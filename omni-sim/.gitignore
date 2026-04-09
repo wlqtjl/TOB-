@@ -1,0 +1,40 @@
+# Rust build artefacts
+/target/
+Cargo.lock          # tracked for libraries — omit this line if building a binary
+
+# Unity generated files
+/unity/Library/
+/unity/Temp/
+/unity/Logs/
+/unity/obj/
+/unity/Builds/
+/unity/UserSettings/
+/unity/*.sln
+/unity/*.csproj
+/unity/Assembly-CSharp*.csproj
+
+# Unity asset metadata (keep *.meta — Unity needs them)
+# Do NOT ignore .meta files
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/settings.json
+.vscode/.ropeproject
+*.iml
+
+# Build outputs
+/build/ci/*.log
+/dist/
+
+# Wasm intermediate (keep final .wasm in Plugins/)
+target/wasm32-unknown-unknown/
+
+# Benchmark HTML reports
+criterion/

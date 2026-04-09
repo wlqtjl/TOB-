@@ -30,8 +30,12 @@ public class EntityMeshPool : MonoBehaviour
     {
         if (_free.Count == 0)
         {
-            Debug.LogWarning("[OmniSim] EntityMeshPool exhausted — growing pool.");
-            AddToPool();
+            // L-03 FIX: grow by doubling (min 16) instead of +1 to avoid
+            // repeated single-mesh allocations under heavy demand.
+            int growBy = Mathf.Max(16, _all.Count);
+            Debug.LogWarning($"[OmniSim] EntityMeshPool exhausted — growing by {growBy}.");
+            for (int i = 0; i < growBy; i++)
+                AddToPool();
         }
         return _free.Dequeue();
     }

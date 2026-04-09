@@ -139,6 +139,14 @@ fn parse_args(args: &[String]) -> Result<Config> {
         i += 1;
     }
 
+    // L-04 FIX: validate ticks > 0 and delta > 0.
+    if ticks == 0 {
+        anyhow::bail!("--ticks must be > 0");
+    }
+    if delta <= 0.0 {
+        anyhow::bail!("--delta must be > 0.0");
+    }
+
     Ok(Config {
         opdl_path: opdl_path.context("--opdl <path> is required")?,
         ticks,

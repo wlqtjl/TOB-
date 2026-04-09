@@ -4,7 +4,7 @@
 
 **技术栈**: Rust (ECS · Wasm) → Unity 6 LTS (三维可视化) → TypeScript (Web 控制台)
 
-[![CI](https://github.com/your-org/omni-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/omni-sim/actions)
+[![CI](https://github.com/wlqtjl/TOB-/actions/workflows/ci.yml/badge.svg)](https://github.com/wlqtjl/TOB-/actions)
 
 ---
 
@@ -12,7 +12,7 @@
 
 ```bash
 # Step 1 — 克隆
-git clone https://github.com/your-org/omni-sim.git && cd omni-sim
+git clone https://github.com/wlqtjl/TOB-.git && cd TOB-/omni-sim
 
 # Step 2 — 验证 Rust 环境（需 stable >= 1.78）
 cargo test --workspace

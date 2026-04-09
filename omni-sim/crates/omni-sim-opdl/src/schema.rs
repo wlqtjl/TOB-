@@ -1,7 +1,9 @@
 /// Serde-deserialised representation of a raw OPDL JSON document.
 /// All fields map 1-to-1 with the OPDL v1.0 schema defined in §4.
 /// Validation is intentionally NOT performed here — see `validator.rs`.
-#[derive(Debug, serde::Deserialize)]
+///
+/// M-05 FIX: derive Clone so validator tests can clone entities for duplicate-id testing.
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct OpdlDocument {
     pub version: String,
     pub pack_id: String,
@@ -14,7 +16,7 @@ pub struct OpdlDocument {
     pub topology: Option<OpdlTopology>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct OpdlEntity {
     pub id: String,
     pub entity_type: String,
@@ -27,7 +29,7 @@ pub struct OpdlEntity {
     pub tags: Vec<String>,
 }
 
-#[derive(Debug, Default, serde::Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct OpdlComponents {
     #[serde(default)]
     pub cpu: f32,
@@ -47,7 +49,7 @@ fn default_cores() -> u8 {
     1
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct OpdlBehaviors {
     #[serde(default = "default_growth")]
     pub cpu_growth_rate: f32,
@@ -71,13 +73,13 @@ impl Default for OpdlBehaviors {
     }
 }
 
-#[derive(Debug, Default, serde::Deserialize)]
+#[derive(Debug, Default, Clone, serde::Deserialize)]
 pub struct OpdlTopology {
     #[serde(default)]
     pub links: Vec<OpdlLink>,
 }
 
-#[derive(Debug, serde::Deserialize)]
+#[derive(Debug, Clone, serde::Deserialize)]
 pub struct OpdlLink {
     pub from: String,
     pub to: String,

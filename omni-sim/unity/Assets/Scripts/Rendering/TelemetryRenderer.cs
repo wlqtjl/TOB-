@@ -112,6 +112,7 @@ public class TelemetryRenderer : MonoBehaviour
     /// <summary>
     /// Submit entities in BATCH-sized calls.
     /// Array.Copy into pre-allocated batch slices — no heap allocation.
+    /// M-03 FIX: clear tail of batch arrays when n &lt; BATCH to avoid stale GPU data.
     /// </summary>
     private void RenderBatched()
     {
@@ -125,6 +126,16 @@ public class TelemetryRenderer : MonoBehaviour
             // Copy slice into preallocated batch arrays (no `new`).
             System.Array.Copy(_matrices, offset, _batchMatrices, 0, n);
             System.Array.Copy(_colors,   offset, _batchColors,   0, n);
+
+            // M-03 FIX: zero out tail entries when the last batch is partial,
+            // so the GPU doesn't render stale data from a previous frame.
+            if (n < BATCH)
+            {
+                for (int i = n; i < BATCH; i++)
+                {
+                    _batchColors[i] = Vector4.zero;
+                }
+            }
 
             _mpb.SetVectorArray("_Color", _batchColors);
 
@@ -140,13 +151,16 @@ public class TelemetryRenderer : MonoBehaviour
     }
 
     // ── Gizmo (Editor only) ────────────────────────────────────────────────
+    // L-02 FIX: use sqrt(maxEntities) for grid dimensions, not maxEntities.
 #if UNITY_EDITOR
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;
+        int cols = Mathf.CeilToInt(Mathf.Sqrt(maxEntities));
+        float extent = cols * gridSpacing;
         Gizmos.DrawWireCube(
-            new Vector3(maxEntities * gridSpacing * 0.5f, 0f, maxEntities * gridSpacing * 0.5f),
-            new Vector3(maxEntities * gridSpacing, 1f, maxEntities * gridSpacing));
+            new Vector3(extent * 0.5f, 0f, extent * 0.5f),
+            new Vector3(extent, 1f, extent));
     }
 #endif
 }

@@ -1,9 +1,9 @@
-/// Shared memory management for the FFI boundary.
-///
-/// Ownership contract (MUST be honoured by every caller):
-/// - Buffers returned via `*mut u8` were allocated by Rust.
-/// - The C caller (Unity) MUST call `omni_free(ptr, len)` exactly once per pointer.
-/// - Buffers passed IN by the caller are NEVER freed by Rust.
+//! Shared memory management for the FFI boundary.
+//!
+//! Ownership contract (MUST be honoured by every caller):
+//! - Buffers returned via `*mut u8` were allocated by Rust.
+//! - The C caller (Unity) MUST call `omni_free(ptr, len)` exactly once per pointer.
+//! - Buffers passed IN by the caller are NEVER freed by Rust.
 
 /// Allocate a zeroed byte buffer of `len` bytes and return a raw pointer.
 ///

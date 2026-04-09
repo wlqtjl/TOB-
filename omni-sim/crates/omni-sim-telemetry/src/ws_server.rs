@@ -1,14 +1,14 @@
-/// WebSocket push server — D-06 fix.
-///
-/// Architecture (§5.1):
-///   RingBuffer → Sampler → this server → Web console / Telemetry panel
-///
-/// The server runs on a Tokio task and broadcasts the latest TelemetryFrame
-/// JSON to all connected clients every `interval_ms` milliseconds.
-/// Frame format matches §5.2 exactly.
-///
-/// C-02 FIX: individual stream accept errors are logged and skipped, not propagated.
-/// C-03 FIX: client sockets get a read timeout; max concurrent clients is capped.
+//! WebSocket push server — D-06 fix.
+//!
+//! Architecture (§5.1):
+//!   RingBuffer → Sampler → this server → Web console / Telemetry panel
+//!
+//! The server runs on a Tokio task and broadcasts the latest TelemetryFrame
+//! JSON to all connected clients every `interval_ms` milliseconds.
+//! Frame format matches §5.2 exactly.
+//!
+//! C-02 FIX: individual stream accept errors are logged and skipped, not propagated.
+//! C-03 FIX: client sockets get a read timeout; max concurrent clients is capped.
 
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -80,11 +80,7 @@ pub fn now_ms() -> u64 {
 /// C-02 FIX: accept errors are logged and skipped instead of terminating the server.
 /// C-03 FIX: read_timeout prevents idle clients from blocking threads forever.
 ///           MAX_CLIENTS cap prevents DoS via thread exhaustion.
-pub fn run_ws_server(
-    addr: &str,
-    buffer: SharedBuffer,
-    interval_ms: u64,
-) -> Result<()> {
+pub fn run_ws_server(addr: &str, buffer: SharedBuffer, interval_ms: u64) -> Result<()> {
     use std::net::TcpListener;
     use std::thread;
     use std::time::Duration;

@@ -25,9 +25,18 @@ mod tests {
     fn world_with_entity(cpu: f32, rate: f32) -> hecs::World {
         let mut w = hecs::World::new();
         w.spawn((
-            CpuC { usage: cpu, cores: 8 },
-            MemC { used_ratio: 0.3, total_gb: 64.0 },
-            BehavC { cpu_growth_rate: rate, burst_threshold: 0.9 },
+            CpuC {
+                usage: cpu,
+                cores: 8,
+            },
+            MemC {
+                used_ratio: 0.3,
+                total_gb: 64.0,
+            },
+            BehavC {
+                cpu_growth_rate: rate,
+                burst_threshold: 0.9,
+            },
         ));
         w
     }

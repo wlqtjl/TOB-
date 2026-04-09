@@ -12,13 +12,20 @@ pub struct EntityIr {
 
 #[derive(Debug, Clone, Copy)]
 pub struct ComponentsIr {
-    pub cpu: f32, pub memory: f32,
-    pub cpu_cores: u8, pub memory_gb: f32,
-    pub network_tx: f32, pub network_rx: f32,
+    pub cpu: f32,
+    pub memory: f32,
+    pub cpu_cores: u8,
+    pub memory_gb: f32,
+    pub network_tx: f32,
+    pub network_rx: f32,
 }
 
 #[derive(Debug, Clone)]
-pub struct LinkIr { pub from: String, pub to: String, pub bandwidth_gbps: f32 }
+pub struct LinkIr {
+    pub from: String,
+    pub to: String,
+    pub bandwidth_gbps: f32,
+}
 
 #[derive(Debug)]
 pub struct CompiledDocument {

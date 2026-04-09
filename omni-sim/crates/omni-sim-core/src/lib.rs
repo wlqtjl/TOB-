@@ -23,7 +23,7 @@ use crate::scheduler::tick_systems;
 /// `update()` is panic-free in release builds (`panic = "abort"` in workspace).
 pub struct SimulationCore {
     world: hecs::World,
-    tick:  u64,
+    tick: u64,
 }
 
 impl SimulationCore {
@@ -69,9 +69,15 @@ impl SimulationCore {
         *h.finalize().as_bytes()
     }
 
-    pub fn entity_count(&self) -> usize { self.world.len() as usize }
-    pub fn tick(&self)         -> u64   { self.tick }
-    pub fn world(&self)        -> &hecs::World { &self.world }
+    pub fn entity_count(&self) -> usize {
+        self.world.len() as usize
+    }
+    pub fn tick(&self) -> u64 {
+        self.tick
+    }
+    pub fn world(&self) -> &hecs::World {
+        &self.world
+    }
 }
 
 #[cfg(test)]
@@ -82,21 +88,42 @@ mod tests {
         "entities":[{"id":"n1","entity_type":"Server",
                      "components":{"cpu":0.2,"memory":0.3}}]}"#;
 
-    #[test] fn loads_one_entity()  { assert_eq!(SimulationCore::from_opdl(MINIMAL).unwrap().entity_count(), 1); }
-    #[test] fn tick_increments()   { let mut c = SimulationCore::from_opdl(MINIMAL).unwrap(); c.update(0.016); assert_eq!(c.tick(), 1); }
-    #[test] fn hash_deterministic() {
+    #[test]
+    fn loads_one_entity() {
+        assert_eq!(
+            SimulationCore::from_opdl(MINIMAL).unwrap().entity_count(),
+            1
+        );
+    }
+    #[test]
+    fn tick_increments() {
+        let mut c = SimulationCore::from_opdl(MINIMAL).unwrap();
+        c.update(0.016);
+        assert_eq!(c.tick(), 1);
+    }
+    #[test]
+    fn hash_deterministic() {
         let mut c1 = SimulationCore::from_opdl(MINIMAL).unwrap();
         let mut c2 = SimulationCore::from_opdl(MINIMAL).unwrap();
-        for _ in 0..100 { c1.update(0.016); c2.update(0.016); }
+        for _ in 0..100 {
+            c1.update(0.016);
+            c2.update(0.016);
+        }
         assert_eq!(c1.state_hash(), c2.state_hash());
     }
-    #[test] fn hash_changes_per_tick() {
+    #[test]
+    fn hash_changes_per_tick() {
         let mut c = SimulationCore::from_opdl(MINIMAL).unwrap();
-        let h0 = c.state_hash(); c.update(0.016);
+        let h0 = c.state_hash();
+        c.update(0.016);
         assert_ne!(h0, c.state_hash());
     }
-    #[test] fn invalid_opdl_is_err() {
-        assert!(SimulationCore::from_opdl(r#"{"version":"1.0","pack_id":"t","entities":[
-            {"id":"x","entity_type":"Server","components":{"cpu":9.9,"memory":0.3}}]}"#).is_err());
+    #[test]
+    fn invalid_opdl_is_err() {
+        assert!(SimulationCore::from_opdl(
+            r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"x","entity_type":"Server","components":{"cpu":9.9,"memory":0.3}}]}"#
+        )
+        .is_err());
     }
 }

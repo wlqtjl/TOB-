@@ -89,16 +89,16 @@ fn main() -> Result<()> {
 // ── CLI argument parser ────────────────────────────────────────────────────
 
 struct Config {
-    opdl_path:   PathBuf,
-    ticks:       u64,
-    delta:       f32,
+    opdl_path: PathBuf,
+    ticks: u64,
+    delta: f32,
     output_path: Option<PathBuf>,
 }
 
 fn parse_args(args: &[String]) -> Result<Config> {
-    let mut opdl_path   = None::<PathBuf>;
-    let mut ticks       = 1000u64;
-    let mut delta       = 0.016f32; // ~60fps
+    let mut opdl_path = None::<PathBuf>;
+    let mut ticks = 1000u64;
+    let mut delta = 0.016f32; // ~60fps
     let mut output_path = None::<PathBuf>;
 
     let mut i = 1;
@@ -112,14 +112,16 @@ fn parse_args(args: &[String]) -> Result<Config> {
             }
             "--ticks" => {
                 i += 1;
-                ticks = args.get(i)
+                ticks = args
+                    .get(i)
                     .context("--ticks requires a number")?
                     .parse()
                     .context("--ticks must be a positive integer")?;
             }
             "--delta" => {
                 i += 1;
-                delta = args.get(i)
+                delta = args
+                    .get(i)
                     .context("--delta requires a number")?
                     .parse()
                     .context("--delta must be a float")?;

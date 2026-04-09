@@ -39,7 +39,9 @@ pub enum ValidationError {
     UnknownLinkEndpoint { id: String },
 
     /// L-08 FIX: zero or negative bandwidth is meaningless for production links.
-    #[error("topology link from \"{from}\" to \"{to}\" has bandwidth_gbps={val} which must be > 0")]
+    #[error(
+        "topology link from \"{from}\" to \"{to}\" has bandwidth_gbps={val} which must be > 0"
+    )]
     ZeroBandwidth { from: String, to: String, val: f32 },
 }
 

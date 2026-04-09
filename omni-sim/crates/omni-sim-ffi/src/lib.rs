@@ -1,9 +1,9 @@
-/// Omni-Sim FFI bridge.
-///
-/// Compiled as both `cdylib` (Wasm / Unity native plugin) and
-/// `staticlib` (C smoke-test harness on native targets).
-///
-/// No `wasm-bindgen` — pure `extern "C"` + `#[no_mangle]`.  (D-03 fix)
+//! Omni-Sim FFI bridge.
+//!
+//! Compiled as both `cdylib` (Wasm / Unity native plugin) and
+//! `staticlib` (C smoke-test harness on native targets).
+//!
+//! No `wasm-bindgen` — pure `extern "C"` + `#[no_mangle]`.  (D-03 fix)
 
 pub mod exports;
 pub mod memory;

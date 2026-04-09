@@ -4,11 +4,11 @@
 //! Stage 2 — Validate: OpdlDocument → ()               (semantic rules)
 //! Stage 3 — Compile:  OpdlDocument → CompiledDocument (type-safe IR)
 
-use anyhow::{anyhow, Context, Result};
 use crate::components_stub::{BehavC, EntityType};
 use crate::ir::{CompiledDocument, ComponentsIr, EntityIr, LinkIr};
 use crate::schema::OpdlDocument;
 use crate::validator;
+use anyhow::{anyhow, Context, Result};
 
 // ── Stage 1: Parse ────────────────────────────────────────────────────────────
 
@@ -21,10 +21,17 @@ pub fn parse(json: &str) -> Result<OpdlDocument> {
 /// Collect all semantic errors before returning.
 pub fn validate(doc: &OpdlDocument) -> Result<()> {
     validator::validate(doc).map_err(|errors| {
-        let msg = errors.iter().enumerate()
+        let msg = errors
+            .iter()
+            .enumerate()
             .map(|(i, e)| format!("  [{i}] {e}"))
-            .collect::<Vec<_>>().join("\n");
-        anyhow!("OPDL validation failed ({} error(s)):\n{}", errors.len(), msg)
+            .collect::<Vec<_>>()
+            .join("\n");
+        anyhow!(
+            "OPDL validation failed ({} error(s)):\n{}",
+            errors.len(),
+            msg
+        )
     })
 }
 
@@ -34,30 +41,48 @@ pub fn validate(doc: &OpdlDocument) -> Result<()> {
 /// Validation should have caught unknown types, but defensive error handling
 /// is safer than `panic!` under `panic = "abort"`.
 pub fn compile(doc: OpdlDocument) -> Result<CompiledDocument> {
-    let entities = doc.entities.into_iter().map(|e| -> Result<EntityIr> {
-        Ok(EntityIr {
-            id: e.id,
-            entity_type: parse_entity_type(&e.entity_type)?,
-            components: ComponentsIr {
-                cpu:        e.components.cpu,
-                memory:     e.components.memory,
-                cpu_cores:  e.components.cpu_cores,
-                memory_gb:  e.components.memory_gb,
-                network_tx: e.components.network_tx,
-                network_rx: e.components.network_rx,
-            },
-            behavior: BehavC {
-                cpu_growth_rate: e.behaviors.cpu_growth_rate,
-                burst_threshold: e.behaviors.burst_threshold,
-            },
+    let entities = doc
+        .entities
+        .into_iter()
+        .map(|e| -> Result<EntityIr> {
+            Ok(EntityIr {
+                id: e.id,
+                entity_type: parse_entity_type(&e.entity_type)?,
+                components: ComponentsIr {
+                    cpu: e.components.cpu,
+                    memory: e.components.memory,
+                    cpu_cores: e.components.cpu_cores,
+                    memory_gb: e.components.memory_gb,
+                    network_tx: e.components.network_tx,
+                    network_rx: e.components.network_rx,
+                },
+                behavior: BehavC {
+                    cpu_growth_rate: e.behaviors.cpu_growth_rate,
+                    burst_threshold: e.behaviors.burst_threshold,
+                },
+            })
         })
-    }).collect::<Result<Vec<_>>>()?;
+        .collect::<Result<Vec<_>>>()?;
 
-    let links = doc.topology.map(|t| t.links.into_iter().map(|l| LinkIr {
-        from: l.from, to: l.to, bandwidth_gbps: l.bandwidth_gbps,
-    }).collect()).unwrap_or_default();
+    let links = doc
+        .topology
+        .map(|t| {
+            t.links
+                .into_iter()
+                .map(|l| LinkIr {
+                    from: l.from,
+                    to: l.to,
+                    bandwidth_gbps: l.bandwidth_gbps,
+                })
+                .collect()
+        })
+        .unwrap_or_default();
 
-    Ok(CompiledDocument { pack_id: doc.pack_id, entities, links })
+    Ok(CompiledDocument {
+        pack_id: doc.pack_id,
+        entities,
+        links,
+    })
 }
 
 /// H-06 FIX: returns `Result` instead of panicking.  Even though the
@@ -65,10 +90,10 @@ pub fn compile(doc: OpdlDocument) -> Result<CompiledDocument> {
 /// than `panic!` in a `panic = "abort"` profile.
 fn parse_entity_type(s: &str) -> Result<EntityType> {
     match s {
-        "Server"  => Ok(EntityType::Server),
-        "Switch"  => Ok(EntityType::Switch),
+        "Server" => Ok(EntityType::Server),
+        "Switch" => Ok(EntityType::Switch),
         "Storage" => Ok(EntityType::Storage),
-        "VM"      => Ok(EntityType::Vm),
+        "VM" => Ok(EntityType::Vm),
         other => Err(anyhow!("unknown entity_type '{other}'")),
     }
 }
@@ -83,7 +108,8 @@ mod tests {
             {"id":"sw1","entity_type":"Switch","components":{"cpu":0.1,"memory":0.1}}
         ]}"#;
 
-    #[test] fn pipeline_roundtrip() {
+    #[test]
+    fn pipeline_roundtrip() {
         let doc = parse(VALID).unwrap();
         validate(&doc).unwrap();
         let c = compile(doc).unwrap();
@@ -92,16 +118,27 @@ mod tests {
         assert_eq!(c.entities[1].entity_type, EntityType::Switch);
     }
 
-    #[test] fn bad_json_fails_parse()  { assert!(parse("{bad}").is_err()); }
-    #[test] fn bad_cpu_fails_validate() {
-        let doc = parse(r#"{"version":"1.0","pack_id":"t","entities":[
-            {"id":"x","entity_type":"Server","components":{"cpu":2.0,"memory":0.3}}]}"#).unwrap();
+    #[test]
+    fn bad_json_fails_parse() {
+        assert!(parse("{bad}").is_err());
+    }
+    #[test]
+    fn bad_cpu_fails_validate() {
+        let doc = parse(
+            r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"x","entity_type":"Server","components":{"cpu":2.0,"memory":0.3}}]}"#,
+        )
+        .unwrap();
         assert!(validate(&doc).is_err());
     }
 
-    #[test] fn defaults_applied() {
-        let doc = parse(r#"{"version":"1.0","pack_id":"t","entities":[
-            {"id":"x","entity_type":"Server","components":{"cpu":0.1,"memory":0.2}}]}"#).unwrap();
+    #[test]
+    fn defaults_applied() {
+        let doc = parse(
+            r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"x","entity_type":"Server","components":{"cpu":0.1,"memory":0.2}}]}"#,
+        )
+        .unwrap();
         let c = compile(doc).unwrap();
         assert_eq!(c.entities[0].components.cpu_cores, 1); // default_cores()
         assert!((c.entities[0].behavior.cpu_growth_rate - 0.01).abs() < 1e-6);

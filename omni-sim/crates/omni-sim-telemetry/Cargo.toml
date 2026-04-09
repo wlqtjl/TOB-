@@ -1,0 +1,14 @@
+[package]
+name        = "omni-sim-telemetry"
+version     = "0.1.0"
+edition     = "2021"
+description = "Omni-Sim telemetry — ring-buffer sampling, WebSocket push server, adaptive rate"
+
+[dependencies]
+omni-sim-core = { path = "../omni-sim-core" }
+tokio         = { workspace = true }
+tungstenite   = { workspace = true }
+serde         = { workspace = true }
+serde_json    = { workspace = true }
+thiserror     = { workspace = true }
+anyhow        = { workspace = true }

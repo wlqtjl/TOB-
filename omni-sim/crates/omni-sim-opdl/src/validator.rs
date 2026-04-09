@@ -254,4 +254,176 @@ mod tests {
             .iter()
             .any(|e| matches!(e, ValidationError::InvalidPackId { .. })));
     }
+
+    #[test]
+    fn pack_id_with_uppercase_fails() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.pack_id = "Bad-Pack".into();
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidPackId { .. })));
+    }
+
+    #[test]
+    fn pack_id_with_special_chars_fails() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.pack_id = "pack_id!".into();
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidPackId { .. })));
+    }
+
+    #[test]
+    fn zero_cores_fails() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.entities[0].components.cpu_cores = 0;
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::ZeroCores { .. })));
+    }
+
+    #[test]
+    fn growth_rate_out_of_range_fails() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.entities[0].behaviors.cpu_growth_rate = 2.0;
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::GrowthRateOutOfRange { .. })));
+    }
+
+    #[test]
+    fn negative_growth_rate_out_of_range_fails() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.entities[0].behaviors.cpu_growth_rate = -1.5;
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::GrowthRateOutOfRange { .. })));
+    }
+
+    #[test]
+    fn unknown_link_endpoint_fails() {
+        use crate::schema::{OpdlLink, OpdlTopology};
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.topology = Some(OpdlTopology {
+            links: vec![OpdlLink {
+                from: "n1".into(),
+                to: "nonexistent".into(),
+                bandwidth_gbps: 10.0,
+            }],
+        });
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::UnknownLinkEndpoint { .. })));
+    }
+
+    #[test]
+    fn zero_bandwidth_fails() {
+        use crate::schema::{OpdlLink, OpdlTopology};
+        let mut doc = minimal_doc(0.2, 0.3);
+        // Add a second entity for a valid link pair
+        doc.entities.push(OpdlEntity {
+            id: "n2".into(),
+            entity_type: "Switch".into(),
+            label: None,
+            tags: vec![],
+            components: OpdlComponents {
+                cpu: 0.1,
+                memory: 0.1,
+                cpu_cores: 2,
+                memory_gb: 8.0,
+                network_tx: 0.0,
+                network_rx: 0.0,
+            },
+            behaviors: Default::default(),
+        });
+        doc.topology = Some(OpdlTopology {
+            links: vec![OpdlLink {
+                from: "n1".into(),
+                to: "n2".into(),
+                bandwidth_gbps: 0.0,
+            }],
+        });
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::ZeroBandwidth { .. })));
+    }
+
+    #[test]
+    fn negative_bandwidth_fails() {
+        use crate::schema::{OpdlLink, OpdlTopology};
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.entities.push(OpdlEntity {
+            id: "n2".into(),
+            entity_type: "Switch".into(),
+            label: None,
+            tags: vec![],
+            components: OpdlComponents {
+                cpu: 0.1,
+                memory: 0.1,
+                cpu_cores: 2,
+                memory_gb: 8.0,
+                network_tx: 0.0,
+                network_rx: 0.0,
+            },
+            behaviors: Default::default(),
+        });
+        doc.topology = Some(OpdlTopology {
+            links: vec![OpdlLink {
+                from: "n1".into(),
+                to: "n2".into(),
+                bandwidth_gbps: -5.0,
+            }],
+        });
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::ZeroBandwidth { .. })));
+    }
+
+    #[test]
+    fn multiple_errors_collected() {
+        let mut doc = minimal_doc(1.5, -0.1); // both cpu and memory out of range
+        doc.entities[0].components.cpu_cores = 0; // zero cores
+        doc.entities[0].behaviors.cpu_growth_rate = 5.0; // growth rate out of range
+        let errs = validate(&doc).unwrap_err();
+        assert!(
+            errs.len() >= 4,
+            "expected at least 4 errors, got {}",
+            errs.len()
+        );
+    }
+
+    #[test]
+    fn boundary_cpu_zero_passes() {
+        assert!(validate(&minimal_doc(0.0, 0.3)).is_ok());
+    }
+
+    #[test]
+    fn boundary_cpu_one_passes() {
+        assert!(validate(&minimal_doc(1.0, 0.3)).is_ok());
+    }
+
+    #[test]
+    fn boundary_memory_zero_passes() {
+        assert!(validate(&minimal_doc(0.2, 0.0)).is_ok());
+    }
+
+    #[test]
+    fn boundary_memory_one_passes() {
+        assert!(validate(&minimal_doc(0.2, 1.0)).is_ok());
+    }
+
+    #[test]
+    fn valid_pack_id_with_hyphens_and_digits() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.pack_id = "my-pack-123".into();
+        assert!(validate(&doc).is_ok());
+    }
 }

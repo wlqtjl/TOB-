@@ -88,6 +88,7 @@ fn main() -> Result<()> {
 
 // ── CLI argument parser ────────────────────────────────────────────────────
 
+#[derive(Debug)]
 struct Config {
     opdl_path: PathBuf,
     ticks: u64,
@@ -168,4 +169,100 @@ Options:
   --output  Write JSON report to file instead of stdout
   --help    Show this message"
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn args(strs: &[&str]) -> Vec<String> {
+        strs.iter().map(|s| s.to_string()).collect()
+    }
+
+    #[test]
+    fn parse_minimal_args() {
+        let a = args(&["bin", "--opdl", "test.json"]);
+        let cfg = parse_args(&a).unwrap();
+        assert_eq!(cfg.opdl_path, PathBuf::from("test.json"));
+        assert_eq!(cfg.ticks, 1000); // default
+        assert!((cfg.delta - 0.016).abs() < 1e-6); // default
+        assert!(cfg.output_path.is_none());
+    }
+
+    #[test]
+    fn parse_all_args() {
+        let a = args(&[
+            "bin", "--opdl", "my.opdl.json", "--ticks", "500", "--delta", "0.033", "--output",
+            "report.json",
+        ]);
+        let cfg = parse_args(&a).unwrap();
+        assert_eq!(cfg.opdl_path, PathBuf::from("my.opdl.json"));
+        assert_eq!(cfg.ticks, 500);
+        assert!((cfg.delta - 0.033).abs() < 1e-6);
+        assert_eq!(cfg.output_path, Some(PathBuf::from("report.json")));
+    }
+
+    #[test]
+    fn missing_opdl_fails() {
+        let a = args(&["bin", "--ticks", "100"]);
+        assert!(parse_args(&a).is_err());
+    }
+
+    #[test]
+    fn zero_ticks_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--ticks", "0"]);
+        let err = parse_args(&a).unwrap_err();
+        assert!(err.to_string().contains("--ticks must be > 0"));
+    }
+
+    #[test]
+    fn zero_delta_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--delta", "0.0"]);
+        let err = parse_args(&a).unwrap_err();
+        assert!(err.to_string().contains("--delta must be > 0.0"));
+    }
+
+    #[test]
+    fn negative_delta_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--delta", "-1.0"]);
+        let err = parse_args(&a).unwrap_err();
+        assert!(err.to_string().contains("--delta must be > 0.0"));
+    }
+
+    #[test]
+    fn unknown_arg_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--unknown"]);
+        let err = parse_args(&a).unwrap_err();
+        assert!(err.to_string().contains("unknown argument"));
+    }
+
+    #[test]
+    fn opdl_missing_value_fails() {
+        let a = args(&["bin", "--opdl"]);
+        assert!(parse_args(&a).is_err());
+    }
+
+    #[test]
+    fn ticks_missing_value_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--ticks"]);
+        assert!(parse_args(&a).is_err());
+    }
+
+    #[test]
+    fn ticks_non_numeric_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--ticks", "abc"]);
+        assert!(parse_args(&a).is_err());
+    }
+
+    #[test]
+    fn delta_non_numeric_fails() {
+        let a = args(&["bin", "--opdl", "test.json", "--delta", "xyz"]);
+        assert!(parse_args(&a).is_err());
+    }
+
+    #[test]
+    fn empty_args_fails() {
+        let a = args(&["bin"]);
+        assert!(parse_args(&a).is_err());
+    }
 }

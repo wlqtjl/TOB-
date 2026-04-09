@@ -143,4 +143,78 @@ mod tests {
         assert_eq!(c.entities[0].components.cpu_cores, 1); // default_cores()
         assert!((c.entities[0].behavior.cpu_growth_rate - 0.01).abs() < 1e-6);
     }
+
+    #[test]
+    fn all_entity_types_compile() {
+        let json = r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"s","entity_type":"Server","components":{"cpu":0.1,"memory":0.1}},
+            {"id":"sw","entity_type":"Switch","components":{"cpu":0.1,"memory":0.1}},
+            {"id":"st","entity_type":"Storage","components":{"cpu":0.1,"memory":0.1}},
+            {"id":"v","entity_type":"VM","components":{"cpu":0.1,"memory":0.1}}
+        ]}"#;
+        let doc = parse(json).unwrap();
+        let c = compile(doc).unwrap();
+        assert_eq!(c.entities[0].entity_type, EntityType::Server);
+        assert_eq!(c.entities[1].entity_type, EntityType::Switch);
+        assert_eq!(c.entities[2].entity_type, EntityType::Storage);
+        assert_eq!(c.entities[3].entity_type, EntityType::Vm);
+    }
+
+    #[test]
+    fn topology_links_compile() {
+        let json = r#"{"version":"1.0","pack_id":"t",
+            "entities":[
+                {"id":"s1","entity_type":"Server","components":{"cpu":0.1,"memory":0.1}},
+                {"id":"sw1","entity_type":"Switch","components":{"cpu":0.1,"memory":0.1}}
+            ],
+            "topology":{"links":[
+                {"from":"s1","to":"sw1","bandwidth_gbps":10.0}
+            ]}}"#;
+        let doc = parse(json).unwrap();
+        validate(&doc).unwrap();
+        let c = compile(doc).unwrap();
+        assert_eq!(c.links.len(), 1);
+        assert_eq!(c.links[0].from, "s1");
+        assert_eq!(c.links[0].to, "sw1");
+        assert!((c.links[0].bandwidth_gbps - 10.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn no_topology_yields_empty_links() {
+        let doc = parse(
+            r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"x","entity_type":"Server","components":{"cpu":0.1,"memory":0.2}}]}"#,
+        )
+        .unwrap();
+        let c = compile(doc).unwrap();
+        assert!(c.links.is_empty());
+    }
+
+    #[test]
+    fn pack_id_preserved() {
+        let doc = parse(
+            r#"{"version":"1.0","pack_id":"my-special-pack","entities":[
+            {"id":"x","entity_type":"Server","components":{"cpu":0.1,"memory":0.2}}]}"#,
+        )
+        .unwrap();
+        let c = compile(doc).unwrap();
+        assert_eq!(c.pack_id, "my-special-pack");
+    }
+
+    #[test]
+    fn component_values_preserved() {
+        let json = r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"x","entity_type":"Server","components":{
+                "cpu":0.45,"memory":0.67,"cpu_cores":16,"memory_gb":128.0,
+                "network_tx":0.5,"network_rx":0.3}}]}"#;
+        let doc = parse(json).unwrap();
+        let c = compile(doc).unwrap();
+        let comp = &c.entities[0].components;
+        assert!((comp.cpu - 0.45).abs() < 1e-6);
+        assert!((comp.memory - 0.67).abs() < 1e-6);
+        assert_eq!(comp.cpu_cores, 16);
+        assert!((comp.memory_gb - 128.0).abs() < 1e-6);
+        assert!((comp.network_tx - 0.5).abs() < 1e-6);
+        assert!((comp.network_rx - 0.3).abs() < 1e-6);
+    }
 }

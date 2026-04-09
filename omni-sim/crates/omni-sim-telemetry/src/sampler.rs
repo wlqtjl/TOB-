@@ -121,4 +121,58 @@ mod tests {
         let frame = sample(&core, 0);
         assert_eq!(recommend_interval(&frame), SampleInterval::Critical);
     }
+
+    #[test]
+    fn recommend_normal_for_warning_cpu() {
+        // CPU > 0.7 but <= 0.9 should yield Warning → Normal interval
+        let core = make_core(0.75);
+        let frame = sample(&core, 0);
+        assert_eq!(recommend_interval(&frame), SampleInterval::Normal);
+    }
+
+    #[test]
+    fn sample_interval_millis_idle() {
+        assert_eq!(SampleInterval::Idle.millis(), 500);
+    }
+
+    #[test]
+    fn sample_interval_millis_normal() {
+        assert_eq!(SampleInterval::Normal.millis(), 100);
+    }
+
+    #[test]
+    fn sample_interval_millis_critical() {
+        assert_eq!(SampleInterval::Critical.millis(), 50);
+    }
+
+    #[test]
+    fn sample_entity_values() {
+        let core = make_core(0.2);
+        let frame = sample(&core, 5000);
+        assert_eq!(frame.timestamp_ms, 5000);
+        assert_eq!(frame.entities.len(), 1);
+        assert!((frame.entities[0].cpu - 0.2).abs() < 1e-5);
+        assert!((frame.entities[0].memory - 0.3).abs() < 1e-5);
+        assert_eq!(frame.entities[0].status, crate::buffer::AlertStatus::Normal);
+    }
+
+    #[test]
+    fn sample_state_hash_hex_is_64_chars() {
+        let core = make_core(0.2);
+        let frame = sample(&core, 0);
+        // Blake3 hash hex = 32 bytes * 2 = 64 hex chars
+        assert_eq!(frame.state_hash_hex.len(), 64);
+        assert!(frame.state_hash_hex.chars().all(|c| c.is_ascii_hexdigit()));
+    }
+
+    #[test]
+    fn recommend_idle_for_empty_entities() {
+        let frame = TelemetryFrame {
+            tick: 0,
+            timestamp_ms: 0,
+            state_hash_hex: "0".repeat(64),
+            entities: vec![],
+        };
+        assert_eq!(recommend_interval(&frame), SampleInterval::Idle);
+    }
 }

@@ -154,4 +154,105 @@ mod tests {
         let ticks: Vec<u64> = rb.iter_chronological().map(|f| f.tick).collect();
         assert_eq!(ticks, vec![1, 2, 3, 4, 5]);
     }
+
+    #[test]
+    fn empty_buffer_latest_is_none() {
+        let rb = RingBuffer::new();
+        assert!(rb.latest().is_none());
+    }
+
+    #[test]
+    fn empty_buffer_is_empty() {
+        let rb = RingBuffer::new();
+        assert!(rb.is_empty());
+        assert_eq!(rb.len(), 0);
+    }
+
+    #[test]
+    fn non_empty_buffer_is_not_empty() {
+        let mut rb = RingBuffer::new();
+        rb.push(frame(1));
+        assert!(!rb.is_empty());
+    }
+
+    #[test]
+    fn default_creates_empty_buffer() {
+        let rb = RingBuffer::default();
+        assert!(rb.is_empty());
+        assert_eq!(rb.len(), 0);
+    }
+
+    #[test]
+    fn chronological_order_after_wrap() {
+        let mut rb = RingBuffer::new();
+        // Fill buffer fully and then push a few more
+        for i in 0..(RING_CAPACITY as u64 + 5) {
+            rb.push(frame(i));
+        }
+        let ticks: Vec<u64> = rb.iter_chronological().map(|f| f.tick).collect();
+        assert_eq!(ticks.len(), RING_CAPACITY);
+        // First element should be tick 5 (oldest not overwritten)
+        assert_eq!(ticks[0], 5);
+        // Last element should be the most recently pushed
+        assert_eq!(*ticks.last().unwrap(), RING_CAPACITY as u64 + 4);
+    }
+
+    #[test]
+    fn empty_iter_chronological() {
+        let rb = RingBuffer::new();
+        assert_eq!(rb.iter_chronological().count(), 0);
+    }
+
+    #[test]
+    fn alert_classify_normal() {
+        assert_eq!(AlertStatus::classify(0.5, 0.5), AlertStatus::Normal);
+    }
+
+    #[test]
+    fn alert_classify_warning_cpu() {
+        assert_eq!(AlertStatus::classify(0.75, 0.5), AlertStatus::Warning);
+    }
+
+    #[test]
+    fn alert_classify_warning_memory() {
+        assert_eq!(AlertStatus::classify(0.5, 0.75), AlertStatus::Warning);
+    }
+
+    #[test]
+    fn alert_classify_critical_cpu() {
+        assert_eq!(AlertStatus::classify(0.95, 0.5), AlertStatus::Critical);
+    }
+
+    #[test]
+    fn alert_classify_critical_memory() {
+        assert_eq!(AlertStatus::classify(0.5, 0.9), AlertStatus::Critical);
+    }
+
+    #[test]
+    fn alert_classify_boundary_cpu_warning() {
+        // cpu > 0.7 is Warning
+        assert_eq!(AlertStatus::classify(0.7, 0.5), AlertStatus::Normal);
+        assert_eq!(AlertStatus::classify(0.71, 0.5), AlertStatus::Warning);
+    }
+
+    #[test]
+    fn alert_classify_boundary_cpu_critical() {
+        // cpu > 0.9 is Critical
+        assert_eq!(AlertStatus::classify(0.9, 0.5), AlertStatus::Warning);
+        assert_eq!(AlertStatus::classify(0.91, 0.5), AlertStatus::Critical);
+    }
+
+    #[test]
+    fn alert_classify_boundary_mem_warning() {
+        // memory > 0.7 is Warning
+        assert_eq!(AlertStatus::classify(0.5, 0.7), AlertStatus::Normal);
+        assert_eq!(AlertStatus::classify(0.5, 0.71), AlertStatus::Warning);
+    }
+
+    #[test]
+    fn alert_classify_boundary_mem_critical() {
+        // memory > 0.85 is Critical
+        assert_eq!(AlertStatus::classify(0.5, 0.85), AlertStatus::Warning);
+        assert_eq!(AlertStatus::classify(0.5, 0.86), AlertStatus::Critical);
+    }
 }

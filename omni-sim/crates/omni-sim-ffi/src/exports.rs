@@ -162,3 +162,165 @@ pub extern "C" fn omni_reset() {
         *cell.borrow_mut() = None;
     });
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VALID_OPDL: &str = r#"{"version":"1.0","pack_id":"test",
+        "entities":[{"id":"s1","entity_type":"Server",
+        "components":{"cpu":0.2,"memory":0.3}}]}"#;
+
+    fn init_with(json: &str) -> i32 {
+        unsafe { omni_init(json.as_ptr(), json.len()) }
+    }
+
+    #[test]
+    fn init_success() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        omni_reset();
+    }
+
+    #[test]
+    fn init_invalid_json_returns_2() {
+        omni_reset();
+        assert_eq!(init_with("{bad json}"), 2);
+        omni_reset();
+    }
+
+    #[test]
+    fn init_validation_error_returns_3() {
+        omni_reset();
+        let bad = r#"{"version":"1.0","pack_id":"t","entities":[
+            {"id":"x","entity_type":"Server","components":{"cpu":9.9,"memory":0.3}}]}"#;
+        assert_eq!(init_with(bad), 3);
+        omni_reset();
+    }
+
+    #[test]
+    fn init_utf8_error_returns_1() {
+        omni_reset();
+        let bad_bytes: &[u8] = &[0xFF, 0xFE, 0xFD];
+        let result = unsafe { omni_init(bad_bytes.as_ptr(), bad_bytes.len()) };
+        assert_eq!(result, 1);
+        omni_reset();
+    }
+
+    #[test]
+    fn entity_count_after_init() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        assert_eq!(omni_entity_count(), 1);
+        omni_reset();
+    }
+
+    #[test]
+    fn entity_count_before_init() {
+        omni_reset();
+        assert_eq!(omni_entity_count(), 0);
+    }
+
+    #[test]
+    fn tick_count_before_init() {
+        omni_reset();
+        assert_eq!(omni_tick_count(), 0);
+    }
+
+    #[test]
+    fn tick_advances_and_returns_hash() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        let mut buf = [0u8; 32];
+        let ret = unsafe { omni_tick(0.016, buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(ret, 32);
+        assert_eq!(omni_tick_count(), 1);
+        // hash should be non-zero after tick
+        assert!(buf.iter().any(|&b| b != 0));
+        omni_reset();
+    }
+
+    #[test]
+    fn tick_not_initialized_returns_neg1() {
+        omni_reset();
+        let mut buf = [0u8; 32];
+        let ret = unsafe { omni_tick(0.016, buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(ret, -1);
+    }
+
+    #[test]
+    fn tick_buffer_too_small_returns_neg2() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        let mut buf = [0u8; 16]; // too small, needs 32
+        let ret = unsafe { omni_tick(0.016, buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(ret, -2);
+        omni_reset();
+    }
+
+    #[test]
+    fn state_hash_success() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        let mut buf = [0u8; 32];
+        let ret = unsafe { omni_state_hash(buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(ret, 32);
+        omni_reset();
+    }
+
+    #[test]
+    fn state_hash_not_initialized_returns_neg1() {
+        omni_reset();
+        let mut buf = [0u8; 32];
+        let ret = unsafe { omni_state_hash(buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(ret, -1);
+    }
+
+    #[test]
+    fn state_hash_buffer_too_small_returns_neg2() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        let mut buf = [0u8; 8]; // too small
+        let ret = unsafe { omni_state_hash(buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(ret, -2);
+        omni_reset();
+    }
+
+    #[test]
+    fn state_hash_does_not_advance_tick() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        let tick_before = omni_tick_count();
+        let mut buf = [0u8; 32];
+        unsafe { omni_state_hash(buf.as_mut_ptr(), buf.len()) };
+        assert_eq!(omni_tick_count(), tick_before);
+        omni_reset();
+    }
+
+    #[test]
+    fn reset_clears_state() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        assert_eq!(omni_entity_count(), 1);
+        omni_reset();
+        assert_eq!(omni_entity_count(), 0);
+        assert_eq!(omni_tick_count(), 0);
+    }
+
+    #[test]
+    fn reinit_after_reset() {
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        omni_reset();
+        assert_eq!(init_with(VALID_OPDL), 0);
+        assert_eq!(omni_entity_count(), 1);
+        omni_reset();
+    }
+
+    #[test]
+    fn free_null_is_noop() {
+        unsafe { omni_free(std::ptr::null_mut(), 0) };
+        unsafe { omni_free(std::ptr::null_mut(), 100) };
+        // Should not crash
+    }
+}

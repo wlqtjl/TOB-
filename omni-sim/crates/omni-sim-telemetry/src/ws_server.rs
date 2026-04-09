@@ -225,4 +225,84 @@ mod tests {
             assert!(t.contains("state_hash"));
         }
     }
+
+    #[test]
+    fn ws_message_contains_all_entity_fields() {
+        let msg = frame_to_ws_message(&sample_frame()).unwrap();
+        let text = match msg {
+            Message::Text(t) => t,
+            _ => panic!("expected Text"),
+        };
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let entity = &v["entities"][0];
+        assert!(entity["cpu"].is_number());
+        assert!(entity["memory"].is_number());
+        assert!(entity["network_tx"].is_number());
+        assert!(entity["network_rx"].is_number());
+        assert!(entity["status"].is_string());
+        assert!(entity["index"].is_number());
+    }
+
+    #[test]
+    fn ws_message_empty_entities() {
+        let frame = TelemetryFrame {
+            tick: 10,
+            timestamp_ms: 2_000_000,
+            state_hash_hex: "b".repeat(64),
+            entities: vec![],
+        };
+        let msg = frame_to_ws_message(&frame).unwrap();
+        let text = match msg {
+            Message::Text(t) => t,
+            _ => panic!("expected Text"),
+        };
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        assert_eq!(v["type"], "telemetry");
+        assert_eq!(v["tick"], 10);
+        assert!(v["entities"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn ws_message_multiple_entities() {
+        let frame = TelemetryFrame {
+            tick: 100,
+            timestamp_ms: 5_000_000,
+            state_hash_hex: "c".repeat(64),
+            entities: vec![
+                EntitySample {
+                    index: 0,
+                    cpu: 0.2,
+                    memory: 0.3,
+                    network_tx: 0.1,
+                    network_rx: 0.05,
+                    status: AlertStatus::Normal,
+                },
+                EntitySample {
+                    index: 1,
+                    cpu: 0.95,
+                    memory: 0.9,
+                    network_tx: 0.8,
+                    network_rx: 0.7,
+                    status: AlertStatus::Critical,
+                },
+            ],
+        };
+        let msg = frame_to_ws_message(&frame).unwrap();
+        let text = match msg {
+            Message::Text(t) => t,
+            _ => panic!("expected Text"),
+        };
+        let v: serde_json::Value = serde_json::from_str(&text).unwrap();
+        let entities = v["entities"].as_array().unwrap();
+        assert_eq!(entities.len(), 2);
+        assert_eq!(entities[0]["status"], "normal");
+        assert_eq!(entities[1]["status"], "critical");
+    }
+
+    #[test]
+    fn now_ms_returns_nonzero() {
+        let ts = now_ms();
+        // Should be a reasonable Unix timestamp in milliseconds (after year 2000)
+        assert!(ts > 946_684_800_000, "expected timestamp after year 2000, got {ts}");
+    }
 }

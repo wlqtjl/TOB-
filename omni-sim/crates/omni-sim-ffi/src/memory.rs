@@ -36,3 +36,58 @@ pub unsafe fn free(ptr: *mut u8, len: usize) {
     // capacity `len`. The caller guarantees single-free ownership.
     drop(Vec::from_raw_parts(ptr, len, len));
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn alloc_zero_returns_null() {
+        let ptr = unsafe { alloc(0) };
+        assert!(ptr.is_null());
+    }
+
+    #[test]
+    fn alloc_returns_valid_zeroed_memory() {
+        let len = 64;
+        let ptr = unsafe { alloc(len) };
+        assert!(!ptr.is_null());
+        // Memory should be zeroed
+        for i in 0..len {
+            assert_eq!(unsafe { *ptr.add(i) }, 0);
+        }
+        // Free the allocated memory
+        unsafe { free(ptr, len) };
+    }
+
+    #[test]
+    fn alloc_and_free_roundtrip() {
+        let len = 1024;
+        let ptr = unsafe { alloc(len) };
+        assert!(!ptr.is_null());
+        // Write some data
+        unsafe {
+            *ptr = 42;
+            *ptr.add(len - 1) = 99;
+        }
+        // Free should not panic
+        unsafe { free(ptr, len) };
+    }
+
+    #[test]
+    fn free_null_is_noop() {
+        unsafe { free(std::ptr::null_mut(), 0) };
+        unsafe { free(std::ptr::null_mut(), 100) };
+    }
+
+    #[test]
+    fn free_zero_len_is_noop() {
+        // Even with a non-null pointer (we won't actually use a real ptr
+        // here since len=0 triggers early return before using the pointer)
+        let ptr = unsafe { alloc(1) };
+        // free with len=0 is a no-op — the pointer won't be freed
+        unsafe { free(ptr, 0) };
+        // Now properly free it
+        unsafe { free(ptr, 1) };
+    }
+}

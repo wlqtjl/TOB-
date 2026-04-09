@@ -26,15 +26,3 @@ opt-level   = 3
 lto         = true      # link-time optimisation — smaller + faster Wasm
 codegen-units = 1
 panic       = "abort"   # required for Wasm: no unwinding runtime
-
-# ── Integration tests (workspace-level) ──────────────────────────────────────
-[[test]]
-name = "test_world_load"
-path = "tests/integration/test_world_load.rs"
-
-[[test]]
-name = "test_state_hash"
-path = "tests/integration/test_state_hash.rs"
-
-[workspace.dev-dependencies]
-omni-sim-core = { path = "crates/omni-sim-core" }

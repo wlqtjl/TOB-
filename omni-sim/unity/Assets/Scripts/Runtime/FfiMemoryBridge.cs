@@ -16,7 +16,8 @@ public sealed class FfiBuffer : IDisposable
 {
     [DllImport("omni_sim_ffi")]
     // MUST MATCH: pub extern "C" fn omni_free(ptr: *mut u8, len: usize)
-    static extern void omni_free(IntPtr ptr, int len);
+    // H-05 FIX: use UIntPtr for Rust `usize`.
+    static extern void omni_free(IntPtr ptr, UIntPtr len);
 
     public IntPtr Ptr  { get; private set; }
     public int    Len  { get; private set; }
@@ -41,7 +42,7 @@ public sealed class FfiBuffer : IDisposable
     {
         if (!_disposed && Ptr != IntPtr.Zero && Len > 0)
         {
-            omni_free(Ptr, Len);
+            omni_free(Ptr, (UIntPtr)Len);
             Ptr      = IntPtr.Zero;
             Len      = 0;
             _disposed = true;

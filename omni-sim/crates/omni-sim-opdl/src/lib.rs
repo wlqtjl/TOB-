@@ -28,7 +28,7 @@ use hecs::World;
 pub fn compile_to_world(json: &str) -> Result<World> {
     let doc = compiler::parse(json)?;
     compiler::validate(&doc)?;
-    let compiled = compiler::compile(doc);
+    let compiled = compiler::compile(doc)?;
     Ok(spawn_world(compiled))
 }
 
@@ -38,10 +38,22 @@ fn spawn_world(compiled: CompiledDocument) -> World {
     let mut world = World::new();
     for ir in compiled.entities {
         world.spawn((
-            CpuC { usage: ir.components.cpu, cores: ir.components.cpu_cores },
-            MemC { used_ratio: ir.components.memory, total_gb: ir.components.memory_gb },
-            NetC { tx_mbps: ir.components.network_tx, rx_mbps: ir.components.network_rx },
-            MetaC { vendor_id: 0, entity_type: ir.entity_type },
+            CpuC {
+                usage: ir.components.cpu,
+                cores: ir.components.cpu_cores,
+            },
+            MemC {
+                used_ratio: ir.components.memory,
+                total_gb: ir.components.memory_gb,
+            },
+            NetC {
+                tx_mbps: ir.components.network_tx,
+                rx_mbps: ir.components.network_rx,
+            },
+            MetaC {
+                vendor_id: 0,
+                entity_type: ir.entity_type,
+            },
             ir.behavior,
         ));
     }
@@ -74,8 +86,11 @@ mod tests {
     #[test]
     fn world_has_cpu_components() {
         let world = compile_to_world(TWO_ENTITIES).unwrap();
-        let cpus: Vec<_> = world.query::<&CpuC>().iter()
-            .map(|(_, c)| c.usage).collect();
+        let cpus: Vec<_> = world
+            .query::<&CpuC>()
+            .iter()
+            .map(|(_, c)| c.usage)
+            .collect();
         assert_eq!(cpus.len(), 2);
     }
 }

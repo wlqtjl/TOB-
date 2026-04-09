@@ -1,13 +1,16 @@
-/// WebSocket push server — D-06 fix.
-///
-/// Architecture (§5.1):
-///   RingBuffer → Sampler → this server → Web console / Telemetry panel
-///
-/// The server runs on a Tokio task and broadcasts the latest TelemetryFrame
-/// JSON to all connected clients every `interval_ms` milliseconds.
-/// Frame format matches §5.2 exactly.
+//! WebSocket push server — D-06 fix.
+//!
+//! Architecture (§5.1):
+//!   RingBuffer → Sampler → this server → Web console / Telemetry panel
+//!
+//! The server runs on a Tokio task and broadcasts the latest TelemetryFrame
+//! JSON to all connected clients every `interval_ms` milliseconds.
+//! Frame format matches §5.2 exactly.
+//!
+//! C-02 FIX: individual stream accept errors are logged and skipped, not propagated.
+//! C-03 FIX: client sockets get a read timeout; max concurrent clients is capped.
 
-use std::net::SocketAddr;
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -18,6 +21,9 @@ use crate::buffer::{RingBuffer, TelemetryFrame};
 
 /// Shared state between the sampler task and the WebSocket broadcaster.
 pub type SharedBuffer = Arc<Mutex<RingBuffer>>;
+
+/// Maximum number of concurrent WebSocket client threads.
+const MAX_CLIENTS: usize = 64;
 
 /// Serialise a frame to the §5.2 WebSocket JSON format.
 ///
@@ -70,11 +76,11 @@ pub fn now_ms() -> u64 {
 /// `addr`        — bind address, e.g. `"127.0.0.1:9001"`
 /// `buffer`      — shared ring buffer populated by the sampler
 /// `interval_ms` — push interval in milliseconds
-pub fn run_ws_server(
-    addr: &str,
-    buffer: SharedBuffer,
-    interval_ms: u64,
-) -> Result<()> {
+///
+/// C-02 FIX: accept errors are logged and skipped instead of terminating the server.
+/// C-03 FIX: read_timeout prevents idle clients from blocking threads forever.
+///           MAX_CLIENTS cap prevents DoS via thread exhaustion.
+pub fn run_ws_server(addr: &str, buffer: SharedBuffer, interval_ms: u64) -> Result<()> {
     use std::net::TcpListener;
     use std::thread;
     use std::time::Duration;
@@ -82,11 +88,40 @@ pub fn run_ws_server(
     let listener = TcpListener::bind(addr)?;
     eprintln!("[OmniSim Telemetry] WebSocket server listening on ws://{addr}");
 
+    let active_clients = Arc::new(AtomicUsize::new(0));
+
     for stream in listener.incoming() {
-        let stream = stream?;
+        // C-02 FIX: log and skip individual accept errors instead of propagating.
+        let stream = match stream {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("[OmniSim Telemetry] accept error (skipped): {e}");
+                continue;
+            }
+        };
+
+        // C-03 FIX: cap concurrent clients to prevent thread exhaustion DoS.
+        let current = active_clients.load(Ordering::Relaxed);
+        if current >= MAX_CLIENTS {
+            eprintln!("[OmniSim Telemetry] max clients reached ({MAX_CLIENTS}), rejecting");
+            drop(stream);
+            continue;
+        }
+
+        // C-03 FIX: set read timeout so blocking `ws.read()` cannot hang forever.
+        let read_timeout = Duration::from_secs(5);
+        if let Err(e) = stream.set_read_timeout(Some(read_timeout)) {
+            eprintln!("[OmniSim Telemetry] failed to set read timeout: {e}");
+            continue;
+        }
+
         let buf_clone = Arc::clone(&buffer);
+        let clients = Arc::clone(&active_clients);
+        clients.fetch_add(1, Ordering::Relaxed);
 
         thread::spawn(move || {
+            let _guard = scopeguard(clients);
+
             let mut ws = match tungstenite::accept(stream) {
                 Ok(ws) => ws,
                 Err(e) => {
@@ -99,8 +134,12 @@ pub fn run_ws_server(
 
             loop {
                 // Send latest frame
+                // H-07 FIX: recover from poisoned mutex instead of panicking.
                 let msg = {
-                    let lock = buf_clone.lock().expect("telemetry buffer poisoned");
+                    let lock = match buf_clone.lock() {
+                        Ok(guard) => guard,
+                        Err(poisoned) => poisoned.into_inner(),
+                    };
                     lock.latest().and_then(|f| frame_to_ws_message(f).ok())
                 };
 
@@ -112,9 +151,17 @@ pub fn run_ws_server(
 
                 thread::sleep(Duration::from_millis(interval_ms));
 
-                // Drain any incoming messages (ping/pong/close)
+                // Drain any incoming messages (ping/pong/close).
+                // C-03 FIX: read_timeout ensures this won't block forever.
                 match ws.read() {
-                    Ok(Message::Close(_)) | Err(_) => break,
+                    Ok(Message::Close(_)) => break,
+                    Err(tungstenite::Error::Io(ref e))
+                        if e.kind() == std::io::ErrorKind::WouldBlock
+                            || e.kind() == std::io::ErrorKind::TimedOut =>
+                    {
+                        // Timeout is expected — continue broadcasting.
+                    }
+                    Err(_) => break,
                     Ok(_) => {} // ignore pings etc.
                 }
             }
@@ -124,6 +171,17 @@ pub fn run_ws_server(
     }
 
     Ok(())
+}
+
+/// RAII-style decrement of the active client counter when a thread exits.
+fn scopeguard(counter: Arc<AtomicUsize>) -> impl Drop {
+    struct Guard(Arc<AtomicUsize>);
+    impl Drop for Guard {
+        fn drop(&mut self) {
+            self.0.fetch_sub(1, Ordering::Relaxed);
+        }
+    }
+    Guard(counter)
 }
 
 #[cfg(test)]

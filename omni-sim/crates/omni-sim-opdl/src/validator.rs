@@ -37,6 +37,12 @@ pub enum ValidationError {
 
     #[error("topology link references unknown entity \"{id}\"")]
     UnknownLinkEndpoint { id: String },
+
+    /// L-08 FIX: zero or negative bandwidth is meaningless for production links.
+    #[error(
+        "topology link from \"{from}\" to \"{to}\" has bandwidth_gbps={val} which must be > 0"
+    )]
+    ZeroBandwidth { from: String, to: String, val: f32 },
 }
 
 const VALID_ENTITY_TYPES: &[&str] = &["Server", "Switch", "Storage", "VM"];
@@ -55,10 +61,12 @@ pub fn validate(doc: &OpdlDocument) -> Result<(), Vec<ValidationError>> {
     }
 
     // --- pack_id ---
-    if !doc
-        .pack_id
-        .chars()
-        .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+    // M-02 FIX: reject empty pack_id (empty iterator `.all()` returns true).
+    if doc.pack_id.is_empty()
+        || !doc
+            .pack_id
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
     {
         errors.push(ValidationError::InvalidPackId {
             id: doc.pack_id.clone(),
@@ -126,6 +134,14 @@ pub fn validate(doc: &OpdlDocument) -> Result<(), Vec<ValidationError>> {
             if !seen_ids.contains(link.to.as_str()) {
                 errors.push(ValidationError::UnknownLinkEndpoint {
                     id: link.to.clone(),
+                });
+            }
+            // L-08 FIX: zero or negative bandwidth is meaningless.
+            if link.bandwidth_gbps <= 0.0 {
+                errors.push(ValidationError::ZeroBandwidth {
+                    from: link.from.clone(),
+                    to: link.to.clone(),
+                    val: link.bandwidth_gbps,
                 });
             }
         }
@@ -227,5 +243,15 @@ mod tests {
         assert!(errs
             .iter()
             .any(|e| matches!(e, ValidationError::UnsupportedVersion { .. })));
+    }
+
+    #[test]
+    fn empty_pack_id_fails() {
+        let mut doc = minimal_doc(0.2, 0.3);
+        doc.pack_id = "".into();
+        let errs = validate(&doc).unwrap_err();
+        assert!(errs
+            .iter()
+            .any(|e| matches!(e, ValidationError::InvalidPackId { .. })));
     }
 }

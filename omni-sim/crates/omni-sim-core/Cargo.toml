@@ -20,3 +20,12 @@ criterion = { workspace = true }
 [[bench]]
 name    = "bench_ecs"
 harness = false
+
+# Integration tests (moved from workspace root — workspace Cargo.toml cannot have [[test]])
+[[test]]
+name = "test_world_load"
+path = "tests/integration/test_world_load.rs"
+
+[[test]]
+name = "test_state_hash"
+path = "tests/integration/test_state_hash.rs"

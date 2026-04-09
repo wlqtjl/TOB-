@@ -44,7 +44,11 @@ fn main() -> Result<()> {
         // Sample every 100 ticks (coarse — headless mode)
         if i % 100 == 0 || i == cfg.ticks - 1 {
             let frame = sample(&core, now_ms());
-            buf.lock().expect("telemetry buffer poisoned").push(frame);
+            // H-07 FIX: recover from poisoned mutex instead of panicking.
+            match buf.lock() {
+                Ok(mut guard) => guard.push(frame),
+                Err(poisoned) => poisoned.into_inner().push(frame),
+            }
         }
     }
 
@@ -85,16 +89,16 @@ fn main() -> Result<()> {
 // ── CLI argument parser ────────────────────────────────────────────────────
 
 struct Config {
-    opdl_path:   PathBuf,
-    ticks:       u64,
-    delta:       f32,
+    opdl_path: PathBuf,
+    ticks: u64,
+    delta: f32,
     output_path: Option<PathBuf>,
 }
 
 fn parse_args(args: &[String]) -> Result<Config> {
-    let mut opdl_path   = None::<PathBuf>;
-    let mut ticks       = 1000u64;
-    let mut delta       = 0.016f32; // ~60fps
+    let mut opdl_path = None::<PathBuf>;
+    let mut ticks = 1000u64;
+    let mut delta = 0.016f32; // ~60fps
     let mut output_path = None::<PathBuf>;
 
     let mut i = 1;
@@ -108,14 +112,16 @@ fn parse_args(args: &[String]) -> Result<Config> {
             }
             "--ticks" => {
                 i += 1;
-                ticks = args.get(i)
+                ticks = args
+                    .get(i)
                     .context("--ticks requires a number")?
                     .parse()
                     .context("--ticks must be a positive integer")?;
             }
             "--delta" => {
                 i += 1;
-                delta = args.get(i)
+                delta = args
+                    .get(i)
                     .context("--delta requires a number")?
                     .parse()
                     .context("--delta must be a float")?;
@@ -133,6 +139,14 @@ fn parse_args(args: &[String]) -> Result<Config> {
             unknown => anyhow::bail!("unknown argument: {unknown}"),
         }
         i += 1;
+    }
+
+    // L-04 FIX: validate ticks > 0 and delta > 0.
+    if ticks == 0 {
+        anyhow::bail!("--ticks must be > 0");
+    }
+    if delta <= 0.0 {
+        anyhow::bail!("--delta must be > 0.0");
     }
 
     Ok(Config {

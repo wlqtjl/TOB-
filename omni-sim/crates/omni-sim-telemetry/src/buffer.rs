@@ -1,7 +1,12 @@
-/// Fixed-capacity ring buffer for telemetry frame history.
-///
-/// Capacity: 3600 frames (1 hour @ 1 fps, or 1 minute @ 60 fps).
-/// When full, the oldest frame is silently overwritten (no allocation).
+//! Fixed-capacity ring buffer for telemetry frame history.
+//!
+//! Capacity: 3600 frames (1 hour @ 1 fps, or 1 minute @ 60 fps).
+//! When full, the oldest frame is silently overwritten (no allocation).
+//!
+//! L-07 NOTE: Each frame stores a `Vec<EntitySample>` per entity. For 100k
+//! entities, a full buffer could consume ~8.6 GB. Callers should use coarse
+//! sampling (e.g., every 100 ticks) or cap the number of sampled entities
+//! per frame when running large simulations.
 
 pub const RING_CAPACITY: usize = 3600;
 
@@ -93,12 +98,18 @@ impl RingBuffer {
         })
     }
 
-    pub fn len(&self) -> usize { self.len }
-    pub fn is_empty(&self) -> bool { self.len == 0 }
+    pub fn len(&self) -> usize {
+        self.len
+    }
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
 }
 
 impl Default for RingBuffer {
-    fn default() -> Self { Self::new() }
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[cfg(test)]

@@ -30,39 +30,46 @@ pub fn validate(doc: &OpdlDocument) -> Result<()> {
 
 // ── Stage 3: Compile ──────────────────────────────────────────────────────────
 
-/// Infallible by construction — validation guarantees all fields are in range.
-pub fn compile(doc: OpdlDocument) -> CompiledDocument {
-    let entities = doc.entities.into_iter().map(|e| EntityIr {
-        id: e.id,
-        entity_type: parse_entity_type(&e.entity_type),
-        components: ComponentsIr {
-            cpu:        e.components.cpu,
-            memory:     e.components.memory,
-            cpu_cores:  e.components.cpu_cores,
-            memory_gb:  e.components.memory_gb,
-            network_tx: e.components.network_tx,
-            network_rx: e.components.network_rx,
-        },
-        behavior: BehavC {
-            cpu_growth_rate: e.behaviors.cpu_growth_rate,
-            burst_threshold: e.behaviors.burst_threshold,
-        },
-    }).collect();
+/// H-06 FIX: now returns `Result` because `parse_entity_type` is fallible.
+/// Validation should have caught unknown types, but defensive error handling
+/// is safer than `panic!` under `panic = "abort"`.
+pub fn compile(doc: OpdlDocument) -> Result<CompiledDocument> {
+    let entities = doc.entities.into_iter().map(|e| -> Result<EntityIr> {
+        Ok(EntityIr {
+            id: e.id,
+            entity_type: parse_entity_type(&e.entity_type)?,
+            components: ComponentsIr {
+                cpu:        e.components.cpu,
+                memory:     e.components.memory,
+                cpu_cores:  e.components.cpu_cores,
+                memory_gb:  e.components.memory_gb,
+                network_tx: e.components.network_tx,
+                network_rx: e.components.network_rx,
+            },
+            behavior: BehavC {
+                cpu_growth_rate: e.behaviors.cpu_growth_rate,
+                burst_threshold: e.behaviors.burst_threshold,
+            },
+        })
+    }).collect::<Result<Vec<_>>>()?;
 
     let links = doc.topology.map(|t| t.links.into_iter().map(|l| LinkIr {
         from: l.from, to: l.to, bandwidth_gbps: l.bandwidth_gbps,
     }).collect()).unwrap_or_default();
 
-    CompiledDocument { pack_id: doc.pack_id, entities, links }
+    Ok(CompiledDocument { pack_id: doc.pack_id, entities, links })
 }
 
-fn parse_entity_type(s: &str) -> EntityType {
+/// H-06 FIX: returns `Result` instead of panicking.  Even though the
+/// validator should prevent unknown types, a defensive `Err` is safer
+/// than `panic!` in a `panic = "abort"` profile.
+fn parse_entity_type(s: &str) -> Result<EntityType> {
     match s {
-        "Server"  => EntityType::Server,
-        "Switch"  => EntityType::Switch,
-        "Storage" => EntityType::Storage,
-        "VM"      => EntityType::Vm,
-        other => panic!("BUG: validator allowed unknown entity_type '{other}'"),
+        "Server"  => Ok(EntityType::Server),
+        "Switch"  => Ok(EntityType::Switch),
+        "Storage" => Ok(EntityType::Storage),
+        "VM"      => Ok(EntityType::Vm),
+        other => Err(anyhow!("unknown entity_type '{other}'")),
     }
 }
 
@@ -79,7 +86,7 @@ mod tests {
     #[test] fn pipeline_roundtrip() {
         let doc = parse(VALID).unwrap();
         validate(&doc).unwrap();
-        let c = compile(doc);
+        let c = compile(doc).unwrap();
         assert_eq!(c.entities.len(), 2);
         assert_eq!(c.entities[0].entity_type, EntityType::Server);
         assert_eq!(c.entities[1].entity_type, EntityType::Switch);
@@ -95,7 +102,7 @@ mod tests {
     #[test] fn defaults_applied() {
         let doc = parse(r#"{"version":"1.0","pack_id":"t","entities":[
             {"id":"x","entity_type":"Server","components":{"cpu":0.1,"memory":0.2}}]}"#).unwrap();
-        let c = compile(doc);
+        let c = compile(doc).unwrap();
         assert_eq!(c.entities[0].components.cpu_cores, 1); // default_cores()
         assert!((c.entities[0].behavior.cpu_growth_rate - 0.01).abs() < 1e-6);
     }

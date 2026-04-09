@@ -44,7 +44,11 @@ fn main() -> Result<()> {
         // Sample every 100 ticks (coarse — headless mode)
         if i % 100 == 0 || i == cfg.ticks - 1 {
             let frame = sample(&core, now_ms());
-            buf.lock().expect("telemetry buffer poisoned").push(frame);
+            // H-07 FIX: recover from poisoned mutex instead of panicking.
+            match buf.lock() {
+                Ok(mut guard) => guard.push(frame),
+                Err(poisoned) => poisoned.into_inner().push(frame),
+            }
         }
     }
 

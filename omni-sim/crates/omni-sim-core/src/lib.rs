@@ -43,16 +43,28 @@ impl SimulationCore {
 
     /// Deterministic 32-byte Blake3 hash of the current world state (§11).
     ///
-    /// Input bytes: tick‖∀cpu.usage‖∀mem.used_ratio  (all little-endian).
+    /// C-01 FIX: Uses a single joint query `(&Cpu, &Memory)` to guarantee
+    /// consistent iteration order.  Entity data is sorted by `hecs::Entity`
+    /// id before hashing so the result is independent of archetype layout.
+    ///
+    /// Input bytes: tick‖∀(cpu.usage‖mem.used_ratio)  (all little-endian, entity-id order).
     /// Same input sequence → same hash on every platform.
     pub fn state_hash(&self) -> [u8; 32] {
         let mut h = Hasher::new();
         h.update(&self.tick.to_le_bytes());
-        for (_, cpu) in self.world.query::<&Cpu>().iter() {
-            h.update(&cpu.usage.to_le_bytes());
-        }
-        for (_, mem) in self.world.query::<&Memory>().iter() {
-            h.update(&mem.used_ratio.to_le_bytes());
+
+        // Collect (entity_id, cpu, memory) and sort by entity id for determinism.
+        let mut entries: Vec<(hecs::Entity, f32, f32)> = self
+            .world
+            .query::<(&Cpu, &Memory)>()
+            .iter()
+            .map(|(e, (cpu, mem))| (e, cpu.usage, mem.used_ratio))
+            .collect();
+        entries.sort_by_key(|(e, _, _)| e.to_bits());
+
+        for (_, cpu_usage, mem_ratio) in &entries {
+            h.update(&cpu_usage.to_le_bytes());
+            h.update(&mem_ratio.to_le_bytes());
         }
         *h.finalize().as_bytes()
     }

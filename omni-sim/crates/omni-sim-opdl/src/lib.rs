@@ -28,7 +28,7 @@ use hecs::World;
 pub fn compile_to_world(json: &str) -> Result<World> {
     let doc = compiler::parse(json)?;
     compiler::validate(&doc)?;
-    let compiled = compiler::compile(doc);
+    let compiled = compiler::compile(doc)?;
     Ok(spawn_world(compiled))
 }
 

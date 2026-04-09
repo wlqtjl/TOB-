@@ -1,6 +1,7 @@
 # Rust build artefacts
 /target/
-Cargo.lock          # tracked for libraries — omit this line if building a binary
+# C-04 FIX: Cargo.lock is tracked because the workspace contains binary crates
+# (omni-sim-headless) that require reproducible builds.
 
 # Unity generated files
 /unity/Library/

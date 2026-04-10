@@ -54,7 +54,7 @@ export default function Home() {
 
       {/* 技术栈标签 */}
       <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-        {['Next.js 14', 'NestJS', 'Phaser.js', 'PixiJS Particles', 'Redis', 'PostgreSQL', 'FastAPI', 'GPT-4o'].map((tech) => (
+        {['Next.js 15', 'NestJS', 'Phaser.js', 'PixiJS Particles', 'Redis', 'PostgreSQL', 'FastAPI', 'GPT-4o'].map((tech) => (
           <span key={tech} className="rounded-full border border-gray-800 px-3 py-1">
             {tech}
           </span>

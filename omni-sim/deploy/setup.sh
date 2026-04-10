@@ -51,6 +51,8 @@ if command -v node &>/dev/null; then
     echo "  ✅ Found: Node.js $NODE_VER"
 else
     echo "  ⚠️  Node.js not found — installing..."
+    echo "  ⚠️  NOTE: This downloads and runs an install script from nodesource.com."
+    echo "  ⚠️  Review https://deb.nodesource.com/setup_20.x before proceeding in sensitive environments."
     if [[ "$OS" == "Linux" ]]; then
         curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
         sudo apt-get install -y nodejs

@@ -13,7 +13,7 @@ RUN cargo build -p omni-sim-headless --release \
 FROM node:20-bookworm-slim AS web-builder
 
 WORKDIR /build/web-console
-COPY web-console/package.json web-console/package-lock.json* ./
+COPY web-console/package.json web-console/package-lock.json ./
 RUN npm ci --ignore-scripts
 COPY web-console/ ./
 RUN npm run build

@@ -8,7 +8,7 @@
 import { TelemetryClient } from "./client";
 import { renderFrame, renderConnectionState } from "./dashboard";
 
-const WS_URL = import.meta.env.VITE_WS_URL as string | undefined ?? "ws://127.0.0.1:9001";
+const WS_URL = (import.meta.env.VITE_WS_URL ?? "ws://127.0.0.1:9001") as string;
 
 function main(): void {
   const client = new TelemetryClient({ url: WS_URL });

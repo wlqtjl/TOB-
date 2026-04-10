@@ -4,15 +4,19 @@
 //!
 //! Usage:
 //!   omni-sim-headless --opdl <path> --ticks <n> [--delta <f>] [--output <path>]
+//!   omni-sim-headless --opdl <path> --serve [--ws-addr 0.0.0.0:9001]
 //!
 //! Verification command (§13.2 Step 2 equivalent):
 //!   omni-sim-headless --opdl vendor/smartx/smartx.opdl.json --ticks 1000
+//!
+//! Live server mode (WebSocket telemetry push):
+//!   omni-sim-headless --opdl vendor/smartx/smartx.opdl.json --serve
 //!
 //! Expected: exits 0, prints final state hash and entity count.
 
 use anyhow::{Context, Result};
 use omni_sim_core::SimulationCore;
-use omni_sim_telemetry::{new_shared_buffer, now_ms, sample};
+use omni_sim_telemetry::{new_shared_buffer, now_ms, run_ws_server, sample, recommend_interval};
 use std::{env, fs, path::PathBuf};
 
 fn main() -> Result<()> {
@@ -35,7 +39,89 @@ fn main() -> Result<()> {
     // ── Telemetry buffer ───────────────────────────────────────────────────
     let buf = new_shared_buffer();
 
-    // ── Simulation loop ────────────────────────────────────────────────────
+    // ── Serve mode: WebSocket server + continuous simulation ──────────────
+    if cfg.serve {
+        return run_serve_mode(&mut core, &cfg, buf);
+    }
+
+    // ── Batch mode: run N ticks and exit ──────────────────────────────────
+    run_batch_mode(&mut core, &cfg, buf)
+}
+
+/// Serve mode: start WebSocket telemetry server on a background thread,
+/// then run the simulation in a continuous loop pushing frames.
+fn run_serve_mode(
+    core: &mut SimulationCore,
+    cfg: &Config,
+    buf: omni_sim_telemetry::SharedBuffer,
+) -> Result<()> {
+    use std::thread;
+    use std::time::Duration;
+
+    let ws_addr = cfg.ws_addr.clone();
+    let buf_ws = buf.clone();
+
+    // Start WebSocket server in a background thread
+    thread::spawn(move || {
+        if let Err(e) = run_ws_server(&ws_addr, buf_ws, 100) {
+            eprintln!("[OmniSim] WebSocket server error: {e}");
+        }
+    });
+
+    eprintln!(
+        "[OmniSim] Serve mode — simulation running continuously, WebSocket on ws://{}",
+        cfg.ws_addr
+    );
+    eprintln!("[OmniSim] Press Ctrl+C to stop.");
+
+    let mut tick_count: u64 = 0;
+    loop {
+        // Run a batch of ticks, then sample
+        for _ in 0..10 {
+            core.update(cfg.delta);
+            tick_count += 1;
+        }
+
+        let frame = sample(core, now_ms());
+        let interval = recommend_interval(&frame);
+
+        // H-07 FIX: recover from poisoned mutex instead of panicking.
+        match buf.lock() {
+            Ok(mut guard) => guard.push(frame),
+            Err(poisoned) => poisoned.into_inner().push(frame),
+        }
+
+        // Log progress periodically
+        if tick_count.is_multiple_of(1000) {
+            let hash = core.state_hash();
+            let hash_short: String = hash.iter().take(4).map(|b| format!("{b:02x}")).collect();
+            eprintln!(
+                "[OmniSim] tick={tick_count} entities={} hash={hash_short}… interval={:?}",
+                core.entity_count(),
+                interval
+            );
+        }
+
+        // Sleep to approximate real-time simulation at ~60fps
+        thread::sleep(Duration::from_millis(interval.millis().min(16)));
+
+        // If a max tick count is set, respect it
+        if cfg.ticks > 0 && tick_count >= cfg.ticks {
+            eprintln!("[OmniSim] Reached {tick_count} ticks — continuing in serve mode (loop)");
+            // Reset simulation to keep it interesting
+            let json = fs::read_to_string(&cfg.opdl_path)?;
+            *core = SimulationCore::from_opdl(&json)?;
+            tick_count = 0;
+        }
+    }
+}
+
+/// Batch mode: run N ticks, output report, and exit.
+fn run_batch_mode(
+    core: &mut SimulationCore,
+    cfg: &Config,
+    buf: omni_sim_telemetry::SharedBuffer,
+) -> Result<()> {
     let t_start = std::time::Instant::now();
 
     for i in 0..cfg.ticks {
@@ -43,7 +129,7 @@ fn main() -> Result<()> {
 
         // Sample every 100 ticks (coarse — headless mode)
         if i % 100 == 0 || i == cfg.ticks - 1 {
-            let frame = sample(&core, now_ms());
+            let frame = sample(core, now_ms());
             // H-07 FIX: recover from poisoned mutex instead of panicking.
             match buf.lock() {
                 Ok(mut guard) => guard.push(frame),
@@ -94,6 +180,8 @@ struct Config {
     ticks: u64,
     delta: f32,
     output_path: Option<PathBuf>,
+    serve: bool,
+    ws_addr: String,
 }
 
 fn parse_args(args: &[String]) -> Result<Config> {
@@ -101,6 +189,8 @@ fn parse_args(args: &[String]) -> Result<Config> {
     let mut ticks = 1000u64;
     let mut delta = 0.016f32; // ~60fps
     let mut output_path = None::<PathBuf>;
+    let mut serve = false;
+    let mut ws_addr = "0.0.0.0:9001".to_string();
 
     let mut i = 1;
     while i < args.len() {
@@ -133,6 +223,16 @@ fn parse_args(args: &[String]) -> Result<Config> {
                     args.get(i).context("--output requires a path")?,
                 ));
             }
+            "--serve" => {
+                serve = true;
+            }
+            "--ws-addr" => {
+                i += 1;
+                ws_addr = args
+                    .get(i)
+                    .context("--ws-addr requires an address (e.g. 0.0.0.0:9001)")?
+                    .to_string();
+            }
             "--help" | "-h" => {
                 print_usage();
                 std::process::exit(0);
@@ -142,8 +242,8 @@ fn parse_args(args: &[String]) -> Result<Config> {
         i += 1;
     }
 
-    // L-04 FIX: validate ticks > 0 and delta > 0.
-    if ticks == 0 {
+    // L-04 FIX: validate ticks > 0 and delta > 0 (only in batch mode).
+    if !serve && ticks == 0 {
         anyhow::bail!("--ticks must be > 0");
     }
     if delta <= 0.0 {
@@ -155,19 +255,24 @@ fn parse_args(args: &[String]) -> Result<Config> {
         ticks,
         delta,
         output_path,
+        serve,
+        ws_addr,
     })
 }
 
 fn print_usage() {
     eprintln!(
         "Usage: omni-sim-headless --opdl <path> [--ticks <n>] [--delta <f32>] [--output <path>]
+       omni-sim-headless --opdl <path> --serve [--ws-addr 0.0.0.0:9001]
 
 Options:
-  --opdl    Path to OPDL JSON file (required)
-  --ticks   Number of simulation ticks to run (default: 1000)
-  --delta   Simulated time per tick in seconds (default: 0.016 ≈ 60fps)
-  --output  Write JSON report to file instead of stdout
-  --help    Show this message"
+  --opdl     Path to OPDL JSON file (required)
+  --ticks    Number of simulation ticks to run (default: 1000)
+  --delta    Simulated time per tick in seconds (default: 0.016 ≈ 60fps)
+  --output   Write JSON report to file instead of stdout
+  --serve    Start WebSocket telemetry server and run simulation continuously
+  --ws-addr  WebSocket server bind address (default: 0.0.0.0:9001)
+  --help     Show this message"
     );
 }
 
@@ -187,6 +292,8 @@ mod tests {
         assert_eq!(cfg.ticks, 1000); // default
         assert!((cfg.delta - 0.016).abs() < 1e-6); // default
         assert!(cfg.output_path.is_none());
+        assert!(!cfg.serve);
+        assert_eq!(cfg.ws_addr, "0.0.0.0:9001");
     }
 
     #[test]
@@ -203,6 +310,22 @@ mod tests {
     }
 
     #[test]
+    fn parse_serve_mode() {
+        let a = args(&["bin", "--opdl", "test.json", "--serve"]);
+        let cfg = parse_args(&a).unwrap();
+        assert!(cfg.serve);
+        assert_eq!(cfg.ws_addr, "0.0.0.0:9001");
+    }
+
+    #[test]
+    fn parse_serve_with_custom_addr() {
+        let a = args(&["bin", "--opdl", "test.json", "--serve", "--ws-addr", "127.0.0.1:8080"]);
+        let cfg = parse_args(&a).unwrap();
+        assert!(cfg.serve);
+        assert_eq!(cfg.ws_addr, "127.0.0.1:8080");
+    }
+
+    #[test]
     fn missing_opdl_fails() {
         let a = args(&["bin", "--ticks", "100"]);
         assert!(parse_args(&a).is_err());
@@ -213,6 +336,15 @@ mod tests {
         let a = args(&["bin", "--opdl", "test.json", "--ticks", "0"]);
         let err = parse_args(&a).unwrap_err();
         assert!(err.to_string().contains("--ticks must be > 0"));
+    }
+
+    #[test]
+    fn zero_ticks_ok_in_serve_mode() {
+        // In serve mode, ticks=0 means "run forever"
+        let a = args(&["bin", "--opdl", "test.json", "--serve", "--ticks", "0"]);
+        let cfg = parse_args(&a).unwrap();
+        assert!(cfg.serve);
+        assert_eq!(cfg.ticks, 0);
     }
 
     #[test]

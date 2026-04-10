@@ -35,9 +35,9 @@ cargo test --workspace
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ 展示层  Unity Editor / Unity Build / WebGL / CLI        │
+│ 展示层  Unity Editor / WebGL / CLI / Web Console (TS)    │
 ├─────────────────────────────────────────────────────────┤
-│ 桥接层  OmniSimRuntime.cs ↔ extern "C" FFI ↔ Wasm       │
+│ 桥接层  OmniSimRuntime.cs ↔ FFI ↔ Wasm │ WebSocket     │
 ├─────────────────────────────────────────────────────────┤
 │ 核心层  SimulationCore → ECS World (hecs) → Systems      │
 │         TelemetrySystem / NetworkSystem / LifecycleSystem│
@@ -45,6 +45,8 @@ cargo test --workspace
 │ 数据层  OPDL Compiler → World Snapshot → Blake3 Hash    │
 ├─────────────────────────────────────────────────────────┤
 │ 生态层  SmartX Pack │ VMware Pack │ Huawei Pack │ AWS    │
+├─────────────────────────────────────────────────────────┤
+│ 运维层  Docker Compose │ deploy/setup.sh │ CI/CD         │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -69,7 +71,9 @@ omni-sim-headless      ← CLI 无头服务器
 |------|------|------|
 | Rust | stable ≥ 1.78 | `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` |
 | wasm32 target | — | `rustup target add wasm32-unknown-unknown` |
+| Node.js | ≥ 20 LTS | `https://nodejs.org/` |
 | Unity | 6000.x LTS | unity.com/releases |
+| Docker (可选) | ≥ 24 | docker.com |
 | wasm-opt (可选) | latest | `cargo install wasm-opt` |
 
 ---
@@ -88,6 +92,11 @@ cargo fmt --all                                     # 格式化
 cargo run -p omni-sim-headless -- \
   --opdl vendor/smartx/smartx.opdl.json \
   --ticks 1000
+
+# Web Console（开发模式）
+cd web-console && npm ci && npm run dev             # → http://localhost:3000
+cd web-console && npm test                          # 运行前端测试
+cd web-console && npm run build                     # 生产构建 → dist/
 ```
 
 ---
@@ -111,6 +120,99 @@ cargo run -p omni-sim-headless -- \
 | 渲染帧率 (100k) | 30fps | 60fps |
 | Wasm 文件大小 | < 5MB | < 2MB |
 | State Hash 计算 | < 5ms | < 1ms |
+
+---
+
+## Web Console（TypeScript 控制台）
+
+实时 Telemetry 监控面板，通过 WebSocket 连接仿真服务器。
+
+```
+web-console/
+├── src/
+│   ├── types.ts        ← TelemetryFrame / EntitySample / AlertStatus 类型定义
+│   ├── client.ts       ← WebSocket 客户端（自动重连 + 指数退避）
+│   ├── telemetry.ts    ← 数据验证 + 转换（纯函数）
+│   ├── dashboard.ts    ← DOM 渲染（摘要面板 + 实体表格 + CPU 折线图）
+│   └── main.ts         ← 入口：连接 ws://127.0.0.1:9001 并驱动 UI
+├── test/
+│   └── telemetry.test.ts  ← 23 个单元测试
+├── index.html          ← 控制台页面
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+```
+
+**功能亮点：**
+- 📊 实体详情表格（CPU / 内存 / 网络 TX/RX / 告警状态）
+- 📈 CPU 使用率历史折线图（含 70% 警告 / 90% 危急阈值线）
+- 🔗 WebSocket 自动重连（指数退避，最大 10 秒）
+- 🎨 暗色主题仪表板，适配移动端
+- ✅ 23 个 Vitest 单元测试
+
+**WebSocket 消息格式（§5.2）：**
+
+```json
+{
+  "type": "telemetry",
+  "tick": 42314,
+  "timestamp_ms": 1719840000000,
+  "state_hash": "a3f9b2c7...",
+  "entities": [
+    { "index": 0, "cpu": 0.73, "memory": 0.51, "network_tx": 0.22, "network_rx": 0.18, "status": "warning" }
+  ]
+}
+```
+
+---
+
+## 部署
+
+### 方式一：Docker Compose（推荐）
+
+```bash
+cd omni-sim
+docker compose up --build
+# → Web Console:  http://localhost:3000
+# → WebSocket:    ws://localhost:9001
+```
+
+### 方式二：自动化脚本
+
+```bash
+chmod +x deploy/setup.sh
+./deploy/setup.sh          # 完整构建 + 测试
+./deploy/setup.sh --quick  # 跳过测试，仅构建
+```
+
+### 方式三：手动构建
+
+```bash
+# 1. 构建 headless 仿真服务器
+cargo build -p omni-sim-headless --release
+
+# 2. 构建 Web Console
+cd web-console && npm ci && npm run build
+
+# 3. 启动仿真
+./target/release/omni-sim-headless \
+  --opdl vendor/smartx/smartx.opdl.json --ticks 100000
+
+# 4. 用任意静态文件服务器托管 web-console/dist/
+```
+
+### Docker 架构
+
+```
+┌──────────────────────────────────────────────┐
+│               sim-server 容器                 │
+│                                              │
+│  nginx (:3000)  ─── 静态文件 → Web Console    │
+│       └─── /ws  ─── 代理 → :9001             │
+│                                              │
+│  omni-sim-headless ─── Telemetry WS (:9001)  │
+└──────────────────────────────────────────────┘
+```
 
 ---
 

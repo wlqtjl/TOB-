@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Omni-Sim Web Console</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>Omni-Sim <span class="subtitle">Web Console</span></h1>
+    </div>
+    <div class="header-right">
+      <span id="conn-status" class="conn-disconnected">⚪ Disconnected</span>
+      <button id="btn-reconnect" class="btn">Reconnect</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Frame Info Bar -->
+    <section class="info-bar">
+      <div class="info-item">
+        <span class="info-label">Tick</span>
+        <span id="frame-tick" class="info-value">—</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">State Hash</span>
+        <span id="frame-hash" class="info-value mono">—</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">Timestamp</span>
+        <span id="frame-time" class="info-value">—</span>
+      </div>
+    </section>
+
+    <!-- Cluster Summary -->
+    <section class="summary-bar">
+      <div class="summary-card">
+        <span class="summary-label">Entities</span>
+        <span id="summary-entities" class="summary-value">0</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Avg CPU</span>
+        <span id="summary-cpu" class="summary-value">0.0%</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Avg Memory</span>
+        <span id="summary-memory" class="summary-value">0.0%</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Net TX</span>
+        <span id="summary-net-tx" class="summary-value">0.0%</span>
+      </div>
+      <div class="summary-card">
+        <span class="summary-label">Net RX</span>
+        <span id="summary-net-rx" class="summary-value">0.0%</span>
+      </div>
+      <div class="summary-card alert-card-normal">
+        <span class="summary-label">Normal</span>
+        <span id="alert-normal" class="summary-value">0</span>
+      </div>
+      <div class="summary-card alert-card-warning">
+        <span class="summary-label">Warning</span>
+        <span id="alert-warning" class="summary-value">0</span>
+      </div>
+      <div class="summary-card alert-card-critical">
+        <span class="summary-label">Critical</span>
+        <span id="alert-critical" class="summary-value">0</span>
+      </div>
+    </section>
+
+    <!-- CPU History Chart -->
+    <section class="chart-section">
+      <h2>CPU Usage History</h2>
+      <div id="cpu-chart" class="chart-container">
+        <svg width="600" height="120" class="chart-svg">
+          <text x="300" y="60" text-anchor="middle" fill="#888">Waiting for data…</text>
+        </svg>
+      </div>
+    </section>
+
+    <!-- Entity Table -->
+    <section class="table-section">
+      <h2>Entity Details</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>CPU</th>
+            <th>Memory</th>
+            <th>Net TX</th>
+            <th>Net RX</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="entity-tbody">
+          <tr><td colspan="6" class="empty-row">No data — waiting for telemetry connection</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    <p>Omni-Sim Platform © 2026 — Telemetry via <code>ws://127.0.0.1:9001</code></p>
+  </footer>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

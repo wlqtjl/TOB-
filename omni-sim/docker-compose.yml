@@ -1,0 +1,29 @@
+# Omni-Sim Platform — Docker Compose
+#
+# Services:
+#   sim-server   — Headless simulation engine + telemetry WebSocket (port 9001)
+#   web-console  — Static dashboard served via nginx (port 3000)
+#
+# Usage:
+#   docker compose up --build
+#   Open http://localhost:3000
+
+services:
+  # ── Headless Simulation Server ─────────────────────────────────────────────
+  sim-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"    # Web Console
+      - "9001:9001"    # WebSocket Telemetry
+    volumes:
+      - ./vendor:/opt/omni-sim/vendor:ro
+    environment:
+      - RUST_LOG=info
+    command:
+      - "--opdl"
+      - "/opt/omni-sim/vendor/smartx/smartx.opdl.json"
+      - "--ticks"
+      - "100000"
+    restart: unless-stopped

@@ -1,0 +1,6 @@
+target/
+unity/
+web-console/node_modules/
+web-console/dist/
+.git/
+*.tar.gz

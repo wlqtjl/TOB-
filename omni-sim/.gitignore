@@ -17,6 +17,10 @@
 # Unity asset metadata (keep *.meta — Unity needs them)
 # Do NOT ignore .meta files
 
+# Web Console
+/web-console/node_modules/
+/web-console/dist/
+
 # OS artefacts
 .DS_Store
 Thumbs.db

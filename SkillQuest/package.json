@@ -1,0 +1,18 @@
+{
+  "name": "skillquest",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SkillQuest — 游戏化产品技能培训平台 (Data Center级炫酷效果)",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@9.1.0"
+}

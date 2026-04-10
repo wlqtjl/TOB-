@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand-primary: #2378eb;
+  --game-gold: #FFD700;
+  --game-correct: #22c55e;
+  --game-wrong: #ef4444;
+  --game-particle: #00BFFF;
+}
+
+body {
+  @apply bg-gray-950 text-white;
+}

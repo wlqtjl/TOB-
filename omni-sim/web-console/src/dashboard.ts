@@ -46,12 +46,20 @@ function renderEntityTable(frame: TelemetryFrame): void {
   const tbody = document.getElementById("entity-tbody");
   if (!tbody) return;
 
+  const entityNames = [
+    "compute-node-0", "compute-node-1", "compute-node-2",
+    "compute-node-3", "compute-node-4", "storage-pool-0",
+    "storage-pool-1", "network-switch-0",
+  ];
+
   tbody.innerHTML = "";
   for (const entity of frame.entities) {
+    const name = entityNames[entity.index] ?? `entity-${entity.index}`;
     const tr = document.createElement("tr");
     tr.className = statusClass(entity.status);
     tr.innerHTML = `
       <td>${entity.index}</td>
+      <td>${name}</td>
       <td>${formatPercent(entity.cpu)}</td>
       <td>${formatPercent(entity.memory)}</td>
       <td>${formatPercent(entity.network_tx)}</td>

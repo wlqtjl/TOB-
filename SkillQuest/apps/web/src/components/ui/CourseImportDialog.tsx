@@ -115,7 +115,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
           setUploading(false);
           if (data.status === 'done' && data.courseId) {
             // 延迟 1 秒后回调，让用户看到成功状态
-            setTimeout(() => onSuccess(data.courseId!), 1500);
+            setTimeout(() => data.courseId && onSuccess(data.courseId), 1500);
           }
         }
       } catch {

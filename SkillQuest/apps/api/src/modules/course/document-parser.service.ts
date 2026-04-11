@@ -6,8 +6,13 @@
  */
 
 import { Injectable, BadRequestException } from '@nestjs/common';
-import * as pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';
+
+// pdf-parse does not ship complete types for its default export; define the minimum needed shape
+type PdfParseResult = { text: string };
+type PdfParseFn = (buf: Buffer) => Promise<PdfParseResult>;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const pdfParse = require('pdf-parse') as PdfParseFn;
 
 @Injectable()
 export class DocumentParserService {
@@ -39,7 +44,7 @@ export class DocumentParserService {
 
   private async extractPdf(buffer: Buffer): Promise<string> {
     try {
-      const data = await (pdfParse as unknown as (buf: Buffer) => Promise<{ text: string }>)(buffer);
+      const data = await pdfParse(buffer);
       return data.text.trim();
     } catch (err) {
       throw new BadRequestException(`PDF 解析失败：${(err as Error).message}`);

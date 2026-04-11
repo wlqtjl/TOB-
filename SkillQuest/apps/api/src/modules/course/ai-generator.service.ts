@@ -184,7 +184,7 @@ export class AiGeneratorService {
     if (!this.openai) {
       const apiKey = process.env['OPENAI_API_KEY'];
       if (!apiKey) {
-        throw new InternalServerErrorException('未配置 OPENAI_API_KEY 环境变量');
+        throw new InternalServerErrorException('OPENAI_API_KEY environment variable is not configured');
       }
       this.openai = new OpenAI({ apiKey });
     }

@@ -17,12 +17,12 @@ import {
   defaultViewport,
 } from '../visual-scene';
 
-const CENTER_X = 450;
-const Y_START = 60;
-const Y_STEP_SPACING = 140;
-const X_CHOICE_SPREAD = 200;
-
 export function scenarioAdapter(quiz: ScenarioQuizLevel): VisualScene {
+  const viewport = defaultViewport();
+  const centerX = viewport.width / 2;
+  const yStart = 60;
+  const yStepSpacing = 140;
+  const xChoiceSpread = Math.round(viewport.width * 0.22);
   const optimalSet = new Set(quiz.optimalPath);
   const entities: VisualScene['entities'] = [];
   const connections: VisualScene['connections'] = [];
@@ -33,7 +33,7 @@ export function scenarioAdapter(quiz: ScenarioQuizLevel): VisualScene {
     type: 'scenario-opening',
     label: quiz.opening.length > 60 ? quiz.opening.slice(0, 60) + '…' : quiz.opening,
     icon: '📞',
-    position: { x: CENTER_X, y: Y_START },
+    position: { x: centerX, y: yStart },
     size: { w: 300, h: 60 },
     style: entityStyle(
       'rgba(239,68,68,0.15)',
@@ -47,7 +47,7 @@ export function scenarioAdapter(quiz: ScenarioQuizLevel): VisualScene {
   // Build steps and choices
   for (let si = 0; si < quiz.steps.length; si++) {
     const step = quiz.steps[si];
-    const yBase = Y_START + (si + 1) * Y_STEP_SPACING;
+    const yBase = yStart + (si + 1) * yStepSpacing;
 
     // Step narrative node
     entities.push({
@@ -55,7 +55,7 @@ export function scenarioAdapter(quiz: ScenarioQuizLevel): VisualScene {
       type: 'scenario-step',
       label: step.narrative.length > 50 ? step.narrative.slice(0, 50) + '…' : step.narrative,
       icon: '📝',
-      position: { x: CENTER_X, y: yBase },
+      position: { x: centerX, y: yBase },
       size: { w: 250, h: 48 },
       style: entityStyle('rgba(107,114,128,0.15)', '#6b7280'),
       group: 'step',
@@ -79,14 +79,14 @@ export function scenarioAdapter(quiz: ScenarioQuizLevel): VisualScene {
     const choiceCount = step.choices.length;
     for (let ci = 0; ci < choiceCount; ci++) {
       const choice = step.choices[ci];
-      const xOffset = (ci - (choiceCount - 1) / 2) * X_CHOICE_SPREAD;
+      const xOffset = (ci - (choiceCount - 1) / 2) * xChoiceSpread;
 
       entities.push({
         id: choice.id,
         type: 'scenario-choice',
         label: choice.text.length > 40 ? choice.text.slice(0, 40) + '…' : choice.text,
         icon: choice.isOptimal ? '✅' : '🔘',
-        position: { x: CENTER_X + xOffset, y: yBase + 60 },
+        position: { x: centerX + xOffset, y: yBase + 60 },
         size: { w: 180, h: 40 },
         style: entityStyle(
           choice.isOptimal ? 'rgba(34,197,94,0.1)' : 'rgba(107,114,128,0.1)',

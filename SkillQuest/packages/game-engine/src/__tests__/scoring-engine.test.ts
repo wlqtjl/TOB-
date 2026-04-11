@@ -44,6 +44,18 @@ describe('ScoringEngine', () => {
     expect(result.stars).toBe(1);
   });
 
+  it('calculates 0 stars for below 60% accuracy', () => {
+    const result = ScoringEngine.calculate({
+      correctCount: 5,
+      totalCount: 10,
+      timeRemainingSec: 0,
+      timeLimitSec: 0,
+      maxCombo: 0,
+    });
+
+    expect(result.stars).toBe(0);
+  });
+
   it('isPassed returns true for >= 60%', () => {
     expect(ScoringEngine.isPassed(6, 10)).toBe(true);
     expect(ScoringEngine.isPassed(5, 10)).toBe(false);

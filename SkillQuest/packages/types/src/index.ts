@@ -50,7 +50,7 @@ export interface ScoreResult {
   baseScore: number;
   timeBonus: number;
   comboBonus: number;
-  stars: 1 | 2 | 3;
+  stars: 0 | 1 | 2 | 3;
   xpGained: number;
   achievements: Achievement[];
 }

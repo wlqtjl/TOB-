@@ -44,16 +44,22 @@ import { getPlayContent, getPlayContentTypes, getCourse } from '../../../../../l
 
 type ContentType = 'topology' | 'matching' | 'ordering' | 'quiz' | 'terminal' | 'scenario' | 'vm_placement';
 
-function adaptContent(type: ContentType, data: Record<string, unknown>): VisualScene {
-  switch (type) {
-    case 'topology': return topologyAdapter(data as unknown as TopologyQuizLevel);
-    case 'matching': return matchingAdapter(data as unknown as MatchingQuestion);
-    case 'ordering': return orderingAdapter(data as unknown as OrderingQuestion);
-    case 'quiz': return quizAdapter(data as unknown as QuizQuestion);
-    case 'terminal': return terminalAdapter(data as unknown as TerminalQuizLevel);
-    case 'scenario': return scenarioAdapter(data as unknown as ScenarioQuizLevel);
-    case 'vm_placement': return vmPlacementAdapter(data as unknown as VirtualizationLevel);
-    default: throw new Error(`Unknown level type: ${type}`);
+function adaptContent(type: ContentType, data: Record<string, unknown>): VisualScene | null {
+  if (!data || typeof data !== 'object') return null;
+  try {
+    switch (type) {
+      case 'topology': return topologyAdapter(data as unknown as TopologyQuizLevel);
+      case 'matching': return matchingAdapter(data as unknown as MatchingQuestion);
+      case 'ordering': return orderingAdapter(data as unknown as OrderingQuestion);
+      case 'quiz': return quizAdapter(data as unknown as QuizQuestion);
+      case 'terminal': return terminalAdapter(data as unknown as TerminalQuizLevel);
+      case 'scenario': return scenarioAdapter(data as unknown as ScenarioQuizLevel);
+      case 'vm_placement': return vmPlacementAdapter(data as unknown as VirtualizationLevel);
+      default: return null;
+    }
+  } catch (err) {
+    console.error(`[adaptContent] Adapter "${type}" failed:`, err);
+    return null;
   }
 }
 
@@ -76,11 +82,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   // Convert content → VisualScene via adapter
   const scene = useMemo(() => {
     if (!content) return null;
-    try {
-      return adaptContent(contentType, content);
-    } catch {
-      return null;
-    }
+    return adaptContent(contentType, content);
   }, [contentType, content]);
 
   const handleInteraction = useCallback(

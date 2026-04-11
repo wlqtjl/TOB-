@@ -253,11 +253,13 @@ export class ParticleSystem {
 
   /** Render all particles to canvas context */
   render(ctx: CanvasRenderingContext2D): void {
-    // Render flow particles + trails
+    // Render flow particles + trails (batch glow to reduce shadowBlur state changes)
+    let lastGlowColor = '';
     for (const p of this.active) {
       if (!p.alive) continue;
 
-      // Draw trail
+      // Draw trail (no glow for trails — cheaper rendering)
+      ctx.shadowBlur = 0;
       for (let i = 0; i < p.trail.length; i++) {
         const t = p.trail[i];
         const trailAlpha = t.alpha * (1 - i / p.trail.length) * 0.5;
@@ -267,29 +269,34 @@ export class ParticleSystem {
         this.drawShape(ctx, t.x, t.y, trailSize, p.shape);
       }
 
-      // Draw particle
+      // Draw particle with glow (batch same color to reduce state changes)
       ctx.globalAlpha = p.alpha;
       ctx.fillStyle = p.color;
-
-      // Glow effect
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = p.size * 2;
+      if (p.color !== lastGlowColor) {
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = p.size * 2;
+        lastGlowColor = p.color;
+      }
       this.drawShape(ctx, p.x, p.y, p.size, p.shape);
-      ctx.shadowBlur = 0;
     }
+    ctx.shadowBlur = 0;
 
-    // Render burst particles
+    // Render burst particles (single shadowBlur setup per batch)
+    lastGlowColor = '';
     for (const bp of this.activeBursts) {
       if (!bp.alive) continue;
       ctx.globalAlpha = bp.alpha;
       ctx.fillStyle = bp.color;
-      ctx.shadowColor = bp.color;
-      ctx.shadowBlur = bp.size;
+      if (bp.color !== lastGlowColor) {
+        ctx.shadowColor = bp.color;
+        ctx.shadowBlur = bp.size;
+        lastGlowColor = bp.color;
+      }
       ctx.beginPath();
       ctx.arc(bp.x, bp.y, bp.size, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
     }
+    ctx.shadowBlur = 0;
 
     ctx.globalAlpha = 1;
   }

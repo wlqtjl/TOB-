@@ -185,17 +185,7 @@ export function handleMouseMove(
     : 'default';
 
   // Update pending connection line
-  if (state.selectedId && entity) {
-    const sourceEntity = scene.entities.find((e) => e.id === state.selectedId);
-    if (sourceEntity) {
-      newState.pendingLine = {
-        fromX: sourceEntity.position.x,
-        fromY: sourceEntity.position.y,
-        toX: mx,
-        toY: my,
-      };
-    }
-  } else if (state.selectedId && !entity) {
+  if (state.selectedId) {
     const sourceEntity = scene.entities.find((e) => e.id === state.selectedId);
     if (sourceEntity) {
       newState.pendingLine = {

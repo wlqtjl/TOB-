@@ -49,6 +49,7 @@ export function topologyAdapter(quiz: TopologyQuizLevel): VisualScene {
       '#3b82f6',
       { glowColor: 'rgba(59,130,246,0.5)', glowRadius: 8 },
     ),
+    group: 'device',
     draggable: false,
     metadata: {
       ports: node.ports,

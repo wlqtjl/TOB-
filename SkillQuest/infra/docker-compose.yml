@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # ─── PostgreSQL ─────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: skillquest
+      POSTGRES_PASSWORD: skillquest_dev
+      POSTGRES_DB: skillquest
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U skillquest']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis (排行榜 + 缓存 + WebSocket pub/sub) ─────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ─── NestJS API ─────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.api
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://skillquest:skillquest_dev@postgres:5432/skillquest
+      - REDIS_URL=redis://redis:6379
+      - PORT=3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Next.js Web ────────────────────────────────────────
+  web:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.web
+    ports:
+      - '3000:3000'
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api:3001/api
+    depends_on:
+      - api
+
+  # ─── Python AI Engine ──────────────────────────────────
+  ai-engine:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile.ai
+    ports:
+      - '8000:8000'
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+
+  # ─── Nginx 反向代理 ────────────────────────────────────
+  nginx:
+    image: nginx:alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - api
+      - ai-engine
+
+volumes:
+  pg_data:
+  redis_data:

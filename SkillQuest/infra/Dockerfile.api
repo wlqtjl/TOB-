@@ -1,0 +1,14 @@
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml* ./
+COPY packages/ packages/
+COPY apps/api/ apps/api/
+RUN corepack enable && pnpm install --frozen-lockfile || pnpm install
+RUN pnpm --filter @skillquest/api build
+
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/apps/api/dist ./dist
+COPY --from=builder /app/apps/api/node_modules ./node_modules
+EXPOSE 3001
+CMD ["node", "dist/main.js"]

@@ -4,7 +4,7 @@ import './globals.css';
 export const metadata: Metadata = {
   title: 'SkillQuest — 游戏化产品技能培训平台',
   description:
-    '对标 Data Center 游戏级炫酷效果，将华为/锐捷/SmartX等To-B产品培训变成闯关游戏。',
+    '通用游戏化产品技能培训平台，支持华为/深信服/安超云/锐捷/SmartX等任意厂商课程闯关。',
 };
 
 export default function RootLayout({

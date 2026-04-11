@@ -112,22 +112,83 @@ pnpm install
 # 2. 启动 Docker 基础设施 (PostgreSQL + Redis)
 cd infra && docker compose up -d postgres redis
 
-# 3. 启动开发服务器
-pnpm dev                  # 全部服务
-pnpm --filter @skillquest/web dev    # 仅前端
-pnpm --filter @skillquest/api dev    # 仅后端
+# 3. 初始化数据库 (Prisma 迁移 + 填充演示数据)
+cd ../apps/api
+cp ../../.env.example .env          # 创建环境变量文件
+npx prisma migrate deploy           # 运行数据库迁移
+npx ts-node prisma/seed.ts          # 填充演示数据 (3门课程/24个关卡/排行榜)
 
-# 4. 启动 AI 引擎
-cd services/ai-engine
-pip install -e ".[dev]"
-uvicorn main:app --reload --port 8000
+# 4. 启动开发服务器
+cd ../..
+pnpm dev                  # 全部服务
+pnpm --filter @skillquest/web dev    # 仅前端 (含Mock数据，无需后端)
+pnpm --filter @skillquest/api dev    # 仅后端 API
+
+# 5. 打开浏览器
+# → 前端: http://localhost:3000
+# → API:  http://localhost:3001/api
+
+# 📧 演示登录: demo@skillquest.dev / password
 ```
+
+### ⚡ 最快体验 — 仅前端游戏模式
+
+> 不需要数据库和后端，直接用内置 Mock 数据开始游戏！
+
+```bash
+cd SkillQuest
+pnpm install
+pnpm --filter @skillquest/web dev
+# → 打开 http://localhost:3000 即可闯关
+```
+
+### 🐳 一键 Docker 全栈部署
+
+```bash
+cd SkillQuest/infra
+docker compose up --build
+# → 前端: http://localhost:3000
+# → API:  http://localhost:3001/api
+# → AI:   http://localhost:8000
+```
+
+### 🗄️ 数据库管理
+
+```bash
+cd apps/api
+npx prisma studio            # 可视化数据库管理面板 (http://localhost:5555)
+npx prisma migrate dev        # 创建新迁移
+npx prisma migrate reset      # 重置数据库 (删除所有数据)
+```
+
+### 📡 API 端点速查
+
+| 方法 | 端点 | 说明 |
+|------|------|------|
+| POST | `/api/auth/register` | 注册 |
+| POST | `/api/auth/login` | 登录 → JWT Token |
+| GET | `/api/auth/me` | 当前用户 (需 Bearer Token) |
+| GET | `/api/courses` | 课程列表 |
+| GET | `/api/courses/:id` | 课程详情 + 关卡 |
+| GET | `/api/courses/:id/map` | 闯关地图数据 |
+| GET | `/api/courses/:id/levels` | 关卡列表 |
+| GET | `/api/courses/:id/questions` | 题目数据 |
+| GET | `/api/courses/:id/play/:type` | 游戏内容 (按题型) |
+| POST | `/api/game/level/:cid/:lid/start` | 开始关卡 |
+| POST | `/api/game/level/:cid/:lid/submit` | 提交答题结果 |
+| GET | `/api/leaderboard/:courseId` | 排行榜 |
+| GET | `/api/tenants` | 租户列表 |
+| POST | `/api/analytics/events` | 记录分析事件 |
+| GET | `/api/analytics/users/:id` | 用户学习概览 |
+
+> AI 引擎 (可选): 需要 `OPENAI_API_KEY`，不影响游戏闯关功能。
 
 ## 📅 执行路线图
 
 | Phase | 时间 | 内容 |
 |---|---|---|
 | **Phase 0** | 第1-2周 | ✅ Monorepo搭建 + Docker + CI |
+| **Phase 0.5** | 第2-3周 | ✅ Prisma数据库 + API业务逻辑 + JWT认证 + 数据Seed + 排行榜 |
 | **Phase 1** | 第3-8周 | 闯关地图 + 基础题型 + 排行榜 + 连击系统 |
 | **Phase 2** | 第9-14周 | AI题目生成 + 拓扑识别 + 高级题型 |
 | **Phase 3** | 第15-20周 | 成就/徽章 + 每日挑战 + 数字证书 |

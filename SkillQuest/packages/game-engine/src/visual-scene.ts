@@ -89,12 +89,15 @@ export interface InteractionRule {
   /** Only allow interaction targeting entities in this group */
   targetFilter?: string;
   /**
-   * Validate a user action.
-   * For 'connect': action = { fromId, toId }
-   * For 'drag':    action = { entityId, targetSlot }
-   * For 'click':   action = { entityId }
-   * For 'sequence': action = { orderedIds: string[] }
-   * For 'input':   action = { entityId, value: string }
+   * Validate a user action. The action shape varies by InteractionType:
+   * - 'connect': { fromId: string, toId: string }
+   * - 'drag':    { entityId: string, targetSlot: string }
+   * - 'click':   { entityId: string }
+   * - 'sequence': { orderedIds: string[] }
+   * - 'input':   { entityId: string, value: string }
+   *
+   * Uses Record<string, unknown> for flexibility — each adapter provides
+   * type-safe validation logic internally.
    */
   validate: (action: Record<string, unknown>) => InteractionResult;
 }

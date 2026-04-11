@@ -5,7 +5,7 @@
  * and generates packet-ball particle flow along Bezier curves.
  */
 
-import type { TopologyQuizLevel, ConnectionPair } from '@skillquest/types';
+import type { TopologyQuizLevel } from '@skillquest/types';
 import type { VisualScene, InteractionResult } from '../visual-scene';
 import {
   entityStyle,
@@ -103,16 +103,15 @@ export function topologyAdapter(quiz: TopologyQuizLevel): VisualScene {
       validate: (action: Record<string, unknown>): InteractionResult => {
         const fromId = String(action['fromId'] ?? '');
         const toId = String(action['toId'] ?? '');
-        const userPairs: ConnectionPair[] = [
-          { fromPortId: fromId, toPortId: toId },
-        ];
-        const result = TopologyEngine.validateConnections(
-          userPairs,
-          quiz.correctConnections,
-        );
+
+        // Single-pair validation: check if this specific pair is in the correct set
+        const forward = `${fromId}:${toId}`;
+        const reverse = `${toId}:${fromId}`;
+        const pairCorrect = correctSet.has(forward) || correctSet.has(reverse);
+
         return {
-          correct: result.allCorrect,
-          message: result.allCorrect ? '连接正确！' : '连接不正确，请重试',
+          correct: pairCorrect,
+          message: pairCorrect ? '连接正确！' : '连接不正确，请重试',
           highlightIds: [fromId, toId],
         };
       },

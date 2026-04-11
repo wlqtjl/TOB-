@@ -408,7 +408,8 @@ export default function UniversalGameRenderer({
 
         if (Math.abs(dx) < hw && Math.abs(dy) < hh) {
           setHoveredId(entity.id);
-          canvas.style.cursor = entity.style.opacity > 0.5 ? 'pointer' : 'not-allowed';
+          const isClickable = entity.metadata.clickable !== false && entity.style.opacity > 0.5;
+      canvas.style.cursor = isClickable ? 'pointer' : 'not-allowed';
           return;
         }
       }

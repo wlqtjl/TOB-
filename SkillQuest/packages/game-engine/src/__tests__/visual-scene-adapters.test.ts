@@ -227,18 +227,23 @@ describe('VisualScene Protocol - Adapter Tests', () => {
       expect(scene.interactions[0].type).toBe('connect');
     });
 
-    it('should validate individual connection pairs', () => {
+    it('should validate correct individual connection pair', () => {
       const scene = topologyAdapter(mockTopology);
-      // Single pair validates correctly (correct >= 1)
       const result = scene.interactions[0].validate({
         fromId: 'pc1-p1',
         toId: 'sw1-p1',
       });
-      // validateConnections checks allCorrect (all pairs must match),
-      // but a single pair only matches 1/2, so allCorrect is false.
-      // The interaction correctly reports partial match as incorrect.
-      expect(result.correct).toBe(false);
+      expect(result.correct).toBe(true);
       expect(result.highlightIds).toContain('pc1-p1');
+    });
+
+    it('should reject incorrect connection pair', () => {
+      const scene = topologyAdapter(mockTopology);
+      const result = scene.interactions[0].validate({
+        fromId: 'pc1-p1',
+        toId: 'srv1-p1',
+      });
+      expect(result.correct).toBe(false);
     });
 
     it('should activate packet flow particles', () => {

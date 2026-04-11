@@ -1,14 +1,28 @@
 /**
- * 课程管理页面 — 展示所有可用课程
+ * 课程管理页面 — 展示所有可用课程 + 文档上传生成新课程
  *
  * Phase 1: 静态课程列表 (从共享数据层读取)
- * Phase 2: 接入API + AI题目生成 + 文档上传
+ * Phase 2: 文档上传 → GPT-4o → 自动生成7种题型关卡 ✅ 已实现
  */
 
+'use client';
+
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { COURSES } from '../../lib/mock-courses';
+import CourseImportDialog from '../../components/ui/CourseImportDialog';
 
 export default function CoursesPage() {
+  const router = useRouter();
+  const [showImport, setShowImport] = useState(false);
+
+  const handleImportSuccess = (courseId: string) => {
+    setShowImport(false);
+    // 跳转到新课程的地图页
+    router.push(`/map?course=${courseId}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-950 p-6">
       <div className="mx-auto max-w-4xl">
@@ -28,20 +42,20 @@ export default function CoursesPage() {
           </Link>
         </div>
 
-        {/* AI上传提示 (Phase 2) */}
-        <div className="mb-6 rounded-xl border border-dashed border-blue-500/30 bg-blue-950/10 p-6 text-center">
+        {/* AI上传区域 */}
+        <div className="mb-6 rounded-xl border border-dashed border-blue-500/40 bg-blue-950/10 p-6 text-center">
           <p className="text-lg text-blue-300">📄 上传培训文档自动生成课程</p>
           <p className="mt-2 text-sm text-gray-500">
-            支持 PDF / PPT / Word — AI自动提取知识点并生成7种题型关卡
+            支持 PDF / Word / TXT — AI 自动提取知识点并生成 7 种题型关卡
           </p>
           <p className="mt-1 text-xs text-gray-600">
-            （深信服超融合安装文档 · 安超云实施手册 · 华为认证教材 — 全部支持）
+            SmartX 超融合 · 深信服 HCI · 安超云 OS · 华为认证教材 — 全部支持
           </p>
           <button
-            className="mt-4 rounded-lg bg-blue-600/50 px-6 py-2 text-sm text-blue-300 cursor-not-allowed"
-            disabled
+            onClick={() => setShowImport(true)}
+            className="mt-4 rounded-lg bg-blue-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-blue-500 transition"
           >
-            📤 上传文档 (Phase 2 — AI Engine 开发中)
+            📤 上传文档生成课程
           </button>
         </div>
 
@@ -115,6 +129,14 @@ export default function CoursesPage() {
           ))}
         </div>
       </div>
+
+      {/* 上传对话框 */}
+      {showImport && (
+        <CourseImportDialog
+          onClose={() => setShowImport(false)}
+          onSuccess={handleImportSuccess}
+        />
+      )}
     </div>
   );
 }

@@ -1,0 +1,192 @@
+// SkillQuest — Prisma Schema
+// 对标 Data Center 游戏的数据模型
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── 租户 (多企业隔离) ──────────────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  logoUrl   String   @default("")
+  domain    String   @default("")
+  plan      Plan     @default(FREE)
+  maxUsers  Int      @default(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  courses Course[]
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ─── 用户 ───────────────────────────────────────────────────────────
+
+model User {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  email       String   @unique
+  password    String
+  displayName String
+  avatarUrl   String   @default("")
+  role        UserRole @default(LEARNER)
+  xp          Int      @default(0)
+  totalStars  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress     UserProgress[]
+  scores       Score[]
+  achievements UserAchievement[]
+  events       AnalyticsEvent[]
+}
+
+enum UserRole {
+  ADMIN
+  TRAINER
+  LEARNER
+}
+
+// ─── 课程 ───────────────────────────────────────────────────────────
+
+model Course {
+  id          String         @id @default(uuid())
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  title       String
+  description String
+  vendor      String
+  category    CourseCategory
+  coverImage  String         @default("")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  levels Level[]
+}
+
+enum CourseCategory {
+  NETWORK
+  VIRTUALIZATION
+  STORAGE
+  SECURITY
+  CLOUD
+}
+
+// ─── 关卡 ───────────────────────────────────────────────────────────
+
+model Level {
+  id            String    @id @default(uuid())
+  courseId       String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sortOrder     Int
+  title         String
+  type          LevelType
+  description   String    @default("")
+  timeLimitSec  Int       @default(300)
+  prerequisites String[]  @default([])
+  positionX     Float     @default(0)
+  positionY     Float     @default(0)
+
+  /// 游戏内容 (JSON) — 题目数据、拓扑图、终端命令等
+  content Json @default("{}")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  progress UserProgress[]
+  scores   Score[]
+
+  @@unique([courseId, sortOrder])
+}
+
+enum LevelType {
+  QUIZ
+  ORDERING
+  MATCHING
+  TOPOLOGY
+  TERMINAL
+  SCENARIO
+  VM_PLACEMENT
+}
+
+// ─── 用户进度 ───────────────────────────────────────────────────────
+
+model UserProgress {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId   String
+  level     Level       @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  status    LevelStatus @default(LOCKED)
+  stars     Int         @default(0)
+  bestScore Int         @default(0)
+  attempts  Int         @default(0)
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, levelId])
+}
+
+enum LevelStatus {
+  LOCKED
+  UNLOCKED
+  IN_PROGRESS
+  PASSED
+  FAILED
+}
+
+// ─── 分数记录 ───────────────────────────────────────────────────────
+
+model Score {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId    String
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  baseScore  Int
+  timeBonus  Int
+  comboBonus Int
+  totalScore Int
+  stars      Int
+  createdAt  DateTime @default(now())
+}
+
+// ─── 成就 ───────────────────────────────────────────────────────────
+
+model UserAchievement {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  icon        String   @default("🏆")
+  unlockedAt  DateTime @default(now())
+
+  @@unique([userId, name])
+}
+
+// ─── 分析事件 ───────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     String
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([userId, event])
+  @@index([createdAt])
+}

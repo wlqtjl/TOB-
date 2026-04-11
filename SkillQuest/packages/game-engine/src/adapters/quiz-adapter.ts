@@ -16,11 +16,11 @@ import {
   defaultViewport,
 } from '../visual-scene';
 
-const CENTER_X = 450;
-const CENTER_Y = 220;
-const RADIUS = 160;
-
 export function quizAdapter(question: QuizQuestion): VisualScene {
+  const viewport = defaultViewport();
+  const centerX = viewport.width / 2;
+  const centerY = viewport.height * 0.44;
+  const radius = Math.min(viewport.width, viewport.height) * 0.32;
   const correctSet = new Set(question.correctOptionIds);
 
   // Central question entity
@@ -29,7 +29,7 @@ export function quizAdapter(question: QuizQuestion): VisualScene {
     type: 'question',
     label: question.content,
     icon: '❓',
-    position: { x: CENTER_X, y: CENTER_Y },
+    position: { x: centerX, y: centerY },
     size: { w: 120, h: 120 },
     style: entityStyle(
       'rgba(59,130,246,0.2)',
@@ -53,8 +53,8 @@ export function quizAdapter(question: QuizQuestion): VisualScene {
       label: opt.text,
       icon: String.fromCharCode(65 + i), // A, B, C, D
       position: {
-        x: CENTER_X + RADIUS * Math.cos(angle),
-        y: CENTER_Y + RADIUS * Math.sin(angle),
+        x: centerX + radius * Math.cos(angle),
+        y: centerY + radius * Math.sin(angle),
       },
       size: { w: 180, h: 48 },
       style: entityStyle('rgba(107,114,128,0.15)', '#6b7280'),

@@ -72,8 +72,10 @@ export function useParticleLoop(
 
     const { ctx, canvas, dpr } = result;
     lastTimeRef.current = performance.now();
+    let active = true;
 
     function frame(now: number) {
+      if (!active) return;
       const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05); // cap at 0.05s (50ms) to prevent spiral-of-death
       lastTimeRef.current = now;
 
@@ -93,6 +95,7 @@ export function useParticleLoop(
     animFrameRef.current = requestAnimationFrame(frame);
 
     return () => {
+      active = false;
       cancelAnimationFrame(animFrameRef.current);
     };
   }, [setupCanvas, width, height]);

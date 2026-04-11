@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useReducer, useCallback, useMemo } from 'react';
+import { useReducer, useCallback, useMemo, useRef } from 'react';
 import { ComboTracker, ScoringEngine } from '@skillquest/game-engine';
 import type { ComboState, ScoringInput } from '@skillquest/game-engine';
 import type { ScoreResult } from '@skillquest/types';
@@ -60,76 +60,84 @@ function createInitialState(totalQuestions: number): GameState {
   };
 }
 
-// ComboTracker and ScoringEngine are shared across the reducer
-// via closure — they maintain internal state
-let comboTracker: ComboTracker;
+// ComboTracker instance is scoped per hook via useRef to avoid
+// module-level shared mutable state leaking across page navigations.
 
-function gameReducer(state: GameState, action: GameAction): GameState {
-  switch (action.type) {
-    case 'ANSWER_CORRECT': {
-      comboTracker.hit();
-      const combo = comboTracker.getState();
-      const elapsedSec = (Date.now() - state.startTime) / 1000;
-      const timeLimitSec = state.totalQuestions * 30;
-      const input: ScoringInput = {
-        correctCount: state.correctCount + 1,
-        totalCount: state.totalQuestions,
-        maxCombo: combo.max,
-        timeRemainingSec: Math.max(0, timeLimitSec - elapsedSec),
-        timeLimitSec,
-      };
-      const result = ScoringEngine.calculate(input);
-      return {
-        ...state,
-        correctCount: state.correctCount + 1,
-        combo,
-        totalScore: state.totalScore + result.baseScore + result.comboBonus,
-        stars: result.stars,
-        lastScoreResult: result,
-        answers: [...state.answers, { questionId: action.questionId, correct: true, score: result.baseScore + result.comboBonus }],
-      };
+function createReducer(comboTrackerRef: { current: ComboTracker }) {
+  return function gameReducer(state: GameState, action: GameAction): GameState {
+    const comboTracker = comboTrackerRef.current;
+    switch (action.type) {
+      case 'ANSWER_CORRECT': {
+        comboTracker.hit();
+        const combo = comboTracker.getState();
+        const elapsedSec = (Date.now() - state.startTime) / 1000;
+        const timeLimitSec = state.totalQuestions * 30;
+        const input: ScoringInput = {
+          correctCount: state.correctCount + 1,
+          totalCount: state.totalQuestions,
+          maxCombo: combo.max,
+          timeRemainingSec: Math.max(0, timeLimitSec - elapsedSec),
+          timeLimitSec,
+        };
+        const result = ScoringEngine.calculate(input);
+        return {
+          ...state,
+          correctCount: state.correctCount + 1,
+          combo,
+          totalScore: state.totalScore + result.baseScore + result.comboBonus,
+          stars: result.stars,
+          lastScoreResult: result,
+          answers: [...state.answers, { questionId: action.questionId, correct: true, score: result.baseScore + result.comboBonus }],
+        };
+      }
+
+      case 'ANSWER_WRONG': {
+        comboTracker.miss();
+        return {
+          ...state,
+          wrongCount: state.wrongCount + 1,
+          combo: comboTracker.getState(),
+          answers: [...state.answers, { questionId: action.questionId, correct: false, score: 0 }],
+        };
+      }
+
+      case 'NEXT_QUESTION': {
+        const nextIndex = state.currentIndex + 1;
+        const isComplete = nextIndex >= state.totalQuestions;
+        return {
+          ...state,
+          currentIndex: nextIndex,
+          isComplete,
+        };
+      }
+
+      case 'COMPLETE_LEVEL':
+        return { ...state, isComplete: true };
+
+      case 'RESET':
+        comboTracker.reset();
+        return createInitialState(action.totalQuestions);
+
+      default:
+        return state;
     }
-
-    case 'ANSWER_WRONG': {
-      comboTracker.miss();
-      return {
-        ...state,
-        wrongCount: state.wrongCount + 1,
-        combo: comboTracker.getState(),
-        answers: [...state.answers, { questionId: action.questionId, correct: false, score: 0 }],
-      };
-    }
-
-    case 'NEXT_QUESTION': {
-      const nextIndex = state.currentIndex + 1;
-      const isComplete = nextIndex >= state.totalQuestions;
-      return {
-        ...state,
-        currentIndex: nextIndex,
-        isComplete,
-      };
-    }
-
-    case 'COMPLETE_LEVEL':
-      return { ...state, isComplete: true };
-
-    case 'RESET':
-      comboTracker.reset();
-      return createInitialState(action.totalQuestions);
-
-    default:
-      return state;
-  }
+  };
 }
 
 export function useGameState(totalQuestions: number) {
-  // Initialize engines
-  useMemo(() => {
-    comboTracker = new ComboTracker();
-  }, []);
+  // Instance-scoped ComboTracker — avoids module-level shared state
+  const comboTrackerRef = useRef<ComboTracker>(null!);
+  if (comboTrackerRef.current === null) {
+    comboTrackerRef.current = new ComboTracker();
+  }
+
+  const reducer = useMemo(
+    () => createReducer(comboTrackerRef),
+    [],
+  );
 
   const [state, dispatch] = useReducer(
-    gameReducer,
+    reducer,
     totalQuestions,
     createInitialState,
   );

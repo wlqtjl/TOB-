@@ -17,12 +17,12 @@ import {
   defaultViewport,
 } from '../visual-scene';
 
-const LEFT_X = 150;
-const RIGHT_X = 750;
-const Y_START = 80;
-const Y_SPACING = 80;
-
 export function matchingAdapter(question: MatchingQuestion): VisualScene {
+  const viewport = defaultViewport();
+  const leftX = Math.round(viewport.width * 0.17);
+  const rightX = Math.round(viewport.width * 0.83);
+  const yStart = 80;
+  const ySpacing = 80;
   const correctMap = new Map(question.correctPairs);
   const reverseMap = new Map(question.correctPairs.map(([l, r]) => [r, l]));
 
@@ -32,7 +32,7 @@ export function matchingAdapter(question: MatchingQuestion): VisualScene {
     type: 'concept',
     label: item.text,
     icon: '🔵',
-    position: { x: LEFT_X, y: Y_START + i * Y_SPACING },
+    position: { x: leftX, y: yStart + i * ySpacing },
     size: { w: 200, h: 48 },
     style: entityStyle('rgba(59,130,246,0.15)', '#3b82f6'),
     group: 'left',
@@ -46,7 +46,7 @@ export function matchingAdapter(question: MatchingQuestion): VisualScene {
     type: 'concept',
     label: item.text,
     icon: '🟠',
-    position: { x: RIGHT_X, y: Y_START + i * Y_SPACING },
+    position: { x: rightX, y: yStart + i * ySpacing },
     size: { w: 200, h: 48 },
     style: entityStyle('rgba(249,115,22,0.15)', '#f97316'),
     group: 'right',

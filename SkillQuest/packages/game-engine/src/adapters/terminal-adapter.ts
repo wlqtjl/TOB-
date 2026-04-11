@@ -17,13 +17,13 @@ import {
   defaultViewport,
 } from '../visual-scene';
 
-const X_POS = 450;
-const Y_START = 40;
-const Y_SPACING = 50;
-
 export function terminalAdapter(quiz: TerminalQuizLevel): VisualScene {
+  const viewport = defaultViewport();
+  const xPos = viewport.width / 2;
+  const yStart = 40;
+  const ySpacing = 50;
   const entities: VisualScene['entities'] = [];
-  let yPos = Y_START;
+  let yPos = yStart;
 
   // Existing terminal lines
   for (let i = 0; i < quiz.terminalLines.length; i++) {
@@ -33,7 +33,7 @@ export function terminalAdapter(quiz: TerminalQuizLevel): VisualScene {
       type: 'terminal-line',
       label: `${line.prompt} ${line.command}`,
       icon: '▶',
-      position: { x: X_POS, y: yPos },
+      position: { x: xPos, y: yPos },
       size: { w: 700, h: 36 },
       style: entityStyle('rgba(34,197,94,0.1)', '#22c55e', { opacity: 0.8 }),
       group: 'display',
@@ -42,13 +42,13 @@ export function terminalAdapter(quiz: TerminalQuizLevel): VisualScene {
     });
 
     if (line.output) {
-      yPos += Y_SPACING * 0.6;
+      yPos += ySpacing * 0.6;
       entities.push({
         id: `output-${i}`,
         type: 'terminal-output',
         label: line.output,
         icon: ' ',
-        position: { x: X_POS, y: yPos },
+        position: { x: xPos, y: yPos },
         size: { w: 700, h: 30 },
         style: entityStyle('transparent', 'transparent', { opacity: 0.6 }),
         group: 'display',
@@ -56,7 +56,7 @@ export function terminalAdapter(quiz: TerminalQuizLevel): VisualScene {
         metadata: {},
       });
     }
-    yPos += Y_SPACING;
+    yPos += ySpacing;
   }
 
   // Blank command slots
@@ -67,7 +67,7 @@ export function terminalAdapter(quiz: TerminalQuizLevel): VisualScene {
       type: 'terminal-blank',
       label: `${blank.prompt} ____`,
       icon: '✏️',
-      position: { x: X_POS, y: yPos },
+      position: { x: xPos, y: yPos },
       size: { w: 700, h: 40 },
       style: entityStyle('rgba(250,204,21,0.1)', '#facc15'),
       group: 'input',
@@ -80,7 +80,7 @@ export function terminalAdapter(quiz: TerminalQuizLevel): VisualScene {
         blankIndex: i,
       },
     });
-    yPos += Y_SPACING;
+    yPos += ySpacing;
   }
 
   // Sequential connections between all lines (data flow visualization)

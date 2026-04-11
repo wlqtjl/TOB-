@@ -17,19 +17,20 @@ import {
   defaultViewport,
 } from '../visual-scene';
 
-const STEP_X = 150;
-const SLOT_X = 650;
-const Y_START = 60;
-const Y_SPACING = 70;
-
 export function orderingAdapter(question: OrderingQuestion): VisualScene {
+  const viewport = defaultViewport();
+  const stepX = Math.round(viewport.width * 0.17);
+  const slotX = Math.round(viewport.width * 0.72);
+  const yStart = 60;
+  const ySpacing = 70;
+
   // Draggable step entities (shuffled order from question data)
   const stepEntities = question.steps.map((step, i) => ({
     id: step.id,
     type: 'step',
     label: step.text,
     icon: '📋',
-    position: { x: STEP_X, y: Y_START + i * Y_SPACING },
+    position: { x: stepX, y: yStart + i * ySpacing },
     size: { w: 280, h: 48 },
     style: entityStyle('rgba(168,85,247,0.15)', '#a855f7'),
     group: 'step',
@@ -43,7 +44,7 @@ export function orderingAdapter(question: OrderingQuestion): VisualScene {
     type: 'slot',
     label: `第 ${i + 1} 步`,
     icon: `${i + 1}️⃣`,
-    position: { x: SLOT_X, y: Y_START + i * Y_SPACING },
+    position: { x: slotX, y: yStart + i * ySpacing },
     size: { w: 280, h: 48 },
     style: entityStyle('rgba(107,114,128,0.15)', '#6b7280', { opacity: 0.8 }),
     group: 'slot',

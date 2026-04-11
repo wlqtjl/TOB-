@@ -50,7 +50,7 @@ function createInitialState(totalQuestions: number): GameState {
     totalQuestions,
     totalScore: 0,
     stars: 0,
-    combo: { count: 0, tier: 'none', multiplier: 1 },
+    combo: { current: 0, max: 0, tier: 'none', multiplier: 1 },
     correctCount: 0,
     wrongCount: 0,
     isComplete: false,
@@ -63,7 +63,6 @@ function createInitialState(totalQuestions: number): GameState {
 // ComboTracker and ScoringEngine are shared across the reducer
 // via closure — they maintain internal state
 let comboTracker: ComboTracker;
-let scoringEngine: ScoringEngine;
 
 function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -71,15 +70,15 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       comboTracker.hit();
       const combo = comboTracker.getState();
       const elapsedSec = (Date.now() - state.startTime) / 1000;
+      const timeLimitSec = state.totalQuestions * 30;
       const input: ScoringInput = {
         correctCount: state.correctCount + 1,
-        totalQuestions: state.totalQuestions,
-        comboMultiplier: combo.multiplier,
-        timeTakenSec: elapsedSec,
-        timeLimitSec: state.totalQuestions * 30, // 30s per question
-        difficulty: 'intermediate',
+        totalCount: state.totalQuestions,
+        maxCombo: combo.max,
+        timeRemainingSec: Math.max(0, timeLimitSec - elapsedSec),
+        timeLimitSec,
       };
-      const result = scoringEngine.calculate(input);
+      const result = ScoringEngine.calculate(input);
       return {
         ...state,
         correctCount: state.correctCount + 1,
@@ -127,7 +126,6 @@ export function useGameState(totalQuestions: number) {
   // Initialize engines
   useMemo(() => {
     comboTracker = new ComboTracker();
-    scoringEngine = new ScoringEngine();
   }, []);
 
   const [state, dispatch] = useReducer(

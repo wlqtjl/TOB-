@@ -1,19 +1,14 @@
 /**
- * 实时排行榜 — 对标 Data Center 资源/收益可视化
+ * 实时排行榜 — 多厂商课程支持
  */
 
-import type { LeaderboardEntry } from '@skillquest/types';
+'use client';
 
-const mockLeaderboard: LeaderboardEntry[] = [
-  { userId: 'u1', displayName: '王磊', avatarUrl: '', totalScore: 12500, rank: 1, rankChange: 0, stars: 24, streakDays: 15 },
-  { userId: 'u2', displayName: '李明', avatarUrl: '', totalScore: 11800, rank: 2, rankChange: 1, stars: 22, streakDays: 12 },
-  { userId: 'u3', displayName: '张三', avatarUrl: '', totalScore: 11200, rank: 3, rankChange: -1, stars: 21, streakDays: 10 },
-  { userId: 'u4', displayName: '赵燕', avatarUrl: '', totalScore: 9800, rank: 4, rankChange: 2, stars: 18, streakDays: 8 },
-  { userId: 'u5', displayName: '周伟 (你)', avatarUrl: '', totalScore: 9500, rank: 5, rankChange: 3, stars: 16, streakDays: 7 },
-  { userId: 'u6', displayName: '孙涛', avatarUrl: '', totalScore: 8900, rank: 6, rankChange: -2, stars: 15, streakDays: 5 },
-  { userId: 'u7', displayName: '吴芳', avatarUrl: '', totalScore: 8200, rank: 7, rankChange: 0, stars: 14, streakDays: 4 },
-  { userId: 'u8', displayName: '陈刚', avatarUrl: '', totalScore: 7500, rank: 8, rankChange: -1, stars: 12, streakDays: 3 },
-];
+import { Suspense } from 'react';
+import type { LeaderboardEntry } from '@skillquest/types';
+import CourseSwitcher from '../../../components/ui/CourseSwitcher';
+import { useCourseId } from '../../../hooks/useCourseId';
+import { getLeaderboard, getCourse } from '../../../lib/mock-courses';
 
 const CROWN_ICONS = ['👑', '🥈', '🥉'];
 
@@ -74,14 +69,18 @@ function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isC
   );
 }
 
-export default function LeaderboardPage() {
+function LeaderboardContent() {
+  const courseId = useCourseId();
+  const course = getCourse(courseId);
+  const { entries, currentUserId } = getLeaderboard(courseId);
+
   return (
     <div className="min-h-screen bg-gray-950 p-6">
       <div className="mx-auto max-w-2xl">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-yellow-400">🏆 实时排行榜</h1>
-            <p className="text-sm text-gray-500">华为 HCIA-Datacom · 全部学员 · 本周</p>
+            <p className="text-sm text-gray-500">{course?.title ?? courseId} · 全部学员 · 本周</p>
           </div>
           <div className="flex gap-2">
             {['本周', '本月', '赛季', '全部'].map((period) => (
@@ -99,12 +98,18 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
+        {/* 课程切换 */}
+        <div className="mb-4">
+          <p className="text-xs text-gray-600 mb-2">切换课程:</p>
+          <CourseSwitcher />
+        </div>
+
         <div className="space-y-2">
-          {mockLeaderboard.map((entry) => (
+          {entries.map((entry) => (
             <LeaderboardRow
               key={entry.userId}
               entry={entry}
-              isCurrentUser={entry.userId === 'u5'}
+              isCurrentUser={entry.userId === currentUserId}
             />
           ))}
         </div>
@@ -115,5 +120,13 @@ export default function LeaderboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LeaderboardPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><p className="text-gray-500 animate-pulse">加载排行榜...</p></div>}>
+      <LeaderboardContent />
+    </Suspense>
   );
 }

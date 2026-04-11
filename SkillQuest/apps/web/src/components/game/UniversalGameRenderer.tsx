@@ -234,7 +234,7 @@ export default function UniversalGameRenderer({
         onMouseDown={handlers.onMouseDown}
         onMouseMove={handlers.onMouseMove}
         onMouseUp={handlers.onMouseUp}
-        style={{ width: '100%', height: 'auto', maxWidth: scene.viewport.width }}
+        style={{ width: scene.viewport.width, height: scene.viewport.height, maxWidth: '100%' }}
       />
     </div>
   );

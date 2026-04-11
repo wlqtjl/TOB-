@@ -74,7 +74,7 @@ export function useParticleLoop(
     lastTimeRef.current = performance.now();
 
     function frame(now: number) {
-      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05); // cap at 50ms
+      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05); // cap at 0.05s (50ms) to prevent spiral-of-death
       lastTimeRef.current = now;
 
       // FPS tracking

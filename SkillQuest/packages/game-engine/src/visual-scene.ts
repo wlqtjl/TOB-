@@ -270,7 +270,7 @@ export function defaultViewport(
     height,
     background: {
       color: '#030712',
-      gridColor: '#ffffff',
+      gridColor: '#1f2937',
       gridSpacing: 30,
       gridVisible: true,
     },

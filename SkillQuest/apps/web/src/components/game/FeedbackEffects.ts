@@ -142,7 +142,7 @@ export function updateFeedback(
 
   // Decay screen flash
   if (screenFlash) {
-    const newAlpha = screenFlash.alpha - dt * 0.5; // fade in 0.3s
+    const newAlpha = screenFlash.alpha - dt * 0.5; // decay rate: 0.5/sec → flash lasts ~0.2-0.4s depending on initial alpha
     screenFlash = newAlpha > 0 ? { ...screenFlash, alpha: newAlpha } : null;
   }
 

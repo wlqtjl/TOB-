@@ -70,7 +70,9 @@ function bezierPoint(path: BezierPath, t: number): { x: number; y: number } {
   };
 }
 
+/** Pool size: 500 flow particles supports ~100 connections × 5 density each */
 const POOL_SIZE = 500;
+/** Pool size: 200 burst particles supports 6-7 simultaneous burst effects */
 const BURST_POOL_SIZE = 200;
 
 export class ParticleSystem {

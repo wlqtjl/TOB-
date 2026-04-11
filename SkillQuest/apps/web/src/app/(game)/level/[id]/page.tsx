@@ -69,8 +69,9 @@ const mockQuestions: QuizQuestion[] = [
   },
 ];
 
-export default function LevelPage({ params }: { params: { id: string } }) {
-  const levelId = params.id;
+export default function LevelPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = React.use(params);
+  const levelId = resolvedParams.id;
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answered, setAnswered] = useState(false);
 
@@ -123,7 +124,7 @@ export default function LevelPage({ params }: { params: { id: string } }) {
         <UniversalGameRenderer
           scene={scene}
           onInteraction={handleInteraction}
-          comboCount={gameState.combo.count}
+          comboCount={gameState.combo.current}
           className="border border-gray-800 rounded-xl overflow-hidden mt-14"
         />
       </div>

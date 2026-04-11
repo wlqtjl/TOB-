@@ -38,7 +38,7 @@ export default function GameHUD({ gameState, levelTitle, timeLimitSec = 0 }: Pro
   const elapsedSec = Math.floor((Date.now() - gameState.startTime) / 1000);
   const remainingSec = timeLimitSec > 0 ? Math.max(0, timeLimitSec - elapsedSec) : null;
 
-  const tier = getComboTier(combo.count);
+  const tier = getComboTier(combo.current);
   const tierStyle = tier ? COMBO_TIER_COLORS[tier] : '';
   const tierLabel = tier ? COMBO_TIER_LABELS[tier] : '';
 
@@ -60,9 +60,9 @@ export default function GameHUD({ gameState, levelTitle, timeLimitSec = 0 }: Pro
 
         {/* Center: combo */}
         <div className="flex items-center gap-2">
-          {combo.count >= 3 && (
+          {combo.current >= 3 && (
             <span className={`rounded-full border px-3 py-0.5 text-xs font-bold ${tierStyle}`}>
-              {tierLabel} {combo.count}x
+              {tierLabel} {combo.current}x
             </span>
           )}
           {combo.multiplier > 1 && (

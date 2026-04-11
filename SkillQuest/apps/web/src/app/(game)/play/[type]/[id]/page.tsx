@@ -31,9 +31,9 @@ import {
   scenarioAdapter,
   vmPlacementAdapter,
 } from '@skillquest/game-engine';
-import UniversalGameRenderer from '../../../../components/game/UniversalGameRenderer';
-import GameHUD from '../../../../components/game/GameHUD';
-import { useGameState } from '../../../../components/game/hooks/useGameState';
+import UniversalGameRenderer from '../../../../../components/game/UniversalGameRenderer';
+import GameHUD from '../../../../../components/game/GameHUD';
+import { useGameState } from '../../../../../components/game/hooks/useGameState';
 
 // ─── Mock data (will be replaced by API fetch) ─────────────────────
 
@@ -194,8 +194,9 @@ const TYPE_LABELS: Record<string, string> = {
 
 // ─── Page Component ────────────────────────────────────────────────
 
-export default function PlayPage({ params }: { params: { type: string; id: string } }) {
-  const { type, id } = params;
+export default function PlayPage({ params }: { params: Promise<{ type: string; id: string }> }) {
+  const resolvedParams = React.use(params);
+  const { type, id } = resolvedParams;
   const contentType = type as ContentType;
   const [messages, setMessages] = useState<Array<{ text: string; correct: boolean }>>([]);
 
@@ -274,7 +275,7 @@ export default function PlayPage({ params }: { params: { type: string; id: strin
         <UniversalGameRenderer
           scene={scene}
           onInteraction={handleInteraction}
-          comboCount={gameState.combo.count}
+          comboCount={gameState.combo.current}
           className="border border-gray-800 rounded-xl overflow-hidden mt-12"
           debug={false}
         />

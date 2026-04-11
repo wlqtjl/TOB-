@@ -1,13 +1,18 @@
 /**
- * 闯关地图页面 — 对标 Data Center 整体布局
+ * 闯关地图页面 — Canvas 粒子流替代 SVG 虚线动画
  *
- * 核心视觉: Phaser.js 渲染的 DAG 知识图谱
- * - 关卡节点 (圆形/星形, 按状态变色)
- * - 粒子流 (沿 Bezier 曲线, 对标 packet-balls)
- * - 已通关: 金色光晕 / 当前: 脉冲 / 锁定: 灰色
+ * 核心变化: 使用 VisualScene 协议 + UniversalGameRenderer
+ * - 金色粒子沿 Bezier 曲线流动 (已完成路径)
+ * - 蓝色脉冲粒子 (可解锁路径)
+ * - 灰色静态连线 (锁定路径)
+ * - 所有效果通过同一个 Canvas 粒子引擎驱动
  */
 
-import type { LevelMapData, LevelMapNode, LevelMapEdge } from '@skillquest/types';
+'use client';
+
+import type { LevelMapData } from '@skillquest/types';
+import { mapAdapter } from '@skillquest/game-engine';
+import UniversalGameRenderer from '../../../components/game/UniversalGameRenderer';
 
 // Mock 数据: 华为 HCIA 课程闯关地图
 const mockMapData: LevelMapData = {
@@ -36,94 +41,8 @@ const mockMapData: LevelMapData = {
   ],
 };
 
-// 状态颜色映射
-const STATUS_COLORS: Record<string, { bg: string; border: string; glow: string }> = {
-  passed: { bg: 'bg-yellow-500/20', border: 'border-yellow-400', glow: 'shadow-yellow-400/50' },
-  unlocked: { bg: 'bg-blue-500/20', border: 'border-blue-400', glow: 'shadow-blue-400/50' },
-  in_progress: { bg: 'bg-orange-500/20', border: 'border-orange-400', glow: 'shadow-orange-400/50' },
-  locked: { bg: 'bg-gray-800/50', border: 'border-gray-700', glow: '' },
-  failed: { bg: 'bg-red-500/10', border: 'border-red-500/50', glow: '' },
-};
-
-const STAR_DISPLAY = ['', '⭐', '⭐⭐', '⭐⭐⭐'];
-
-const TYPE_ICONS: Record<string, string> = {
-  quiz: '📝',
-  topology: '🔗',
-  terminal: '💻',
-  scenario: '🔍',
-  ordering: '📋',
-  matching: '🔀',
-};
-
-function LevelNodeComponent({ node }: { node: LevelMapNode }) {
-  const colors = STATUS_COLORS[node.status] ?? STATUS_COLORS.locked;
-  const isClickable = node.status !== 'locked';
-
-  return (
-    <div
-      className={`
-        absolute flex flex-col items-center gap-1 transition-all duration-300
-        ${isClickable ? 'cursor-pointer hover:scale-110' : 'opacity-50 cursor-not-allowed'}
-      `}
-      style={{ left: node.x, top: node.y, transform: 'translate(-50%, -50%)' }}
-    >
-      <div
-        className={`
-          relative w-16 h-16 rounded-full ${colors.bg} border-2 ${colors.border}
-          flex items-center justify-center text-2xl
-          ${colors.glow ? `shadow-lg ${colors.glow}` : ''}
-        `}
-      >
-        {node.status === 'locked' ? '🔒' : TYPE_ICONS[node.type] ?? '📝'}
-      </div>
-      <span className="text-xs text-gray-300 text-center max-w-[100px] truncate">
-        {node.title}
-      </span>
-      {node.stars > 0 && (
-        <span className="text-xs">{STAR_DISPLAY[node.stars]}</span>
-      )}
-    </div>
-  );
-}
-
-/** 粒子流边 (SVG line with dash animation for particle effect) */
-function ParticleEdge({ edge, nodes }: { edge: LevelMapEdge; nodes: LevelMapNode[] }) {
-  const fromNode = nodes.find((n) => n.levelId === edge.fromLevelId);
-  const toNode = nodes.find((n) => n.levelId === edge.toLevelId);
-  if (!fromNode || !toNode) return null;
-
-  const strokeColor =
-    edge.particleState === 'flowing'
-      ? '#FFD700'
-      : edge.particleState === 'pulsing'
-        ? '#3996f6'
-        : '#374151';
-
-  const dashArray =
-    edge.particleState === 'static' ? '4 8' : '8 4';
-
-  const animClass =
-    edge.particleState === 'flowing'
-      ? 'particle-flow'
-      : edge.particleState === 'pulsing'
-        ? 'particle-pulse'
-        : '';
-
-  return (
-    <line
-      x1={fromNode.x}
-      y1={fromNode.y}
-      x2={toNode.x}
-      y2={toNode.y}
-      stroke={strokeColor}
-      strokeWidth={edge.particleState === 'static' ? 1 : 2}
-      strokeDasharray={dashArray}
-      className={animClass}
-      strokeLinecap="round"
-    />
-  );
-}
+// Convert map data → VisualScene via adapter (pure function)
+const mapScene = mapAdapter(mockMapData);
 
 export default function MapPage() {
   return (
@@ -141,63 +60,32 @@ export default function MapPage() {
         </div>
       </div>
 
-      {/* 地图画布 */}
-      <div className="relative mx-auto h-[500px] w-full max-w-[900px] rounded-xl border border-gray-800 bg-gray-900/50 overflow-hidden">
-        {/* 网格背景 */}
-        <div
-          className="absolute inset-0 opacity-5"
-          style={{
-            backgroundImage: 'radial-gradient(circle, #fff 1px, transparent 1px)',
-            backgroundSize: '30px 30px',
-          }}
+      {/* Canvas 粒子地图 — 替代 SVG stroke-dasharray */}
+      <div className="mx-auto max-w-[900px]">
+        <UniversalGameRenderer
+          scene={mapScene}
+          className="border border-gray-800 rounded-xl overflow-hidden"
+          debug={false}
         />
+      </div>
 
-        {/* 粒子流边 (SVG层) */}
-        <svg className="absolute inset-0 w-full h-full">
-          <defs>
-            <style>{`
-              @keyframes dash-flow {
-                to { stroke-dashoffset: -24; }
-              }
-              @keyframes dash-pulse {
-                to { stroke-dashoffset: -24; }
-              }
-              .particle-flow {
-                animation: dash-flow 2s linear infinite;
-              }
-              .particle-pulse {
-                animation: dash-pulse 1s linear infinite;
-              }
-            `}</style>
-          </defs>
-          {mockMapData.edges.map((edge, i) => (
-            <ParticleEdge key={i} edge={edge} nodes={mockMapData.nodes} />
-          ))}
-        </svg>
-
-        {/* 关卡节点 */}
-        {mockMapData.nodes.map((node) => (
-          <LevelNodeComponent key={node.levelId} node={node} />
-        ))}
-
-        {/* 图例 */}
-        <div className="absolute bottom-3 left-3 flex gap-3 text-xs text-gray-500">
+      {/* 图例 */}
+      <div className="mx-auto mt-4 max-w-[900px] flex items-center justify-between">
+        <div className="flex gap-4 text-xs text-gray-500">
           <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-full border border-yellow-400 bg-yellow-500/20" /> 已通关
+            <span className="inline-block w-3 h-3 rounded-full border border-yellow-400 bg-yellow-500/20" /> 已通关 (金色粒子流)
           </span>
           <span className="flex items-center gap-1">
-            <span className="inline-block w-3 h-3 rounded-full border border-blue-400 bg-blue-500/20" /> 可挑战
+            <span className="inline-block w-3 h-3 rounded-full border border-blue-400 bg-blue-500/20" /> 可挑战 (蓝色脉冲)
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-3 h-3 rounded-full border border-gray-700 bg-gray-800/50" /> 锁定
           </span>
         </div>
+        <p className="text-xs text-gray-600">
+          Canvas 粒子引擎 · 对标 Data Center packet-ball 效果
+        </p>
       </div>
-
-      {/* 说明 */}
-      <p className="mt-4 text-center text-xs text-gray-600">
-        对标 Data Center 游戏的整体布局视图 · 金色粒子流 = 已完成路径 · 蓝色脉冲 = 可解锁路径
-      </p>
     </div>
   );
 }

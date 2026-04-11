@@ -1,0 +1,15 @@
+[package]
+name        = "omni-sim-opdl"
+version     = "0.1.0"
+edition     = "2021"
+description = "Omni-Sim OPDL compiler — parse, validate, compile JSON packs into ECS IR"
+
+[dependencies]
+serde      = { workspace = true }
+serde_json = { workspace = true }
+thiserror  = { workspace = true }
+anyhow     = { workspace = true }
+hecs       = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }

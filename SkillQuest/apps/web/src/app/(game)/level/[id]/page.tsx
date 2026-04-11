@@ -1,13 +1,21 @@
 /**
- * 关卡答题界面 — 对标 Data Center 的即时 packet 反应
+ * 关卡答题界面 — 使用 VisualScene + UniversalGameRenderer
  *
  * 核心体验:
- * - 答对: 爆炸粒子 + 分数飞出 + 连击计数器 + 背景闪光
- * - 答错: 震动 + 错误解析弹出
- * - 连击加成 (Combo系统)
+ * - Canvas 粒子反馈: 正确→绿色爆发 + 分数飞出 / 错误→红色震动
+ * - Combo 连击: ComboTracker 驱动视觉升级
+ * - 与 map 和 play 页面共享同一个渲染引擎
  */
 
-import type { QuizQuestion, QuizOption } from '@skillquest/types';
+'use client';
+
+import React, { useMemo, useCallback, useState } from 'react';
+import type { QuizQuestion } from '@skillquest/types';
+import type { InteractionResult } from '@skillquest/game-engine';
+import { quizAdapter, highlightCorrectOption } from '@skillquest/game-engine';
+import UniversalGameRenderer from '../../../../components/game/UniversalGameRenderer';
+import GameHUD from '../../../../components/game/GameHUD';
+import { useGameState } from '../../../../components/game/hooks/useGameState';
 
 // Mock 题目: 华为 HCIA VLAN 配置
 const mockQuestions: QuizQuestion[] = [
@@ -61,155 +69,122 @@ const mockQuestions: QuizQuestion[] = [
   },
 ];
 
-/** 答题反馈组件 */
-function AnswerFeedback({
-  isCorrect,
-  combo,
-  score,
-  explanation,
-}: {
-  isCorrect: boolean;
-  combo: number;
-  score: number;
-  explanation: string;
-}) {
-  if (isCorrect) {
-    return (
-      <div className="mt-4 rounded-xl border border-green-500/30 bg-green-500/10 p-4">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">✅</span>
-          <div>
-            <p className="font-bold text-green-400">回答正确！</p>
-            <p className="text-sm text-gray-400">+{score} 分</p>
-          </div>
-          {combo >= 3 && (
-            <div className="ml-auto rounded-full bg-amber-500/20 border border-amber-500 px-3 py-1 text-amber-400 font-bold">
-              🔥 {combo}x COMBO!
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-4">
-      <div className="flex items-start gap-3">
-        <span className="text-3xl">❌</span>
-        <div>
-          <p className="font-bold text-red-400">回答错误</p>
-          <p className="mt-2 text-sm text-gray-300">{explanation}</p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/** 选项按钮 */
-function OptionButton({
-  option,
-  state,
-}: {
-  option: QuizOption;
-  state: 'default' | 'correct' | 'wrong' | 'disabled';
-}) {
-  const stateStyles: Record<string, string> = {
-    default: 'border-gray-700 bg-gray-800/50 hover:border-blue-500 hover:bg-blue-900/30 cursor-pointer',
-    correct: 'border-green-500 bg-green-500/10',
-    wrong: 'border-red-500 bg-red-500/10',
-    disabled: 'border-gray-800 bg-gray-900/50 opacity-50 cursor-not-allowed',
-  };
-
-  return (
-    <button
-      className={`w-full rounded-xl border-2 p-4 text-left transition-all ${stateStyles[state]}`}
-      disabled={state === 'disabled'}
-    >
-      <span className="font-mono text-sm text-gray-500 mr-2">
-        {option.id.toUpperCase()}.
-      </span>
-      <span className={state === 'correct' ? 'text-green-400' : state === 'wrong' ? 'text-red-400' : 'text-gray-200'}>
-        {option.text}
-      </span>
-    </button>
-  );
-}
-
 export default function LevelPage({ params }: { params: { id: string } }) {
   const levelId = params.id;
-  const currentQuestion = mockQuestions[0];
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [answered, setAnswered] = useState(false);
+
+  const { state: gameState, answerCorrect, answerWrong, nextQuestion } = useGameState(mockQuestions.length);
+
+  const currentQuestion = mockQuestions[currentIdx];
+
+  // Build VisualScene for the current question
+  const scene = useMemo(() => {
+    const base = quizAdapter(currentQuestion);
+    if (answered) {
+      return highlightCorrectOption(base, currentQuestion.correctOptionIds);
+    }
+    return base;
+  }, [currentQuestion, answered]);
+
+  const handleInteraction = useCallback(
+    (result: InteractionResult) => {
+      if (answered) return;
+      setAnswered(true);
+
+      if (result.correct) {
+        answerCorrect(currentQuestion.id);
+      } else {
+        answerWrong(currentQuestion.id);
+      }
+    },
+    [answered, currentQuestion, answerCorrect, answerWrong],
+  );
+
+  const handleNext = useCallback(() => {
+    if (currentIdx < mockQuestions.length - 1) {
+      setCurrentIdx((prev) => prev + 1);
+      setAnswered(false);
+      nextQuestion();
+    }
+  }, [currentIdx, nextQuestion]);
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
-      {/* 顶部状态栏 */}
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-bold text-blue-300">关卡: VLAN配置实验</h1>
-            <p className="text-xs text-gray-500">关卡 ID: {levelId} · 题目 1/3</p>
-          </div>
-          <div className="flex gap-4 text-sm">
-            <span className="text-amber-400 font-mono">🔥 0x combo</span>
-            <span className="text-blue-300 font-mono">💯 0 分</span>
-            <span className="text-gray-500 font-mono">⏱ 2:00</span>
-          </div>
-        </div>
+    <div className="min-h-screen bg-gray-950 p-4">
+      {/* Game Canvas + HUD */}
+      <div className="mx-auto max-w-[950px] relative">
+        <GameHUD
+          gameState={gameState}
+          levelTitle={`关卡: VLAN配置实验`}
+          timeLimitSec={mockQuestions.length * 30}
+        />
 
-        {/* 进度条 */}
-        <div className="mb-6 h-2 rounded-full bg-gray-800">
-          <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-blue-500 to-yellow-400 transition-all" />
-        </div>
+        {/* Canvas 渲染的选择题 — 替代静态 HTML 卡片 */}
+        <UniversalGameRenderer
+          scene={scene}
+          onInteraction={handleInteraction}
+          comboCount={gameState.combo.count}
+          className="border border-gray-800 rounded-xl overflow-hidden mt-14"
+        />
+      </div>
 
-        {/* 题目卡片 */}
-        <div className="rounded-2xl border border-gray-800 bg-gray-900/80 p-6">
-          {/* 题目标签 */}
-          <div className="mb-3 flex gap-2">
-            {currentQuestion.knowledgePointTags.map((tag) => (
-              <span
-                key={tag}
-                className="rounded-full bg-blue-900/50 px-2.5 py-0.5 text-xs text-blue-300"
-              >
-                {tag}
-              </span>
-            ))}
-            <span className="ml-auto rounded-full bg-gray-800 px-2.5 py-0.5 text-xs text-gray-400">
-              {currentQuestion.difficulty}
+      {/* Question details + explanation */}
+      <div className="mx-auto max-w-[950px] mt-4">
+        {/* Knowledge tags */}
+        <div className="flex gap-2 mb-3">
+          {currentQuestion.knowledgePointTags.map((tag) => (
+            <span
+              key={tag}
+              className="rounded-full bg-blue-900/50 px-2.5 py-0.5 text-xs text-blue-300"
+            >
+              {tag}
             </span>
-          </div>
-
-          {/* 题干 */}
-          <h2 className="mb-6 text-xl font-medium text-gray-100">
-            {currentQuestion.content}
-          </h2>
-
-          {/* 选项 */}
-          <div className="space-y-3">
-            {currentQuestion.options.map((option) => (
-              <OptionButton
-                key={option.id}
-                option={option}
-                state="default"
-              />
-            ))}
-          </div>
-
-          {/* 反馈区 (演示用: 显示正确反馈) */}
-          <AnswerFeedback
-            isCorrect={true}
-            combo={5}
-            score={150}
-            explanation=""
-          />
+          ))}
+          <span className="ml-auto rounded-full bg-gray-800 px-2.5 py-0.5 text-xs text-gray-400">
+            {currentQuestion.difficulty}
+          </span>
         </div>
 
-        {/* 底部操作 */}
-        <div className="mt-6 flex justify-between">
-          <button className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-400 hover:border-gray-500">
+        {/* Feedback */}
+        {answered && (
+          <div className={`rounded-xl border p-4 ${
+            gameState.answers[gameState.answers.length - 1]?.correct
+              ? 'border-green-500/30 bg-green-500/10'
+              : 'border-red-500/30 bg-red-500/10'
+          }`}>
+            <p className={`font-bold ${
+              gameState.answers[gameState.answers.length - 1]?.correct ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {gameState.answers[gameState.answers.length - 1]?.correct ? '✅ 回答正确！' : '❌ 回答错误'}
+            </p>
+            <p className="mt-2 text-sm text-gray-300">{currentQuestion.explanation}</p>
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="mt-4 flex justify-between">
+          <a
+            href="/map"
+            className="rounded-lg border border-gray-700 px-4 py-2 text-sm text-gray-400 hover:border-gray-500 transition"
+          >
             ← 返回地图
-          </button>
-          <button className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-500 transition">
-            下一题 →
-          </button>
+          </a>
+          {answered && currentIdx < mockQuestions.length - 1 && (
+            <button
+              onClick={handleNext}
+              className="rounded-lg bg-blue-600 px-6 py-2 text-sm font-medium text-white hover:bg-blue-500 transition"
+            >
+              下一题 →
+            </button>
+          )}
+          {answered && currentIdx === mockQuestions.length - 1 && (
+            <a
+              href="/map"
+              className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 transition"
+            >
+              🎉 完成关卡
+            </a>
+          )}
         </div>
       </div>
     </div>

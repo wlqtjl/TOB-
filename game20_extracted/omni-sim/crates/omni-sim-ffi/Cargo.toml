@@ -1,0 +1,16 @@
+[package]
+name        = "omni-sim-ffi"
+version     = "0.1.0"
+edition     = "2021"
+description = "Omni-Sim C ABI bridge — compiled to cdylib for Wasm/Unity and staticlib for native tests"
+
+[lib]
+# cdylib   → .wasm for Unity / browser
+# staticlib → native .a for FFI smoke tests (C test harness)
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+omni-sim-core = { path = "../omni-sim-core" }
+
+[profile.release]
+# Inherited from workspace — panic=abort, lto=true

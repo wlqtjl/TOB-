@@ -74,7 +74,7 @@ function gameReducer(state: GameState, action: GameAction): GameState {
       const input: ScoringInput = {
         correctCount: state.correctCount + 1,
         totalCount: state.totalQuestions,
-        maxCombo: combo.current,
+        maxCombo: combo.max,
         timeRemainingSec: Math.max(0, timeLimitSec - elapsedSec),
         timeLimitSec,
       };

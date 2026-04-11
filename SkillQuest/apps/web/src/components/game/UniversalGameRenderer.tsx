@@ -3,34 +3,47 @@
 /**
  * UniversalGameRenderer — Single Canvas rendering engine for ALL level types
  *
- * Accepts a VisualScene as the sole prop. Internally:
- * - Renders entities (icons, labels, state indicators) on Canvas
- * - Draws connections (Bezier curves) between entities
- * - Drives ParticleSystem via requestAnimationFrame
- * - Handles click/hover interactions via hit-testing
+ * Accepts a VisualScene as the sole prop. Uses modular subsystems:
+ * - EntityRenderer: draws entities (icons, labels, glow, selection)
+ * - ConnectionRenderer: draws Bezier curves + arrowheads
+ * - ParticleSystem: Canvas 2D particle engine with object pooling
+ * - InteractionManager: click/drag/connect/sequence/input handling
+ * - FeedbackEffects: shake, celebration, combo, screen flash
  *
  * This one component replaces all per-type rendering code.
  */
 
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useRef, useEffect, useCallback } from 'react';
 import type {
   VisualScene,
-  VisualEntity,
-  VisualConnection,
   InteractionResult,
 } from '@skillquest/game-engine';
-import { ParticleSystem, type BezierPath } from './ParticleSystem';
+import { ParticleSystem } from './ParticleSystem';
+import { drawEntity } from './EntityRenderer';
+import { drawConnection, drawPendingConnection, buildBezierPath, type BezierPath } from './ConnectionRenderer';
+import {
+  updateFeedback,
+  renderFeedback,
+  triggerCorrect,
+  triggerWrong,
+  createFeedbackState,
+  type FeedbackState,
+} from './FeedbackEffects';
+import { useParticleLoop } from './hooks/useParticleLoop';
+import { useInteraction } from './hooks/useInteraction';
 
 interface Props {
   scene: VisualScene;
   onInteraction?: (result: InteractionResult) => void;
+  /** Current combo count for visual feedback tier */
+  comboCount?: number;
   /** Optional class for the container */
   className?: string;
   /** Show debug info (particle count, FPS) */
   debug?: boolean;
 }
 
-// ─── Render helpers ────────────────────────────────────────────────
+// ─── Background grid ───────────────────────────────────────────────
 
 function drawGrid(
   ctx: CanvasRenderingContext2D,
@@ -39,6 +52,7 @@ function drawGrid(
   color: string,
   spacing: number,
 ) {
+  ctx.save();
   ctx.strokeStyle = color;
   ctx.lineWidth = 0.5;
   ctx.globalAlpha = 0.05;
@@ -54,137 +68,7 @@ function drawGrid(
     ctx.lineTo(w, y);
     ctx.stroke();
   }
-  ctx.globalAlpha = 1;
-}
-
-function drawConnection(
-  ctx: CanvasRenderingContext2D,
-  conn: VisualConnection,
-  entityMap: Map<string, VisualEntity>,
-) {
-  const from = entityMap.get(conn.from);
-  const to = entityMap.get(conn.to);
-  if (!from || !to) return;
-
-  ctx.strokeStyle = conn.style.color;
-  ctx.lineWidth = conn.style.width;
-  ctx.globalAlpha = conn.style.opacity;
-
-  if (conn.style.dashPattern && conn.style.dashPattern.length > 0) {
-    ctx.setLineDash(conn.style.dashPattern);
-  } else {
-    ctx.setLineDash([]);
-  }
-
-  ctx.beginPath();
-  if (conn.bezierControl) {
-    const { cx1, cy1, cx2, cy2 } = conn.bezierControl;
-    ctx.moveTo(from.position.x, from.position.y);
-    ctx.bezierCurveTo(cx1, cy1, cx2, cy2, to.position.x, to.position.y);
-  } else {
-    ctx.moveTo(from.position.x, from.position.y);
-    ctx.lineTo(to.position.x, to.position.y);
-  }
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.globalAlpha = 1;
-}
-
-function drawEntity(
-  ctx: CanvasRenderingContext2D,
-  entity: VisualEntity,
-  isHovered: boolean,
-) {
-  const { x, y } = entity.position;
-  const { w, h } = entity.size;
-  const half_w = w / 2;
-  const half_h = h / 2;
-
-  ctx.globalAlpha = entity.style.opacity;
-
-  // Glow effect
-  if (entity.style.glowColor && entity.style.glowRadius) {
-    ctx.shadowColor = entity.style.glowColor;
-    ctx.shadowBlur = entity.style.glowRadius * (isHovered ? 2 : 1);
-  }
-
-  // Background
-  ctx.fillStyle = entity.style.fill;
-  ctx.strokeStyle = entity.style.stroke;
-  ctx.lineWidth = entity.style.strokeWidth;
-
-  // Circle for small entities, rounded rect for larger ones
-  if (w <= 80 && h <= 80) {
-    const radius = Math.min(half_w, half_h);
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-  } else {
-    const rx = x - half_w;
-    const ry = y - half_h;
-    const r = 8;
-    ctx.beginPath();
-    ctx.moveTo(rx + r, ry);
-    ctx.lineTo(rx + w - r, ry);
-    ctx.quadraticCurveTo(rx + w, ry, rx + w, ry + r);
-    ctx.lineTo(rx + w, ry + h - r);
-    ctx.quadraticCurveTo(rx + w, ry + h, rx + w - r, ry + h);
-    ctx.lineTo(rx + r, ry + h);
-    ctx.quadraticCurveTo(rx, ry + h, rx, ry + h - r);
-    ctx.lineTo(rx, ry + r);
-    ctx.quadraticCurveTo(rx, ry, rx + r, ry);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  }
-
-  ctx.shadowBlur = 0;
-
-  // Icon
-  ctx.font = w <= 80 ? '24px serif' : '18px serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#ffffff';
-  ctx.fillText(entity.icon, x, y - (w > 80 ? 4 : 0));
-
-  // Label (below icon for small entities, beside icon for large)
-  if (entity.label) {
-    ctx.font = w <= 80 ? '10px sans-serif' : '12px sans-serif';
-    ctx.fillStyle = '#d1d5db';
-    ctx.textAlign = 'center';
-
-    if (w <= 80) {
-      // Below the circle
-      const lines = entity.label.split('\n');
-      lines.forEach((line, i) => {
-        ctx.fillText(
-          line.length > 12 ? line.slice(0, 12) + '…' : line,
-          x,
-          y + half_h + 14 + i * 14,
-        );
-      });
-    } else {
-      // Inside the rect, below icon
-      const lines = entity.label.split('\n');
-      lines.forEach((line, i) => {
-        ctx.fillText(
-          line.length > 30 ? line.slice(0, 30) + '…' : line,
-          x,
-          y + 10 + i * 14,
-        );
-      });
-    }
-  }
-
-  // Stars metadata
-  const starsDisplay = entity.metadata.starsDisplay as string | undefined;
-  if (starsDisplay) {
-    ctx.font = '10px serif';
-    ctx.fillText(starsDisplay, x, y + half_h + 28);
-  }
-
-  ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 // ─── Component ─────────────────────────────────────────────────────
@@ -192,22 +76,45 @@ function drawEntity(
 export default function UniversalGameRenderer({
   scene,
   onInteraction,
+  comboCount = 0,
   className = '',
   debug = false,
 }: Props) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const particleSystemRef = useRef<ParticleSystem | null>(null);
-  const animFrameRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
-  const [fps, setFps] = useState(0);
-  const frameCountRef = useRef(0);
-  const fpsTimerRef = useRef(0);
+  const feedbackRef = useRef<FeedbackState>(createFeedbackState());
+
+  // Interaction hook
+  const { state: interactionState, handlers } = useInteraction({
+    scene,
+    onResult: useCallback(
+      (result: InteractionResult) => {
+        // Trigger visual feedback
+        const ps = particleSystemRef.current;
+        if (ps) {
+          if (result.correct) {
+            const tier = comboCount >= 20 ? 'legendary' : comboCount >= 10 ? 'amazing' : comboCount >= 5 ? 'great' : comboCount >= 3 ? 'good' : undefined;
+            feedbackRef.current = triggerCorrect(
+              ps,
+              scene.viewport.width / 2,
+              scene.viewport.height / 2,
+              scene.feedback,
+              tier,
+            );
+          } else {
+            feedbackRef.current = triggerWrong(scene.feedback);
+          }
+        }
+        onInteraction?.(result);
+      },
+      [onInteraction, scene.feedback, scene.viewport, comboCount],
+    ),
+  });
 
   // Build entity map for quick lookup
-  const entityMapRef = useRef(new Map<string, VisualEntity>());
+  const entityMapRef = useRef(new Map<string, (typeof scene.entities)[0]>());
   useEffect(() => {
-    const map = new Map<string, VisualEntity>();
+    const map = new Map<string, (typeof scene.entities)[0]>();
     for (const e of scene.entities) {
       map.set(e.id, e);
     }
@@ -222,48 +129,19 @@ export default function UniversalGameRenderer({
 
     for (const conn of scene.connections) {
       if (!conn.particleConfig.enabled) continue;
-      const from = entityMap.get(conn.from);
-      const to = entityMap.get(conn.to);
-      if (!from || !to) continue;
-
-      if (conn.bezierControl) {
-        paths.set(conn.id, {
-          x0: from.position.x,
-          y0: from.position.y,
-          cx1: conn.bezierControl.cx1,
-          cy1: conn.bezierControl.cy1,
-          cx2: conn.bezierControl.cx2,
-          cy2: conn.bezierControl.cy2,
-          x1: to.position.x,
-          y1: to.position.y,
-        });
-      } else {
-        // Straight line: control points at 1/3 and 2/3
-        const dx = to.position.x - from.position.x;
-        const dy = to.position.y - from.position.y;
-        paths.set(conn.id, {
-          x0: from.position.x,
-          y0: from.position.y,
-          cx1: from.position.x + dx / 3,
-          cy1: from.position.y + dy / 3,
-          cx2: from.position.x + (2 * dx) / 3,
-          cy2: from.position.y + (2 * dy) / 3,
-          x1: to.position.x,
-          y1: to.position.y,
-        });
-      }
+      const path = buildBezierPath(conn, entityMap);
+      if (path) paths.set(conn.id, path);
     }
     bezierPathsRef.current = paths;
   }, [scene.connections, scene.entities]);
 
-  // Initialize particle system and emit particles
+  // Initialize particle system
   useEffect(() => {
     if (!particleSystemRef.current) {
       particleSystemRef.current = new ParticleSystem();
     }
     const ps = particleSystemRef.current;
 
-    // Emit particles for enabled connections
     for (const conn of scene.connections) {
       if (conn.particleConfig.enabled) {
         ps.emitForConnection(conn.id, conn.particleConfig);
@@ -273,161 +151,89 @@ export default function UniversalGameRenderer({
     }
   }, [scene.connections]);
 
-  // Animation loop
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  // Render loop via hook
+  const { fps } = useParticleLoop(canvasRef, (lc) => {
+    const { ctx, dt, width, height } = lc;
+    const ps = particleSystemRef.current;
+    if (!ps) return;
 
-    const { width, height } = scene.viewport;
-    canvas.width = width;
-    canvas.height = height;
+    // Update feedback state
+    feedbackRef.current = updateFeedback(feedbackRef.current, dt);
+    const { offsetX, offsetY } = renderFeedback(ctx, feedbackRef.current, width, height);
 
-    const ps = particleSystemRef.current ?? new ParticleSystem();
-    particleSystemRef.current = ps;
+    // Apply shake offset
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
 
-    lastTimeRef.current = performance.now();
+    // Clear
+    ctx.clearRect(-10, -10, width + 20, height + 20);
 
-    function frame(now: number) {
-      const dt = Math.min((now - lastTimeRef.current) / 1000, 0.05); // cap dt
-      lastTimeRef.current = now;
+    // Background
+    const bg = scene.viewport.background;
+    ctx.fillStyle = bg.color;
+    ctx.fillRect(0, 0, width, height);
 
-      if (!ctx || !canvas) return;
-
-      // Clear
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Background
-      const bg = scene.viewport.background;
-      ctx.fillStyle = bg.color;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Grid
-      if (bg.gridVisible && bg.gridColor && bg.gridSpacing) {
-        drawGrid(ctx, canvas.width, canvas.height, bg.gridColor, bg.gridSpacing);
-      }
-
-      // Draw connections
-      for (const conn of scene.connections) {
-        drawConnection(ctx, conn, entityMapRef.current);
-      }
-
-      // Update and render particles
-      ps.update(dt, bezierPathsRef.current);
-      ps.render(ctx);
-
-      // Draw entities
-      for (const entity of scene.entities) {
-        drawEntity(ctx, entity, entity.id === hoveredId);
-      }
-
-      // Debug overlay
-      if (debug) {
-        frameCountRef.current++;
-        fpsTimerRef.current += dt;
-        if (fpsTimerRef.current >= 1) {
-          setFps(frameCountRef.current);
-          frameCountRef.current = 0;
-          fpsTimerRef.current = 0;
-        }
-
-        ctx.fillStyle = '#00ff00';
-        ctx.font = '11px monospace';
-        ctx.textAlign = 'left';
-        ctx.fillText(`${fps} FPS | ${ps.activeCount} particles`, 8, 16);
-      }
-
-      animFrameRef.current = requestAnimationFrame(frame);
+    // Grid
+    if (bg.gridVisible && bg.gridColor && bg.gridSpacing) {
+      drawGrid(ctx, width, height, bg.gridColor, bg.gridSpacing);
     }
 
-    animFrameRef.current = requestAnimationFrame(frame);
+    // Highlight set for connections
+    const highlightSet = new Set(interactionState.sequenceIds);
 
-    return () => {
-      cancelAnimationFrame(animFrameRef.current);
-    };
-  }, [scene, hoveredId, debug, fps]);
+    // Draw connections
+    for (const conn of scene.connections) {
+      drawConnection(ctx, conn, entityMapRef.current, highlightSet);
+    }
 
-  // Hit-testing for mouse interactions
-  const handleCanvasClick = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas || !onInteraction) return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+    // Draw pending connection line (during connect interaction)
+    if (interactionState.pendingLine) {
+      const pl = interactionState.pendingLine;
+      drawPendingConnection(ctx, pl.fromX, pl.fromY, pl.toX, pl.toY);
+    }
 
-      // Find clicked entity
-      for (const entity of scene.entities) {
-        const dx = mx - entity.position.x;
-        const dy = my - entity.position.y;
-        const hw = entity.size.w / 2;
-        const hh = entity.size.h / 2;
+    // Update and render particles
+    ps.update(dt, bezierPathsRef.current);
+    ps.render(ctx);
 
-        if (Math.abs(dx) < hw && Math.abs(dy) < hh) {
-          // Try click interactions
-          for (const rule of scene.interactions) {
-            if (rule.type === 'click') {
-              if (rule.sourceFilter && entity.group !== rule.sourceFilter) continue;
-              const result = rule.validate({ entityId: entity.id });
-              onInteraction(result);
+    // Draw entities
+    for (const entity of scene.entities) {
+      drawEntity(
+        ctx,
+        entity,
+        entity.id === interactionState.hoveredId,
+        entity.id === interactionState.selectedId ||
+          interactionState.sequenceIds.includes(entity.id),
+      );
+    }
 
-              // Emit burst at click position
-              if (particleSystemRef.current) {
-                const effectConfig = result.correct
-                  ? scene.feedback.correctEffect
-                  : { count: 10, color: '#ef4444', speed: 100, lifetime: 0.4, spread: Math.PI * 2 };
-                particleSystemRef.current.emitBurst(
-                  entity.position.x,
-                  entity.position.y,
-                  effectConfig,
-                );
-              }
-              return;
-            }
-          }
-        }
-      }
-    },
-    [scene, onInteraction],
-  );
+    // Render feedback overlay (screen flash is drawn last)
+    renderFeedback(ctx, feedbackRef.current, width, height);
 
-  const handleCanvasMove = useCallback(
-    (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+    ctx.restore();
 
-      for (const entity of scene.entities) {
-        const dx = mx - entity.position.x;
-        const dy = my - entity.position.y;
-        const hw = entity.size.w / 2;
-        const hh = entity.size.h / 2;
-
-        if (Math.abs(dx) < hw && Math.abs(dy) < hh) {
-          setHoveredId(entity.id);
-          const isClickable = entity.metadata.clickable !== false && entity.style.opacity > 0.5;
-      canvas.style.cursor = isClickable ? 'pointer' : 'not-allowed';
-          return;
-        }
-      }
-      setHoveredId(null);
-      canvas.style.cursor = 'default';
-    },
-    [scene.entities],
-  );
+    // Debug overlay
+    if (debug) {
+      ctx.fillStyle = '#00ff00';
+      ctx.font = '11px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`${fps} FPS | ${ps.activeCount} particles`, 8, 16);
+    }
+  }, {
+    width: scene.viewport.width,
+    height: scene.viewport.height,
+    enableDPI: true,
+  });
 
   return (
     <div className={`relative ${className}`}>
       <canvas
         ref={canvasRef}
-        width={scene.viewport.width}
-        height={scene.viewport.height}
         className="rounded-xl"
-        onClick={handleCanvasClick}
-        onMouseMove={handleCanvasMove}
+        onClick={handlers.onClick}
+        onMouseDown={handlers.onMouseDown}
+        onMouseMove={handlers.onMouseMove}
+        onMouseUp={handlers.onMouseUp}
         style={{ width: '100%', height: 'auto', maxWidth: scene.viewport.width }}
       />
     </div>

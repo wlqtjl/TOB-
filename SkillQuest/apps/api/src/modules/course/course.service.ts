@@ -101,7 +101,7 @@ export class CourseService {
   }
 
   async getPlayContentByType(courseId: string, type: string) {
-    const levelType = type.toUpperCase().replace('-', '_');
+    const levelType = type.toUpperCase().replaceAll('-', '_');
     const level = await this.prisma.level.findFirst({
       where: { courseId, type: levelType as never },
       select: { id: true, type: true, title: true, content: true },

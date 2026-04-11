@@ -18,14 +18,16 @@ export class LeaderboardService {
     const redisUrl = process.env.REDIS_URL;
     if (redisUrl) {
       try {
-        this.redis = new Redis(redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
-        this.redis.connect().catch((err) => {
+        const redis = new Redis(redisUrl, { maxRetriesPerRequest: 1, lazyConnect: true });
+        redis.connect().then(() => {
+          this.redis = redis;
+          this.logger.log('Redis 连接成功');
+        }).catch((err) => {
           this.logger.warn(`Redis 不可用，降级为数据库排行榜: ${(err as Error).message}`);
-          this.redis = null;
+          redis.disconnect();
         });
       } catch {
         this.logger.warn('Redis 初始化失败，降级为数据库排行榜');
-        this.redis = null;
       }
     }
   }

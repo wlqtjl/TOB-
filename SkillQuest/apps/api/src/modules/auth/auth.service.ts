@@ -10,6 +10,11 @@ import { PrismaService } from '../../prisma.service';
 const JWT_SECRET = process.env.JWT_SECRET ?? 'skillquest-dev-secret-change-in-production';
 const JWT_EXPIRES_IN = '7d';
 
+// Warn if using default secret in production
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET 环境变量未设置！生产环境必须配置安全的密钥。');
+}
+
 export interface JwtPayload {
   sub: string;
   email: string;

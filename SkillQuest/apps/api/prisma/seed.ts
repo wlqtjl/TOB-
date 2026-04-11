@@ -426,8 +426,10 @@ async function main() {
   const leaderboardUsers: Record<string, string[]> = {};
   for (const [courseId, users] of Object.entries(LEADERBOARD_USERS)) {
     leaderboardUsers[courseId] = [];
-    for (const u of users) {
-      const email = `${u.name.toLowerCase().replace(/\s/g, '')}@demo.skillquest.dev`;
+    for (let idx = 0; idx < users.length; idx++) {
+      const u = users[idx];
+      const sanitizedName = u.name.replace(/[^a-zA-Z0-9]/g, '') || `user${idx}`;
+      const email = `${sanitizedName}@demo.skillquest.dev`;
       const user = await prisma.user.upsert({
         where: { email },
         update: { totalStars: u.stars },

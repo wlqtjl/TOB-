@@ -174,6 +174,8 @@ npx prisma migrate reset      # 重置数据库 (删除所有数据)
 | GET | `/api/courses/:id/levels` | 关卡列表 |
 | GET | `/api/courses/:id/questions` | 题目数据 |
 | GET | `/api/courses/:id/play/:type` | 游戏内容 (按题型) |
+| POST | `/api/courses/import` | **文档上传 → AI 生成课程**（multipart: file + tenantId + hint?）|
+| GET | `/api/courses/import/status/:jobId` | 查询 AI 生成任务进度 |
 | POST | `/api/game/level/:cid/:lid/start` | 开始关卡 |
 | POST | `/api/game/level/:cid/:lid/submit` | 提交答题结果 |
 | GET | `/api/leaderboard/:courseId` | 排行榜 |
@@ -189,7 +191,7 @@ npx prisma migrate reset      # 重置数据库 (删除所有数据)
 |---|---|---|
 | **Phase 0** | 第1-2周 | ✅ Monorepo搭建 + Docker + CI |
 | **Phase 0.5** | 第2-3周 | ✅ Prisma数据库 + API业务逻辑 + JWT认证 + 数据Seed + 排行榜 |
-| **Phase 1** | 第3-8周 | 闯关地图 + 基础题型 + 排行榜 + 连击系统 |
-| **Phase 2** | 第9-14周 | AI题目生成 + 拓扑识别 + 高级题型 |
+| **Phase 1** | 第3-8周 | ✅ 闯关地图 + 7种题型 + 排行榜 + 连击系统 + Canvas渲染引擎 |
+| **Phase 2** | 第9-14周 | ✅ **文档上传 + AI题目生成**（GPT-4o · PDF/DOCX · 7种题型自动生成）|
 | **Phase 3** | 第15-20周 | 成就/徽章 + 每日挑战 + 数字证书 |
 | **Phase 4** | 第21-28周 | 钉钉/飞书SSO + 团队管理 + PWA |

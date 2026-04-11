@@ -5,10 +5,32 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import type { LevelMapData, LevelMapNode, LevelMapEdge } from '@skillquest/types';
+import { DocumentParserService } from './document-parser.service';
+import { AiGeneratorService } from './ai-generator.service';
+
+// ─── 导入任务状态 (内存) ──────────────────────────────────────────
+
+export type ImportJobStatus = 'pending' | 'parsing' | 'generating' | 'saving' | 'done' | 'error';
+
+export interface ImportJob {
+  jobId: string;
+  status: ImportJobStatus;
+  progress: number;  // 0-100
+  message: string;
+  courseId?: string;
+  error?: string;
+  createdAt: Date;
+}
 
 @Injectable()
 export class CourseService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly importJobs = new Map<string, ImportJob>();
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly docParser: DocumentParserService,
+    private readonly aiGenerator: AiGeneratorService,
+  ) {}
 
   // ─── 课程 CRUD ─────────────────────────────────────────────────
 
@@ -205,5 +227,113 @@ export class CourseService {
         bestScore: data.bestScore ?? 0,
       },
     });
+  }
+
+  // ─── 文档导入 (Document → AI → Course) ───────────────────────────
+
+  /** 查询导入任务状态 */
+  getImportJob(jobId: string): ImportJob | undefined {
+    return this.importJobs.get(jobId);
+  }
+
+  /**
+   * 启动文档导入任务（异步，立即返回 jobId）
+   * 调用方轮询 getImportJob(jobId) 查看进度
+   */
+  startImport(params: {
+    buffer: Buffer;
+    mimetype: string;
+    originalname: string;
+    tenantId: string;
+    hint?: string;
+  }): string {
+    const jobId = `import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const job: ImportJob = {
+      jobId,
+      status: 'pending',
+      progress: 0,
+      message: '任务已创建，等待开始…',
+      createdAt: new Date(),
+    };
+    this.importJobs.set(jobId, job);
+
+    // 异步执行，不 await
+    void this.runImport(job, params);
+
+    return jobId;
+  }
+
+  private async runImport(
+    job: ImportJob,
+    params: {
+      buffer: Buffer;
+      mimetype: string;
+      originalname: string;
+      tenantId: string;
+      hint?: string;
+    },
+  ): Promise<void> {
+    try {
+      // 1. 解析文档
+      job.status = 'parsing';
+      job.progress = 10;
+      job.message = '📄 正在解析文档…';
+
+      const text = await this.docParser.extractText(
+        params.buffer,
+        params.mimetype,
+        params.originalname,
+      );
+      const chunks = this.docParser.splitIntoChunks(text);
+
+      // 2. AI 生成
+      job.status = 'generating';
+      job.progress = 40;
+      job.message = '🤖 AI 正在生成课程内容…（约 30-60 秒）';
+
+      const result = await this.aiGenerator.generateCourse(chunks, params.hint);
+
+      // 3. 写入数据库
+      job.status = 'saving';
+      job.progress = 85;
+      job.message = '💾 正在保存课程到数据库…';
+
+      const course = await this.prisma.course.create({
+        data: {
+          tenantId: params.tenantId,
+          title: result.title,
+          description: result.description,
+          vendor: result.vendor,
+          category: result.category,
+        },
+      });
+
+      for (const level of result.levels) {
+        await this.prisma.level.create({
+          data: {
+            courseId: course.id,
+            sortOrder: level.sortOrder,
+            title: level.title,
+            type: level.type,
+            description: level.description,
+            timeLimitSec: level.timeLimitSec,
+            prerequisites: [],
+            positionX: level.positionX,
+            positionY: level.positionY,
+            content: level.content as object,
+          },
+        });
+      }
+
+      job.status = 'done';
+      job.progress = 100;
+      job.message = `✅ 课程《${result.title}》已生成，共 ${result.levels.length} 个关卡`;
+      job.courseId = course.id;
+    } catch (err) {
+      job.status = 'error';
+      job.progress = 0;
+      job.message = '❌ 生成失败';
+      job.error = (err as Error).message;
+    }
   }
 }

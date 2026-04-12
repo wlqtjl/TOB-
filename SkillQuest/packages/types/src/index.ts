@@ -790,3 +790,47 @@ export interface AnimationCatalog {
   /** 状态变化 → 动画效果映射表 */
   mappings: AnimationMapping[];
 }
+
+// ─── 专家对比复盘时间线 (Expert Comparison Timeline) ────────────────
+
+export type TimelineStepStatus = 'correct' | 'warning' | 'error' | 'expert-only';
+
+export interface TimelineStep {
+  id: string;
+  /** 相对时间（秒） */
+  timestamp: number;
+  actionName: string;
+  status: TimelineStepStatus;
+  description: string;
+  /** 对 SLA 或风险的影响分 (-100 ~ 0) */
+  impactScore: number;
+  /** RAG 关联的文档原文 */
+  sourceQuote?: string;
+  /** 当前操作后的状态快照（用于 Canvas 回滚） */
+  worldStateSnapshot: unknown;
+  /** 如果是错误操作，说明偏离原因 */
+  deviationNotice?: string;
+}
+
+export interface ReplayDataSummary {
+  userTime: number;
+  expertTime: number;
+  score: number;
+  slaLoss: string;
+}
+
+export interface ReplayData {
+  summary: ReplayDataSummary;
+  playerSteps: TimelineStep[];
+  /** 专家最优路径的参考步骤 */
+  expertSteps: TimelineStep[];
+}
+
+export interface DeviationPoint {
+  playerStep: TimelineStep;
+  expertStep: TimelineStep;
+  /** 时间偏移量（秒） */
+  timeOffset: number;
+  /** 风险增量 */
+  riskDelta: number;
+}

@@ -28,27 +28,23 @@ interface InsightPanelProps {
 
 /**
  * Typewriter hook for expert commentary
- *
- * Uses useSyncExternalStore pattern to avoid setState in effect body.
  */
 function useTypewriter(text: string, speed: number = 30): string {
-  const stateRef = useRef({ text: '', index: 0, displayed: '' });
-  const [, forceRender] = useState(0);
-
-  // Reset when text changes
-  if (stateRef.current.text !== text) {
-    stateRef.current = { text, index: 0, displayed: '' };
-  }
+  const [displayed, setDisplayed] = useState('');
+  const prevTextRef = useRef(text);
 
   useEffect(() => {
+    // Reset when text changes
+    prevTextRef.current = text;
+    let index = 0;
+    setDisplayed('');
+
     if (!text) return;
 
     const timer = setInterval(() => {
-      const st = stateRef.current;
-      if (st.index < text.length) {
-        st.index++;
-        st.displayed = text.substring(0, st.index);
-        forceRender((n) => n + 1);
+      index++;
+      if (index <= text.length && prevTextRef.current === text) {
+        setDisplayed(text.substring(0, index));
       } else {
         clearInterval(timer);
       }
@@ -57,7 +53,7 @@ function useTypewriter(text: string, speed: number = 30): string {
     return () => clearInterval(timer);
   }, [text, speed]);
 
-  return stateRef.current.displayed;
+  return displayed;
 }
 
 /**

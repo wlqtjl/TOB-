@@ -79,6 +79,13 @@ function formatTimestamp(seconds: number): string {
   return `+${m}:${s.toString().padStart(2, '0')}`;
 }
 
+const STATUS_INDICATOR_BG: Record<TimelineStepStatus, string> = {
+  correct: 'bg-emerald-400',
+  warning: 'bg-amber-400',
+  error: 'bg-red-400',
+  'expert-only': 'bg-base-400',
+};
+
 export default function TimelineNode({
   actionName,
   description,
@@ -140,7 +147,7 @@ export default function TimelineNode({
 
       {/* Selected indicator */}
       {isSelected && (
-        <div className={`absolute top-0 ${side === 'left' ? '-right-2' : '-left-2'} w-1 h-full rounded-full ${config.textColor.replace('text-', 'bg-')}`} />
+        <div className={`absolute top-0 ${side === 'left' ? '-right-2' : '-left-2'} w-1 h-full rounded-full ${STATUS_INDICATOR_BG[status]}`} />
       )}
     </button>
   );

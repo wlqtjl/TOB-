@@ -31,7 +31,9 @@ export default function SLACurve({
   const maxTime = Math.max(...points.map((p) => p[0]));
   const minSLA = Math.min(...points.map((p) => p[1]));
   const maxSLA = Math.max(...points.map((p) => p[1]));
-  const slaRange = Math.max(maxSLA - minSLA, 0.01); // avoid division by zero
+  /** Minimum range to avoid division by zero when all SLA values are identical */
+  const MIN_SLA_RANGE = 0.01;
+  const slaRange = Math.max(maxSLA - minSLA, MIN_SLA_RANGE);
 
   // Map data to SVG coords
   const svgPoints = points.map(([t, sla]) => ({

@@ -275,6 +275,9 @@ function TimelineConnectors({
 
 // ─── Main Component ────────────────────────────────────────────────
 
+/** Vertical height (px) allocated per timeline row */
+const ROW_HEIGHT = 140;
+
 export default function ExpertComparisonTimeline({
   data,
   onStepClick,
@@ -308,7 +311,6 @@ export default function ExpertComparisonTimeline({
   );
 
   const maxRows = Math.max(data.playerSteps.length, data.expertSteps.length);
-  const ROW_HEIGHT = 140; // px per row
 
   // Typewriter summary at bottom
   const [summaryText, setSummaryText] = useState('');

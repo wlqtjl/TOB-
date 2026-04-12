@@ -834,3 +834,182 @@ export interface DeviationPoint {
   /** 风险增量 */
   riskDelta: number;
 }
+
+// ─── 硬核仿真交互系统 (Hardcore Simulation Tool System) ────────────
+//
+// 从"点选按钮"进化为"物理工具交互":
+// 用户通过 Probe/Cutter/Booster/Linker/Migrator/Freezer 六大工具
+// 直接干预系统运行, 配合粒子物理引擎实现沉浸式操作。
+
+/** 工具类型 — 对应六种"物理交互工具" */
+export type ToolType =
+  | 'probe'    // 听诊器: 探测节点性能指标
+  | 'cutter'   // 手术刀: 切断连接, 模拟网络分区
+  | 'booster'  // 加压泵: 增加节点负载, 模拟流量冲击
+  | 'linker'   // 重建器: 重建连接, 修复路径
+  | 'migrator' // 磁力吸: 拖拽数据块迁移
+  | 'freezer'; // 冻结时钟: 暂停粒子流, 观察一致性快照
+
+/** 工具状态 */
+export type ToolStatus = 'idle' | 'active' | 'cooldown' | 'disabled';
+
+/** 单个工具的完整状态 */
+export interface ToolState {
+  type: ToolType;
+  status: ToolStatus;
+  /** 冷却剩余时间 (ms) */
+  cooldownRemainingMs: number;
+  /** 冷却总时间 (ms) */
+  cooldownTotalMs: number;
+  /** 使用次数 (关卡内) */
+  usageCount: number;
+  /** 最大使用次数 (-1=无限) */
+  maxUsage: number;
+}
+
+/** 工具动作 — 用户对某个目标执行工具操作 */
+export interface ToolAction {
+  /** 唯一动作 ID */
+  id: string;
+  /** 使用的工具 */
+  tool: ToolType;
+  /** 目标实体 ID (节点或连接) */
+  targetId: string;
+  /** 可选: 第二目标 (如 Migrator 的目的节点, Linker 的连接终点) */
+  secondaryTargetId?: string;
+  /** 动作发生时间戳 */
+  timestamp: number;
+}
+
+/** 工具动作执行结果 */
+export interface ToolActionResult {
+  success: boolean;
+  message: string;
+  /** 对 WorldState 的变更 */
+  mutations: WorldStateMutation[];
+  /** 触发的视觉效果 trigger */
+  visualTriggers: string[];
+  /** 如果是 Probe, 返回探测数据 */
+  probeData?: ProbeData;
+}
+
+/** Probe 探测返回的节点详细指标 */
+export interface ProbeData {
+  nodeId: string;
+  /** IO 深度 */
+  ioDepth: number;
+  /** IO 延迟曲线采样点 (ms) */
+  latencySamples: number[];
+  /** IOPS */
+  iops: number;
+  /** 吞吐量 (MB/s) */
+  throughputMBps: number;
+  /** 副本同步状态 */
+  replicaSync: Record<string, 'synced' | 'lagging' | 'lost'>;
+}
+
+/**
+ * 操作序列定义 — 关卡要求玩家按特定顺序使用工具
+ *
+ * 不再是单选题, 而是"先 Probe 发现瓶颈 → 再 Cutter 切断旧路径
+ * → 最后 Linker 重建新路径"的操作序列。
+ */
+export interface ToolSequence {
+  /** 序列 ID */
+  id: string;
+  /** 序列描述 */
+  description: string;
+  /** 必须执行的步骤 (按顺序) */
+  requiredSteps: ToolSequenceStep[];
+  /** 步骤之间的最大间隔 (ms), 超过则判定'操作失误' */
+  maxIntervalMs: number;
+  /** 整个序列的时间限制 (ms) */
+  timeLimitMs: number;
+}
+
+/** 操作序列中的单个步骤 */
+export interface ToolSequenceStep {
+  /** 步骤序号 (从 0 开始) */
+  index: number;
+  /** 要求使用的工具 */
+  requiredTool: ToolType;
+  /** 要求的目标节点/连接 ID (null=任意目标) */
+  requiredTargetId: string | null;
+  /** 步骤提示文字 */
+  hint: string;
+}
+
+/** 操作序列验证结果 */
+export interface SequenceValidationResult {
+  /** 是否完成 */
+  completed: boolean;
+  /** 当前进行到第几步 */
+  currentStep: number;
+  /** 总步骤数 */
+  totalSteps: number;
+  /** 是否有操作失误 */
+  hasMistake: boolean;
+  /** 失误原因 */
+  mistakeReason?: string;
+  /** 剩余时间 (ms) */
+  remainingMs: number;
+}
+
+// ─── 粒子物理引擎状态 ──────────────────────────────────────────────
+
+/** 单条连接的粒子物理参数 */
+export interface ParticlePhysics {
+  /** 连接 ID */
+  connectionId: string;
+  /** 粒子密度 (数量/连接, 基础值来自 ParticleConfig.density) */
+  density: number;
+  /** 粒子速度 (px/s) */
+  velocity: number;
+  /** 粒子粘度 (0=自由流动, 1=完全凝滞) — 模拟延迟 */
+  viscosity: number;
+  /** 粒子颜色 (动态变化: 正常=蓝, 高压=红) */
+  color: string;
+  /** 粒子大小 (px) */
+  size: number;
+  /** 是否冻结 */
+  frozen: boolean;
+}
+
+/** 单个节点的物理状态 */
+export interface NodePhysics {
+  /** 节点 ID */
+  nodeId: string;
+  /** 呼吸闪烁相位 (0-2π, 用于正弦振荡) */
+  breathPhase: number;
+  /** 呼吸闪烁频率 (Hz): 正常=0.5, 告警=2.0 */
+  breathFrequency: number;
+  /** 热力值 (0=冷, 1=炽热) — 映射到颜色梯度 */
+  heatValue: number;
+  /** 震动强度 (0=静止, 1=剧烈) */
+  shakeIntensity: number;
+  /** 震动衰减速率 (每秒降低多少) */
+  shakeDamping: number;
+}
+
+/** 全局物理引擎状态 */
+export interface PhysicsState {
+  /** 所有连接的粒子物理参数 */
+  particles: ParticlePhysics[];
+  /** 所有节点的物理状态 */
+  nodes: NodePhysics[];
+  /** 全局时间冻结 */
+  globalFrozen: boolean;
+  /** 全局屏幕震动 (Booster 等操作触发) */
+  screenShake: { intensity: number; remainingMs: number };
+  /** 是否处于 X-Ray 模式 (显示元数据神经网络) */
+  xrayMode: boolean;
+}
+
+/** 物理引擎 tick 更新的输入 */
+export interface PhysicsTickInput {
+  /** 距上次 tick 的时间差 (ms) */
+  deltaMs: number;
+  /** 当前 WorldState (用于驱动物理参数) */
+  worldNodes: WorldNode[];
+  worldLinks: WorldLink[];
+}

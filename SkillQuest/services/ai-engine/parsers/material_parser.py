@@ -124,7 +124,8 @@ def _parse_pdf_with_mineru(pdf_bytes: bytes, work_dir: Path) -> ParseResult:
     # 获取结构化内容列表
     try:
         content_list = pipe_result.get_content_list()
-    except Exception:
+    except Exception as e:
+        logger.warning(f"获取结构化内容列表失败 (表格提取可能不完整): {e}")
         content_list = []
 
     # 提取图片信息
@@ -236,7 +237,7 @@ def _parse_docx(file_bytes: bytes, work_dir: Path) -> ParseResult:
         if not text:
             continue
 
-        # 根据样式转换为 Markdown 标题
+        # 根据样式转换为 Markdown 标题 (假设 Word 标题样式标记了标题层级)
         style_name = (para.style.name or "").lower()
         if "heading 1" in style_name:
             md_parts.append(f"# {text}")
@@ -259,7 +260,7 @@ def _parse_docx(file_bytes: bytes, work_dir: Path) -> ParseResult:
         html = f"<table>{''.join(rows_html)}</table>"
         tables.append(ParsedTable(html=html, page=0, caption=f"表格 {tbl_idx + 1}"))
 
-        # 添加表格的 Markdown 表示
+        # 添加表格的 Markdown 表示 (将第一行视为表头; 对于无表头的表格仍可正常显示)
         if table.rows:
             header = [cell.text.strip() for cell in table.rows[0].cells]
             md_parts.append("| " + " | ".join(header) + " |")

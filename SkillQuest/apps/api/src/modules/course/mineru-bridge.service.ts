@@ -27,11 +27,12 @@ import {
 } from '@nestjs/common';
 import { ChildProcess, spawn } from 'child_process';
 import * as http from 'http';
-import * as https from 'https';
 import * as path from 'path';
-import { Readable } from 'stream';
 
 // ── 类型定义 ──────────────────────────────────────────────────────────
+
+/** 解析请求超时 (5 分钟, 大文件 + OCR 需要较长时间) */
+const PARSE_TIMEOUT_MS = 5 * 60 * 1_000;
 
 export interface MineruParseResult {
   markdown: string;
@@ -265,7 +266,7 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
             'Content-Type': `multipart/form-data; boundary=${boundary}`,
             'Content-Length': body.length,
           },
-          timeout: 300_000, // 5 分钟超时 (大文件 + OCR 可能很慢)
+          timeout: PARSE_TIMEOUT_MS,
         },
         (res) => {
           const chunks: Buffer[] = [];
@@ -288,7 +289,7 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
       req.on('error', reject);
       req.on('timeout', () => {
         req.destroy();
-        reject(new Error('AI Engine 请求超时 (5 分钟)'));
+        reject(new Error(`AI Engine 请求超时 (${PARSE_TIMEOUT_MS / 1_000} 秒)`));
       });
 
       req.write(body);

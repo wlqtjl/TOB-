@@ -8,6 +8,11 @@ import type { LevelMapData, LevelMapNode, LevelMapEdge } from '@skillquest/types
 import { DocumentParserService } from './document-parser.service';
 import { AiGeneratorService } from './ai-generator.service';
 
+/** 附加到 GPT-4o hint 中的最大表格数量 */
+const MAX_TABLES_IN_HINT = 5;
+/** 每个表格 HTML 截取的最大字符数 */
+const MAX_TABLE_HTML_LENGTH = 500;
+
 // ─── 导入任务状态 (内存) ──────────────────────────────────────────
 
 export type ImportJobStatus = 'pending' | 'parsing' | 'generating' | 'saving' | 'done' | 'error';
@@ -301,8 +306,8 @@ export class CourseService {
       let enhancedHint = params.hint ?? '';
       if (structured.tables.length > 0) {
         const tablesSummary = structured.tables
-          .slice(0, 5)
-          .map((t, i) => `表格 ${i + 1}: ${t.html.slice(0, 500)}`)
+          .slice(0, MAX_TABLES_IN_HINT)
+          .map((t, i) => `表格 ${i + 1}: ${t.html.slice(0, MAX_TABLE_HTML_LENGTH)}`)
           .join('\n');
         enhancedHint += `\n\n[文档中包含 ${structured.tables.length} 个表格，以下是部分表格内容，请参考生成 MATCHING 或 QUIZ 题型]\n${tablesSummary}`;
       }

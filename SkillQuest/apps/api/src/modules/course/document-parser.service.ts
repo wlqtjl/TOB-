@@ -95,7 +95,8 @@ export class DocumentParserService {
       const mineruResult = await this.mineruBridge.parseDocument(buffer, originalname, mimetype);
       if (mineruResult) {
         this.logger.log(`MinerU 解析成功 (plain_text): ${mineruResult.parser_used}`);
-        // 优先返回 Markdown (GPT-4o 能更好地理解)
+        // 返回 Markdown 而非纯文本: GPT-4o 对结构化 Markdown 的理解效果更好,
+        // 表格/标题/列表格式有助于生成更精准的课程关卡。
         return mineruResult.markdown || mineruResult.plain_text;
       }
     }

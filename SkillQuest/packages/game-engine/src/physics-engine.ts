@@ -244,7 +244,7 @@ export function tickPhysics(
 
   // 屏幕震动衰减
   const shakeRemaining = Math.max(0, state.screenShake.remainingMs - deltaMs);
-  const shakeIntensity = shakeRemaining > 0
+  const shakeIntensity = shakeRemaining > 0 && state.screenShake.remainingMs > 0
     ? state.screenShake.intensity * (shakeRemaining / state.screenShake.remainingMs)
     : 0;
 

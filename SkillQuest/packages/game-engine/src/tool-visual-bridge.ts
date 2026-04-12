@@ -158,7 +158,8 @@ export function applyToolActionToVisuals(
 
     case 'linker': {
       // Linker: 创建新连接 (或恢复旧连接)
-      const targetConnId = `link-${action.targetId}-${action.secondaryTargetId}`;
+      const secondaryId = action.secondaryTargetId ?? '';
+      const targetConnId = `link-${action.targetId}-${secondaryId}`;
       physicsState = {
         ...physicsState,
         particles: physicsState.particles.map((p: ParticlePhysics) =>

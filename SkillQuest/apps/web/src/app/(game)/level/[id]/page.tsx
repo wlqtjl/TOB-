@@ -66,7 +66,7 @@ function LevelContent({ levelId }: { levelId: string }) {
     }
   }, [currentIdx, questions.length, nextQuestion]);
 
-  if (!currentQuestion) {
+  if (!currentQuestion || !scene) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
@@ -97,7 +97,7 @@ function LevelContent({ levelId }: { levelId: string }) {
 
         <ErrorBoundary>
           <UniversalGameRenderer
-            scene={scene!}
+            scene={scene}
             onInteraction={handleInteraction}
             comboCount={gameState.combo.current}
             className="border border-gray-800 rounded-xl overflow-hidden mt-14"

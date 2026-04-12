@@ -44,7 +44,7 @@ export {
   detectChanges,
   applyWorldStateChanges,
 } from './world-state-visual-bridge';
-export type { StateChange, PendingAnimation } from './world-state-visual-bridge';
+export type { StateChange, PendingAnimation, StatePathSubscription } from './world-state-visual-bridge';
 
 // Visual scene protocol
 export type {

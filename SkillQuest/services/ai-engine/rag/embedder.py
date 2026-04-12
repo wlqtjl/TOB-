@@ -4,7 +4,7 @@
 设计要点:
   - 批量调用 (最多 2048 条/批)
   - 错误重试 (3 次)
-  - 支持降级 (无 API key 时返回零向量, 可用于本地开发)
+  - 支持降级 (无 API key 时降级到 BM25 文本检索, 而非返回零向量)
 """
 
 from __future__ import annotations
@@ -26,13 +26,13 @@ def _get_openai_client() -> Optional[object]:
     """延迟加载 OpenAI 客户端"""
     api_key = os.environ.get("OPENAI_API_KEY", "")
     if not api_key:
-        logger.warning("OPENAI_API_KEY 未设置, embedding 将返回零向量 (仅限开发环境)")
+        logger.warning("OPENAI_API_KEY 未设置, 将降级到 BM25 文本检索 (仅限开发环境)")
         return None
     try:
         from openai import OpenAI
         return OpenAI(api_key=api_key)
     except ImportError:
-        logger.warning("openai 库未安装, embedding 将返回零向量")
+        logger.warning("openai 库未安装, 将降级到 BM25 文本检索")
         return None
 
 
@@ -50,13 +50,15 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
 
     Returns:
         对应的 embedding 向量列表 (1536 维)
+        当 API 不可用时返回空列表, 由 retriever 层切换到 BM25
     """
     if not texts:
         return []
 
     client = _get_openai_client()
     if client is None:
-        return [_zero_vector() for _ in texts]
+        logger.info("Embedding 不可用, 降级到 BM25 文本检索")
+        return []  # 返回空列表, retriever 会使用 BM25
 
     all_embeddings: list[list[float]] = []
 
@@ -78,8 +80,8 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
                 if attempt < MAX_RETRIES - 1:
                     logger.warning(f"Embedding 调用失败 (重试 {attempt + 1}/{MAX_RETRIES}): {e}")
                 else:
-                    logger.error(f"Embedding 调用最终失败: {e}")
-                    all_embeddings.extend([_zero_vector() for _ in batch])
+                    logger.error(f"Embedding 调用最终失败, 降级到 BM25: {e}")
+                    return []  # API 调用失败, 通知 retriever 使用 BM25
 
     return all_embeddings
 
@@ -92,7 +94,7 @@ async def embed_query(query: str) -> list[float]:
         query: 查询文本
 
     Returns:
-        1536 维 embedding 向量
+        1536 维 embedding 向量, 或空列表 (BM25 降级模式)
     """
     results = await embed_texts([query])
-    return results[0] if results else _zero_vector()
+    return results[0] if results else []

@@ -28,6 +28,7 @@ from pydantic import BaseModel
 from analyzers import analyze_markdown_structure, DocumentInsights
 from config import HOST, MAX_FILE_SIZE, PORT
 from parsers import ParseResult, is_mineru_available, parse_document
+from rag import chunk_markdown, embed_texts, embed_query, retrieve_relevant_chunks
 
 logging.basicConfig(
     level=logging.INFO,
@@ -500,6 +501,139 @@ async def replay_trace(req: TraceReplayRequest) -> dict:
             detail="无法从提供的 OTLP Trace 中提取跨服务调用步骤，请检查 Trace 格式是否正确"
         )
     return level
+
+
+# ── RAG 文档索引与检索 ──────────────────────────────────────────────
+
+
+class RagIndexRequest(BaseModel):
+    """文档 RAG 索引请求"""
+    markdown: str
+    """Markdown 格式的文档内容"""
+    course_id: str = "default"
+    """关联课程 ID"""
+    target_chars: int = 1500
+    """目标片段字符数"""
+    overlap_chars: int = 200
+    """相邻片段重叠字符数"""
+
+
+class RagQueryRequest(BaseModel):
+    """RAG 语义检索请求"""
+    query: str
+    """检索查询文本"""
+    course_id: str = "default"
+    """限定检索的课程 ID"""
+    top_k: int = 5
+    """返回前 K 个最相关片段"""
+    min_score: float = 0.3
+    """最低相似度阈值"""
+    chapter_hint: str = ""
+    """章节加权提示 (匹配的章节得分 ×1.3)"""
+
+
+# 内存索引存储 (生产环境用 pgvector, 这里做进程内缓存)
+_rag_index: dict[str, dict] = {}
+
+
+@app.post("/rag/index")
+async def rag_index(req: RagIndexRequest) -> dict:
+    """
+    索引文档 — 将 Markdown 切片并生成 embedding
+
+    流程: Markdown → 按章节/段落切片 → OpenAI embedding → 缓存到内存
+
+    生产环境应将 embedding 持久化到 pgvector (由 NestJS API 层负责写入 DocumentChunk 表)。
+    本端点用于快速验证和开发阶段。
+    """
+    if not req.markdown or not req.markdown.strip():
+        raise HTTPException(status_code=400, detail="markdown 不能为空")
+
+    chunks = chunk_markdown(
+        req.markdown,
+        target_chars=req.target_chars,
+        overlap_chars=req.overlap_chars,
+    )
+
+    if not chunks:
+        return {"course_id": req.course_id, "chunk_count": 0, "indexed": False}
+
+    texts = [c.content for c in chunks]
+    embeddings = await embed_texts(texts)
+
+    _rag_index[req.course_id] = {
+        "chunks": chunks,
+        "embeddings": embeddings,
+    }
+
+    logger.info(f"RAG 索引完成: course={req.course_id}, chunks={len(chunks)}")
+
+    return {
+        "course_id": req.course_id,
+        "chunk_count": len(chunks),
+        "indexed": True,
+        "chunks_preview": [
+            {
+                "index": c.index,
+                "chapter_title": c.chapter_title,
+                "char_count": c.char_count,
+                "estimated_tokens": c.estimated_tokens,
+                "has_tech_spec": c.metadata.get("has_tech_spec", False),
+            }
+            for c in chunks[:20]
+        ],
+    }
+
+
+@app.post("/rag/query")
+async def rag_query(req: RagQueryRequest) -> dict:
+    """
+    语义检索 — 从已索引的文档中检索最相关片段
+
+    用于 AI 出题时精确引用原文参数/阈值/架构逻辑。
+    返回的 source_quote 将直接嵌入题目 JSON。
+    """
+    if not req.query or not req.query.strip():
+        raise HTTPException(status_code=400, detail="query 不能为空")
+
+    index_data = _rag_index.get(req.course_id)
+    if not index_data:
+        return {
+            "query": req.query,
+            "course_id": req.course_id,
+            "results": [],
+            "total": 0,
+            "message": f"课程 {req.course_id} 尚未索引, 请先调用 /rag/index",
+        }
+
+    query_emb = await embed_query(req.query)
+
+    results = retrieve_relevant_chunks(
+        query_embedding=query_emb,
+        chunks=index_data["chunks"],
+        chunk_embeddings=index_data["embeddings"],
+        top_k=req.top_k,
+        min_score=req.min_score,
+        chapter_weight=req.chapter_hint or None,
+    )
+
+    logger.info(f"RAG 检索: query='{req.query[:50]}...', results={len(results)}")
+
+    return {
+        "query": req.query,
+        "course_id": req.course_id,
+        "results": [
+            {
+                "chunk_index": r.chunk.index,
+                "chapter_title": r.chunk.chapter_title,
+                "content": r.chunk.content,
+                "score": round(r.score, 4),
+                "metadata": r.chunk.metadata,
+            }
+            for r in results
+        ],
+        "total": len(results),
+    }
 
 
 # ── 启动入口 ──────────────────────────────────────────────────────────

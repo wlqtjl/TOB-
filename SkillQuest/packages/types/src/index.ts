@@ -501,3 +501,292 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   hasMore: boolean;
 }
+
+// ─── 审核系统 (Human-in-the-Loop) ─────────────────────────────────
+
+export type LevelReviewStatus = 'pending' | 'approved' | 'rejected' | 'needs_revision';
+
+export interface ReviewFeedback {
+  reviewer: string;
+  action: 'approve' | 'reject' | 'edit';
+  feedback: string;
+  timestamp: string;
+}
+
+export interface SourceQuote {
+  chunkId: string;
+  quote: string;
+  chapterTitle: string;
+  relevanceScore: number;
+}
+
+/** Multi-agent validation result for a single round */
+export interface ValidationRound {
+  round: number;
+  generatorOutput: GeneratorOutput;
+  solverOutput: SolverOutput;
+  verdict: 'match' | 'mismatch' | 'ambiguous';
+  refiningOrder?: string;
+}
+
+export interface GeneratorOutput {
+  question: Record<string, unknown>;
+  reasoningChain: string[];
+  sourceQuotes: SourceQuote[];
+}
+
+export interface SolverOutput {
+  selectedAnswer: string;
+  confidence: number;
+  ambiguityFlags: string[];
+  reasoning: string;
+}
+
+// ─── 叙事状态机 (NarrativeModal) ──────────────────────────────────
+
+export type NarrativeChannel = 'dingtalk' | 'wechat_work' | 'slack' | 'terminal' | 'email';
+
+export interface NarrativeMessage {
+  role: string;
+  avatar?: string;
+  text: string;
+  /** 消息样式: normal=普通, danger=红色告警, success=绿色, info=蓝色 */
+  style?: 'normal' | 'danger' | 'success' | 'info';
+  /** 附件图片 URL (可选, 如截图) */
+  imageUrl?: string;
+}
+
+export interface NarrativeConfig {
+  channel: NarrativeChannel;
+  /** 对话标题 (如: "运维值班群") */
+  title?: string;
+  messages: NarrativeMessage[];
+  /** 消息自动播放间隔 (ms, 默认 1500) */
+  autoPlayDelayMs: number;
+}
+
+// ─── WorldState 沙盒系统 ──────────────────────────────────────────
+
+/** 通用节点状态 — 适用于任何厂商的设备/组件 */
+export type WorldNodeStatus =
+  | 'normal'
+  | 'degraded'
+  | 'offline'
+  | 'rebooting'
+  | 'split_brain'
+  | 'recovering'
+  | 'overloaded'
+  | 'maintenance';
+
+export type NetworkStatus =
+  | 'connected'
+  | 'partitioned'
+  | 'degraded'
+  | 'disconnected';
+
+export interface WorldNode {
+  id: string;
+  label: string;
+  /** 通用组件分类 (不限于特定厂商) */
+  category: string;
+  status: WorldNodeStatus;
+  /** 0-1 负载率 */
+  load: number;
+  /** IO 延迟 (ms) */
+  ioLatencyMs: number;
+  /** 数据完整性 (0-1, 1=完好) */
+  dataIntegrity: number;
+  /** 厂商自定义指标 (如 { rebalanceProgress: 0.5, vms: 12 }) */
+  metrics: Record<string, number>;
+}
+
+export interface WorldLink {
+  id: string;
+  fromNodeId: string;
+  toNodeId: string;
+  status: NetworkStatus;
+  /** 带宽利用率 (0-1) */
+  bandwidthUsage: number;
+  /** 延迟 (ms) */
+  latencyMs: number;
+}
+
+export interface WorldState {
+  nodes: WorldNode[];
+  links: WorldLink[];
+  /** SLA 剩余分 (满分 100) */
+  slaScore: number;
+  /** 累计停机时间 (ms) */
+  downtimeMs: number;
+  /** 操作时间线 */
+  timeline: ActionRecord[];
+}
+
+export interface ActionRecord {
+  actionType: string;
+  targetNodeId?: string;
+  timestamp: number;
+  /** 操作前快照 diff */
+  stateBefore: Partial<WorldNode>;
+  /** 操作后快照 diff */
+  stateAfter: Partial<WorldNode>;
+}
+
+/** WorldState 初始配置 (存在 Level JSON 中) */
+export interface WorldStateConfig {
+  initialNodes: WorldNode[];
+  initialLinks: WorldLink[];
+  initialSlaScore: number;
+}
+
+// ─── 因果律系统 (Consequences Engine) ────────────────────────────
+
+export type ConsequenceSeverity = 'minor' | 'moderate' | 'major' | 'catastrophic';
+
+export interface ConsequenceAction {
+  id: string;
+  label: string;
+  description: string;
+  /** 前置条件: 需要先执行的 actionId 列表 (空=无前置) */
+  prerequisites: string[];
+  /** 执行效果 — 应用到 WorldState 的 mutations */
+  effects: WorldStateMutation[];
+  /** 此操作是否在专家推荐路径上 */
+  isOptimal: boolean;
+  /** 触发灾难的概率 (0-1, 受前置条件影响) */
+  disasterProbability: number;
+}
+
+export interface WorldStateMutation {
+  targetNodeId: string;
+  field: string;
+  value: unknown;
+  /** 延迟执行 (ms, 如: 重启 30 秒后才恢复) */
+  delayMs: number;
+}
+
+export interface DisasterEvent {
+  id: string;
+  name: string;
+  description: string;
+  /** 灾难类型 */
+  type: 'split_brain' | 'data_loss' | 'cascading_failure' | 'service_outage' | 'custom';
+  severity: ConsequenceSeverity;
+  /** 影响的节点 ID 列表 */
+  affectedNodeIds: string[];
+  /** 造成的损害 */
+  damage: DamageReport;
+}
+
+export interface DamageReport {
+  /** 业务停摆时长 (ms) */
+  downtimeMs: number;
+  /** SLA 扣分 */
+  slaLoss: number;
+  /** 数据丢失百分比 (0-1) */
+  dataLossPercent: number;
+  /** 业务影响描述 */
+  businessImpact: string;
+}
+
+export interface ConsequencesConfig {
+  /** 可选操作列表 */
+  actions: ConsequenceAction[];
+  /** 专家推荐路径 (actionId 序列) */
+  optimalPath: string[];
+  /** 可能触发的灾难事件 */
+  disasters: DisasterEvent[];
+  /** 初始 SLA 分数 */
+  initialSlaScore: number;
+}
+
+// ─── 通用动画目录系统 (任意厂商/产品适配) ────────────────────────
+
+/**
+ * AnimationCatalog — 厂商无关的动画效果映射
+ *
+ * 核心理念: 将"状态变化"映射到"视觉效果"，而非硬编码特定产品动画。
+ * 任何厂商的产品（SmartX、华为、VMware、Nutanix 等）都可以通过
+ * 配置 AnimationMapping 来获得对应的视觉效果。
+ *
+ * 示例:
+ * - "node.offline"  → 红色闪烁 + 火花粒子
+ * - "link.partitioned" → 连线断裂 + 红闪
+ * - "data.rebalance" → 粒子流向转移动画
+ * - "consensus.election" → 节点间投票粒子 + leader 高亮
+ */
+
+export type AnimationEffectType =
+  | 'blink'           // 闪烁 (节点状态变化)
+  | 'pulse'           // 脉冲 (正在处理)
+  | 'burst'           // 粒子爆发 (操作执行)
+  | 'flow_redirect'   // 流向转移 (数据重平衡)
+  | 'shake'           // 震动 (错误/故障)
+  | 'fade_out'        // 淡出 (节点离线)
+  | 'fade_in'         // 淡入 (节点恢复)
+  | 'highlight'       // 高亮 (选举/选中)
+  | 'spark'           // 火花 (断裂/故障)
+  | 'ripple'          // 波纹 (广播/通知)
+  | 'trail'           // 拖尾 (数据传输)
+  | 'split'           // 分裂 (脑裂/分区)
+  | 'merge'           // 合并 (恢复/合并)
+  | 'progress_bar'    // 进度条 (重建/迁移)
+  | 'heat_map'        // 热力图 (负载可视化)
+  | 'countdown'       // 倒计时 (超时/SLA)
+  | 'explosion'       // 爆炸 (灾难事件)
+  | 'connection_break' // 连线断裂 (网络中断)
+  | 'data_scatter';    // 数据散落 (数据丢失)
+
+export interface AnimationEffect {
+  type: AnimationEffectType;
+  /** 效果颜色 (CSS color) */
+  color: string;
+  /** 持续时间 (ms) */
+  durationMs: number;
+  /** 粒子数量 (burst/spark/explosion 使用) */
+  particleCount?: number;
+  /** 效果强度 (0-1) */
+  intensity: number;
+  /** 是否循环播放 */
+  loop: boolean;
+  /** 自定义参数 (如: 进度条百分比, 热力图值) */
+  params?: Record<string, unknown>;
+}
+
+/**
+ * AnimationMapping: 将 WorldState 状态变化映射到一组视觉效果
+ *
+ * trigger 格式: "{targetType}.{field}.{transition}"
+ * 示例:
+ * - "node.status.normal→offline"    节点离线
+ * - "node.status.offline→rebooting" 节点重启中
+ * - "link.status.connected→partitioned" 网络分区
+ * - "node.load.threshold_high"      负载超阈值
+ * - "node.dataIntegrity.threshold_low" 数据完整性低
+ */
+export interface AnimationMapping {
+  id: string;
+  /** 触发条件 (状态变化模式) */
+  trigger: string;
+  /** 触发的动画效果列表 (可同时播放多个) */
+  effects: AnimationEffect[];
+  /** 优先级 (高优先级覆盖低优先级) */
+  priority: number;
+  /** 描述 (调试/管理用) */
+  description: string;
+}
+
+/**
+ * 预置动画模板 — 通用 IT 基础设施动画
+ * 厂商可以覆盖/扩展这些默认映射
+ */
+export interface AnimationCatalog {
+  /** 唯一标识 (如: "default", "smartx-halo", "huawei-fusioncompute") */
+  id: string;
+  /** 目录名称 */
+  name: string;
+  /** 适用厂商 (空=通用) */
+  vendor?: string;
+  /** 状态变化 → 动画效果映射表 */
+  mappings: AnimationMapping[];
+}

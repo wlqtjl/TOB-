@@ -48,10 +48,11 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  progress     UserProgress[]
-  scores       Score[]
-  achievements UserAchievement[]
-  events       AnalyticsEvent[]
+  progress        UserProgress[]
+  scores          Score[]
+  achievements    UserAchievement[]
+  events          AnalyticsEvent[]
+  incidentReports IncidentReport[]
 }
 
 enum UserRole {
@@ -74,7 +75,8 @@ model Course {
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
-  levels Level[]
+  levels         Level[]
+  documentChunks DocumentChunk[]
 }
 
 enum CourseCategory {
@@ -103,13 +105,39 @@ model Level {
   /// 游戏内容 (JSON) — 题目数据、拓扑图、终端命令等
   content Json @default("{}")
 
+  /// AI 审核状态: PENDING=待审核, APPROVED=已通过, REJECTED=已打回, NEEDS_REVISION=需修改
+  reviewStatus LevelReviewStatus @default(APPROVED)
+
+  /// 专家审核反馈历史 (JSON array of { reviewer, action, feedback, timestamp })
+  feedbackLog Json @default("[]")
+
+  /// RAG 引用的原文片段 (JSON array of { chunkId, quote, chapterTitle, relevanceScore })
+  sourceQuotes Json @default("[]")
+
+  /// 前置剧情配置 (JSON: NarrativeConfig)
+  preStory Json?
+
+  /// 沙盒 WorldState 初始配置 (JSON: WorldStateConfig)
+  worldStateConfig Json?
+
+  /// 因果分支配置 (JSON: ConsequencesConfig)
+  consequencesConfig Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  progress UserProgress[]
-  scores   Score[]
+  progress        UserProgress[]
+  scores          Score[]
+  incidentReports IncidentReport[]
 
   @@unique([courseId, sortOrder])
+}
+
+enum LevelReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
 }
 
 enum LevelType {
@@ -190,4 +218,61 @@ model AnalyticsEvent {
 
   @@index([userId, event])
   @@index([createdAt])
+}
+
+// ─── RAG 文档向量分片 ─────────────────────────────────────────────────
+
+model DocumentChunk {
+  id           String   @id @default(uuid())
+  courseId      String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapterTitle String   @default("")
+  content      String   // Markdown 原文片段
+  /// pgvector embedding — 1536 维 (text-embedding-3-small)
+  /// Prisma 暂不原生支持 vector 类型，使用 Float[] 存储
+  /// 查询时用 raw SQL: ORDER BY embedding <=> $1 LIMIT K
+  embedding    Float[]  @default([])
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([courseId])
+}
+
+// ─── 题目验证日志 (多 Agent 校验审计追踪) ───────────────────────────
+
+model QuestionValidationLog {
+  id          String   @id @default(uuid())
+  levelId     String
+  round       Int      @default(1)
+  /// Agent A 输出 (生成者): 题目 JSON + reasoning_chain
+  generatorOutput Json @default("{}")
+  /// Agent B 输出 (解题者): selected_answer + confidence + ambiguity_flags
+  solverOutput    Json @default("{}")
+  /// 比对结果: match/mismatch/ambiguous
+  verdict     String   @default("pending")
+  /// 如有分歧，发给 Agent A 的 Refining_Order
+  refiningOrder String @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([levelId])
+}
+
+// ─── 事故复盘报告 ─────────────────────────────────────────────────────
+
+model IncidentReport {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId         String
+  level           Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  /// 用户操作序列 (JSON: { actionType, timestamp, targetNodeId }[])
+  actionSequence  Json     @default("[]")
+  /// 状态变化快照 (JSON: WorldState diff)
+  worldStateDiff  Json     @default("{}")
+  /// 损害报告 (JSON: { downtimeMs, slaLoss, dataLossPercent, businessImpact })
+  damageReport    Json     @default("{}")
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([levelId])
 }

@@ -289,7 +289,14 @@ async def analyze_images(
     if len(files) > 10:
         raise HTTPException(status_code=400, detail="最多支持同时分析 10 张图片")
 
-    results = []
+    # Whitelist of safe response keys — never expose internal/exception-derived fields
+    _SAFE_KEYS = frozenset({
+        "filename", "is_topology", "confidence", "key_concept",
+        "nodes", "edges", "correctConnections", "packetPath",
+        "task", "explanation", "description",
+    })
+
+    safe_results = []
     topology_count = 0
 
     for upload in files:
@@ -297,26 +304,28 @@ async def analyze_images(
         try:
             img_bytes = await upload.read()
             if not img_bytes:
-                results.append({"filename": fname, "is_topology": False, "error": "空文件"})
+                safe_results.append({"filename": fname, "is_topology": False})
                 continue
 
             result = await extract_topology_from_image(img_bytes)
-            result["filename"] = fname
 
             if result.get("is_topology"):
                 topology_count += 1
 
-            results.append(result)
+            # Only include known-safe keys in the response
+            safe_result = {k: result[k] for k in _SAFE_KEYS if k in result}
+            safe_result["filename"] = fname
+            safe_results.append(safe_result)
             logger.info(f"图片分析: {fname} → is_topology={result.get('is_topology')}")
 
         except Exception as e:
             logger.error(f"图片分析失败 ({fname}): {e}")
-            results.append({"filename": fname, "is_topology": False, "error": "图片处理失败，请检查格式是否正确"})
+            safe_results.append({"filename": fname, "is_topology": False})
 
     return {
-        "results": results,
+        "results": safe_results,
         "topology_count": topology_count,
-        "total_processed": len(results),
+        "total_processed": len(safe_results),
     }
 
 
@@ -335,10 +344,14 @@ async def extract_topology(
         raise HTTPException(status_code=400, detail="文件内容为空")
 
     result = await extract_topology_from_image(file_bytes)
-    # Return only known safe fields (strip internal error details)
-    if not result.get("is_topology") and result.get("error"):
-        result = {"is_topology": False, "confidence": result.get("confidence", 0.0), "description": "拓扑识别失败，请检查图片格式"}
-    return result
+    # Return only the known-safe fields — never expose internal error or exception details
+    _SAFE_KEYS = frozenset({
+        "is_topology", "confidence", "key_concept", "nodes", "edges",
+        "correctConnections", "packetPath", "task", "explanation", "description",
+    })
+    if not result.get("is_topology"):
+        return {"is_topology": False, "confidence": float(result.get("confidence") or 0), "description": "拓扑识别失败，请检查图片格式"}
+    return {k: result[k] for k in _SAFE_KEYS if k in result}
 
 
 # ── FLOW_SIM 关卡提取 ─────────────────────────────────────────────────

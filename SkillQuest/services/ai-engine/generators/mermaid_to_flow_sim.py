@@ -65,16 +65,20 @@ class ParsedSequence:
 # ── 解析器 ────────────────────────────────────────────────────────────
 
 # Regex patterns
-_RE_PARTICIPANT = re.compile(r'^\s*participant\s+(\w+)(?:\s+as\s+(.+))?$', re.IGNORECASE)
-_RE_ACTOR      = re.compile(r'^\s*actor\s+(\w+)(?:\s+as\s+(.+))?$', re.IGNORECASE)
-_RE_MSG_SOLID  = re.compile(r'^\s*(\w+)\s*->>\s*(\w+)\s*:\s*(.+)$')
-_RE_MSG_DOTTED = re.compile(r'^\s*(\w+)\s*-->>\s*(\w+)\s*:\s*(.+)$')
-_RE_NOTE_OVER  = re.compile(r'^\s*[Nn]ote\s+over\s+([\w,\s]+)\s*:\s*(.+)$')
-_RE_ALT        = re.compile(r'^\s*alt\s+(.+)$', re.IGNORECASE)
-_RE_OPT        = re.compile(r'^\s*opt\s+(.+)$', re.IGNORECASE)
-_RE_ELSE       = re.compile(r'^\s*else\s*(.*)$', re.IGNORECASE)
+# Length bounds prevent polynomial-time ReDoS on crafted inputs:
+#   - \w+ is already safe (bounded by word chars)
+#   - (.{0,300}) limits unbounded .+ in the message label capture group
+#   - [^:\n]+ for Note participants avoids [\w,\s]+ overlap with the ':' delimiter
+_RE_PARTICIPANT = re.compile(r'^\s*participant\s+(\w+)(?:\s+as\s+(.{0,200}))?$', re.IGNORECASE)
+_RE_ACTOR      = re.compile(r'^\s*actor\s+(\w+)(?:\s+as\s+(.{0,200}))?$', re.IGNORECASE)
+_RE_MSG_SOLID  = re.compile(r'^\s*(\w+)\s*->>\s*(\w+)\s*:\s*(.{0,300})$')
+_RE_MSG_DOTTED = re.compile(r'^\s*(\w+)\s*-->>\s*(\w+)\s*:\s*(.{0,300})$')
+_RE_NOTE_OVER  = re.compile(r'^\s*[Nn]ote\s+over\s+([^:\n]{1,200}):\s*(.{0,300})$')
+_RE_ALT        = re.compile(r'^\s*alt\s+(.{1,300})$', re.IGNORECASE)
+_RE_OPT        = re.compile(r'^\s*opt\s+(.{1,300})$', re.IGNORECASE)
+_RE_ELSE       = re.compile(r'^\s*else\s*(.{0,300})$', re.IGNORECASE)
 _RE_END        = re.compile(r'^\s*end\s*$', re.IGNORECASE)
-_RE_LOOP       = re.compile(r'^\s*loop\s+(.+)$', re.IGNORECASE)
+_RE_LOOP       = re.compile(r'^\s*loop\s+(.{1,300})$', re.IGNORECASE)
 
 
 def parse_mermaid_sequence(mermaid_text: str) -> ParsedSequence:
@@ -82,10 +86,16 @@ def parse_mermaid_sequence(mermaid_text: str) -> ParsedSequence:
     解析 Mermaid sequenceDiagram 文本 → ParsedSequence
 
     忽略 sequenceDiagram 声明行, 解析 participant/actor/消息/Note/alt/opt。
+    输入限制: 最多 50KB, 每行最多 1000 字符 (防止 ReDoS)。
     """
     result = ParsedSequence()
     alias_to_label: dict[str, str] = {}
-    lines = mermaid_text.splitlines()
+
+    # Input length guard — prevents ReDoS on adversarially crafted input
+    MAX_TOTAL_CHARS = 50_000
+    MAX_LINE_CHARS = 1_000
+    text_safe = mermaid_text[:MAX_TOTAL_CHARS]
+    lines = [ln[:MAX_LINE_CHARS] for ln in text_safe.splitlines()]
 
     # Track alt/opt decision blocks
     in_decision: MermaidDecision | None = None

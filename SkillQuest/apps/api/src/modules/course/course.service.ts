@@ -274,24 +274,40 @@ export class CourseService {
     },
   ): Promise<void> {
     try {
-      // 1. 解析文档
+      // 1. 解析文档 (MinerU 2.5 优先, 传统解析 fallback)
       job.status = 'parsing';
       job.progress = 10;
-      job.message = '📄 正在解析文档…';
+      job.message = '📄 正在解析文档…（MinerU 2.5 智能分析中）';
 
-      const text = await this.docParser.extractText(
+      const structured = await this.docParser.extractStructured(
         params.buffer,
         params.mimetype,
         params.originalname,
       );
-      const chunks = this.docParser.splitIntoChunks(text);
+
+      // 使用 Markdown (含表格/版面结构) 作为 GPT-4o 输入, 效果更好
+      const textForAi = structured.markdown || structured.plainText;
+      const chunks = this.docParser.splitIntoChunks(textForAi);
+
+      job.progress = 30;
+      job.message = `📄 文档解析完成 (${structured.parserUsed})，提取 ${chunks.length} 个知识块`;
 
       // 2. AI 生成
       job.status = 'generating';
       job.progress = 40;
       job.message = '🤖 AI 正在生成课程内容…（约 30-60 秒）';
 
-      const result = await this.aiGenerator.generateCourse(chunks, params.hint);
+      // 如果有表格数据，附加到 hint 中增强 GPT-4o 的理解
+      let enhancedHint = params.hint ?? '';
+      if (structured.tables.length > 0) {
+        const tablesSummary = structured.tables
+          .slice(0, 5)
+          .map((t, i) => `表格 ${i + 1}: ${t.html.slice(0, 500)}`)
+          .join('\n');
+        enhancedHint += `\n\n[文档中包含 ${structured.tables.length} 个表格，以下是部分表格内容，请参考生成 MATCHING 或 QUIZ 题型]\n${tablesSummary}`;
+      }
+
+      const result = await this.aiGenerator.generateCourse(chunks, enhancedHint.trim() || undefined);
 
       // 3. 写入数据库
       job.status = 'saving';
@@ -327,7 +343,7 @@ export class CourseService {
 
       job.status = 'done';
       job.progress = 100;
-      job.message = `✅ 课程《${result.title}》已生成，共 ${result.levels.length} 个关卡`;
+      job.message = `✅ 课程《${result.title}》已生成，共 ${result.levels.length} 个关卡 (解析器: ${structured.parserUsed})`;
       job.courseId = course.id;
     } catch (err) {
       job.status = 'error';

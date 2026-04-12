@@ -76,6 +76,57 @@ export {
   defaultViewport,
 } from './visual-scene';
 
+// ToolSystem — 硬核仿真交互工具系统 (Probe/Cutter/Booster/Linker/Migrator/Freezer)
+export {
+  createToolState,
+  createAllToolStates,
+  canUseTool,
+  activateTool,
+  tickToolCooldown,
+  tickAllCooldowns,
+  executeProbe,
+  executeCutter,
+  executeBooster,
+  executeLinker,
+  executeMigrator,
+  executeFreezer,
+  executeToolAction,
+  createSequenceTracker,
+  validateSequenceAction,
+} from './tool-system';
+export type { ToolConfig, SequenceTracker } from './tool-system';
+
+// PhysicsEngine — 粒子物理仿真引擎
+export {
+  loadToColor,
+  heatToColor,
+  createParticlePhysics,
+  createNodePhysics,
+  createPhysicsState,
+  tickNodePhysics,
+  tickParticlePhysics,
+  tickPhysics,
+  toggleFreeze,
+  triggerScreenShake,
+  triggerNodeShake,
+  toggleXRay,
+} from './physics-engine';
+
+// ToolVisualBridge — 工具动作 → 视觉效果桥接
+export {
+  applyToolActionToVisuals,
+  boostConnectionParticles,
+} from './tool-visual-bridge';
+export type { ToolVisualUpdate } from './tool-visual-bridge';
+
+// ZBS Replica Rescue Scenario
+export {
+  ZBS_REPLICA_NODES,
+  ZBS_REPLICA_LINKS,
+  ZBS_REPLICA_CONSEQUENCES,
+  ZBS_REPLICA_TOOL_SEQUENCE,
+} from './scenarios/zbs-replica-rescue';
+
 // Adapters
 export {
   topologyAdapter,

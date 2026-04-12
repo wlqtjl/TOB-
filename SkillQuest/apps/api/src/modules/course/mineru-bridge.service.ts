@@ -227,6 +227,84 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
     }
   }
 
+  /**
+   * POST /extract/flow-sim — 从文本或 Mermaid 序列图提取 FLOW_SIM 关卡
+   */
+  async extractFlowSim(opts: {
+    text: string;
+    levelId?: string;
+    levelIdRef?: string;
+    mode?: 'observe' | 'route' | 'failover';
+    task?: string;
+    explanation?: string;
+    playbackSpeed?: number;
+    isMermaid?: boolean;
+  }): Promise<Record<string, unknown> | null> {
+    if (!this.enabled || !opts.text?.trim()) return null;
+
+    const ok = await this.ensureRunning();
+    if (!ok) return null;
+
+    const body = {
+      text: opts.text,
+      level_id: opts.levelId ?? 'flow-sim-1',
+      level_id_ref: opts.levelIdRef ?? 'level-1',
+      mode: opts.mode ?? 'observe',
+      task: opts.task ?? '',
+      explanation: opts.explanation ?? '',
+      playback_speed: Math.max(0.1, Math.min(10, opts.playbackSpeed ?? 1.0)),
+      is_mermaid: opts.isMermaid ?? false,
+    };
+
+    try {
+      const raw = await this.callJson('/extract/flow-sim', body);
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch (err) {
+      this.logger.warn(`FLOW_SIM 提取失败: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * POST /replay/trace — OpenTelemetry OTLP Trace → FLOW_SIM 关卡回放
+   */
+  async replayTrace(opts: {
+    otlpJson: Record<string, unknown>;
+    levelId?: string;
+    levelIdRef?: string;
+    mode?: 'observe' | 'route' | 'failover';
+    task?: string;
+    explanation?: string;
+    playbackSpeed?: number;
+    maxSteps?: number;
+    errorAsFault?: boolean;
+  }): Promise<Record<string, unknown> | null> {
+    if (!this.enabled || !opts.otlpJson) return null;
+
+    const ok = await this.ensureRunning();
+    if (!ok) return null;
+
+    const body = {
+      otlp_json: opts.otlpJson,
+      level_id: opts.levelId ?? 'trace-replay-1',
+      level_id_ref: opts.levelIdRef ?? 'level-1',
+      mode: opts.mode ?? 'observe',
+      task: opts.task ?? '',
+      explanation: opts.explanation ?? '',
+      playback_speed: Math.max(0.1, Math.min(10, opts.playbackSpeed ?? 1.0)),
+      max_steps: Math.max(1, Math.min(50, opts.maxSteps ?? 20)),
+      error_as_fault: opts.errorAsFault ?? true,
+    };
+
+    try {
+      const raw = await this.callJson('/replay/trace', body);
+      return JSON.parse(raw) as Record<string, unknown>;
+    } catch (err) {
+      this.logger.warn(`Trace 回放失败: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
   // ── Python 进程管理 ───────────────────────────────────────────────
 
   /**
@@ -483,6 +561,55 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
       });
 
       req.write(body);
+      req.end();
+    });
+  }
+
+  /**
+   * 简单的 JSON POST 请求 (用于 /extract/flow-sim, /replay/trace 等 JSON body 端点)
+   */
+  private callJson(
+    urlPath: string,
+    body: Record<string, unknown>,
+    timeoutMs: number = PARSE_TIMEOUT_MS,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const bodyStr = JSON.stringify(body);
+      const bodyBuf = Buffer.from(bodyStr, 'utf-8');
+
+      const req = http.request(
+        {
+          hostname: this.host,
+          port: this.port,
+          path: urlPath,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Content-Length': bodyBuf.length,
+          },
+          timeout: timeoutMs,
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => {
+            const data = Buffer.concat(chunks).toString('utf-8');
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              resolve(data);
+            } else {
+              reject(new Error(`AI Engine 返回 ${res.statusCode}: ${data.slice(0, 500)}`));
+            }
+          });
+        },
+      );
+
+      req.on('error', reject);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error(`AI Engine 请求超时 (${(timeoutMs / 1_000).toFixed(1)} 秒) [${urlPath}]`));
+      });
+
+      req.write(bodyBuf);
       req.end();
     });
   }

@@ -10,6 +10,8 @@ SkillQuest AI Engine — FastAPI 入口
 - POST /analyze               — 文档智能预览 (快速结构分析，无需全量解析)
 - POST /analyze/images        — 批量 GPT-4o Vision 拓扑图识别
 - POST /extract/topology      — 单张拓扑图提取 (GPT-4o Vision)
+- POST /extract/flow-sim      — 从文档文本/Mermaid 提取 FLOW_SIM 关卡
+- POST /replay/trace          — OpenTelemetry Trace → FLOW_SIM 关卡回放
 """
 
 from __future__ import annotations
@@ -337,6 +339,154 @@ async def extract_topology(
     if not result.get("is_topology") and result.get("error"):
         result = {"is_topology": False, "confidence": result.get("confidence", 0.0), "description": "拓扑识别失败，请检查图片格式"}
     return result
+
+
+# ── FLOW_SIM 关卡提取 ─────────────────────────────────────────────────
+
+
+class FlowSimTextRequest(BaseModel):
+    """从文本/Mermaid 提取 FLOW_SIM 关卡的请求体"""
+    text: str
+    """技术文档文本或 Mermaid sequenceDiagram 文本"""
+    level_id: str = "flow-sim-1"
+    level_id_ref: str = "level-1"
+    mode: str = "observe"
+    """'observe' | 'route' | 'failover'"""
+    task: str = ""
+    explanation: str = ""
+    playback_speed: float = 1.0
+    """播放速度倍数 (0.1 ~ 10)"""
+    is_mermaid: bool = False
+    """True=输入为 Mermaid sequenceDiagram; False=普通文本(自动提取)"""
+
+
+@app.post("/extract/flow-sim")
+async def extract_flow_sim(req: FlowSimTextRequest) -> dict:
+    """
+    从技术文档文本或 Mermaid 序列图提取 FLOW_SIM 关卡。
+
+    两种工作模式 (由 is_mermaid 参数控制):
+      is_mermaid=false (默认): 使用关键词正则 + spaCy (若可用) 从自然语言文本提取组件和数据流边
+      is_mermaid=true:         精确解析 Mermaid sequenceDiagram 语法
+
+    请求体 (JSON):
+      text:           必填，技术文档文本或 Mermaid 文本
+      level_id:       生成的关卡 ID (默认 flow-sim-1)
+      level_id_ref:   关联的 LevelNode ID (默认 level-1)
+      mode:           'observe' | 'route' | 'failover' (默认 observe)
+      task:           关卡任务描述 (空则自动生成)
+      explanation:    关卡解析 (空则自动生成)
+      playback_speed: 初始播放速度 0.1~10 (默认 1.0)
+      is_mermaid:     是否为 Mermaid 格式 (默认 false)
+
+    返回: FLOW_SIM 关卡 JSON (符合 FlowSimLevel schema)
+    """
+    if not req.text or not req.text.strip():
+        raise HTTPException(status_code=400, detail="text 参数不能为空")
+
+    playback_speed = max(0.1, min(10.0, req.playback_speed))
+
+    if req.is_mermaid:
+        from generators.mermaid_to_flow_sim import mermaid_to_flow_sim
+        level = mermaid_to_flow_sim(
+            mermaid_text=req.text,
+            level_id=req.level_id,
+            level_id_ref=req.level_id_ref,
+            mode=req.mode,
+            task=req.task,
+            explanation=req.explanation,
+            playback_speed=playback_speed,
+        )
+    else:
+        from generators.flow_sim_factory import text_to_flow_sim
+        level = text_to_flow_sim(
+            text=req.text,
+            level_id=req.level_id,
+            level_id_ref=req.level_id_ref,
+            mode=req.mode,
+            task=req.task,
+            explanation=req.explanation,
+            playback_speed=playback_speed,
+        )
+
+    if not level:
+        raise HTTPException(
+            status_code=422,
+            detail="无法从提供的文本中提取数据流向信息，请确保文本描述了组件间的消息传递或数据流"
+        )
+    return level
+
+
+# ── OpenTelemetry Trace 回放 ──────────────────────────────────────────
+
+
+class TraceReplayRequest(BaseModel):
+    """OTLP Trace → FLOW_SIM 请求体"""
+    otlp_json: dict
+    """OTLP ExportTraceServiceRequest JSON"""
+    level_id: str = "trace-replay-1"
+    level_id_ref: str = "level-1"
+    mode: str = "observe"
+    """'observe' | 'route' | 'failover'"""
+    task: str = ""
+    explanation: str = ""
+    playback_speed: float = 1.0
+    """播放速度倍数 (0.1 ~ 10); 支持 0.1x 慢动作 ~ 10x 快进"""
+    max_steps: int = 20
+    """最大步骤数限制 (防止 Trace 过长)"""
+    error_as_fault: bool = True
+    """是否将 ERROR span 转为 FlowSimFault 故障事件 (failover 模式)"""
+
+
+@app.post("/replay/trace")
+async def replay_trace(req: TraceReplayRequest) -> dict:
+    """
+    将 OpenTelemetry OTLP Trace JSON 转换为 FLOW_SIM 关卡。
+
+    这是 Phase 3 的核心功能: 把生产环境的真实 Trace (从 Jaeger/Tempo/Zipkin 导出)
+    变成 SkillQuest 可玩关卡:
+      - 每个跨服务 Span → 一个粒子动画步骤
+      - ERROR Span → FlowSimFault 故障事件 (mode=failover 时激活)
+      - playbackSpeed 支持 0.1x 慢放 (看清每一步) ~ 10x 快进 (看全局流向)
+
+    请求体 (JSON):
+      otlp_json:      必填, OTLP ExportTraceServiceRequest JSON
+      level_id:       关卡 ID (默认 trace-replay-1)
+      level_id_ref:   关联的 LevelNode ID (默认 level-1)
+      mode:           'observe' | 'route' | 'failover'
+      task:           关卡任务描述
+      explanation:    关卡解析
+      playback_speed: 0.1 ~ 10 (默认 1.0)
+      max_steps:      最大步骤数 (默认 20)
+      error_as_fault: 是否将 ERROR span 转为故障事件 (默认 true)
+
+    返回: FLOW_SIM 关卡 JSON
+    """
+    if not req.otlp_json:
+        raise HTTPException(status_code=400, detail="otlp_json 不能为空")
+
+    playback_speed = max(0.1, min(10.0, req.playback_speed))
+    max_steps = max(1, min(50, req.max_steps))
+
+    from generators.otlp_trace_replay import otlp_trace_to_flow_sim
+    level = otlp_trace_to_flow_sim(
+        otlp_json=req.otlp_json,
+        level_id=req.level_id,
+        level_id_ref=req.level_id_ref,
+        mode=req.mode,
+        task=req.task,
+        explanation=req.explanation,
+        playback_speed=playback_speed,
+        max_steps=max_steps,
+        error_as_fault=req.error_as_fault,
+    )
+
+    if not level:
+        raise HTTPException(
+            status_code=422,
+            detail="无法从提供的 OTLP Trace 中提取跨服务调用步骤，请检查 Trace 格式是否正确"
+        )
+    return level
 
 
 # ── 启动入口 ──────────────────────────────────────────────────────────

@@ -97,7 +97,7 @@ export class CourseService {
     courseId: string;
     sortOrder: number;
     title: string;
-    type: 'QUIZ' | 'ORDERING' | 'MATCHING' | 'TOPOLOGY' | 'TERMINAL' | 'SCENARIO' | 'VM_PLACEMENT';
+    type: 'QUIZ' | 'ORDERING' | 'MATCHING' | 'TOPOLOGY' | 'TERMINAL' | 'SCENARIO' | 'VM_PLACEMENT' | 'FLOW_SIM';
     description?: string;
     timeLimitSec?: number;
     prerequisites?: string[];
@@ -166,7 +166,7 @@ export class CourseService {
       const typeMap: Record<string, string> = {
         QUIZ: 'quiz', ORDERING: 'ordering', MATCHING: 'matching',
         TOPOLOGY: 'topology', TERMINAL: 'terminal', SCENARIO: 'scenario',
-        VM_PLACEMENT: 'vm_placement',
+        VM_PLACEMENT: 'vm_placement', FLOW_SIM: 'flow_sim',
       };
       return {
         levelId: l.id,

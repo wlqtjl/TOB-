@@ -36,17 +36,6 @@ def _get_openai_client() -> Optional[object]:
         return None
 
 
-# ─── 降级标记 ──────────────────────────────────────────────────────
-
-# 当 embedding 不可用时, 设置此标记以通知 retriever 使用 BM25
-_fallback_to_bm25 = False
-
-
-def is_bm25_fallback() -> bool:
-    """检查当前是否处于 BM25 降级模式"""
-    return _fallback_to_bm25
-
-
 def _zero_vector() -> list[float]:
     """返回零向量 (降级模式)"""
     return [0.0] * EMBEDDING_DIMENSIONS
@@ -63,14 +52,11 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
         对应的 embedding 向量列表 (1536 维)
         当 API 不可用时返回空列表, 由 retriever 层切换到 BM25
     """
-    global _fallback_to_bm25
-
     if not texts:
         return []
 
     client = _get_openai_client()
     if client is None:
-        _fallback_to_bm25 = True
         logger.info("Embedding 不可用, 降级到 BM25 文本检索")
         return []  # 返回空列表, retriever 会使用 BM25
 
@@ -95,10 +81,8 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
                     logger.warning(f"Embedding 调用失败 (重试 {attempt + 1}/{MAX_RETRIES}): {e}")
                 else:
                     logger.error(f"Embedding 调用最终失败, 降级到 BM25: {e}")
-                    _fallback_to_bm25 = True
                     return []  # API 调用失败, 通知 retriever 使用 BM25
 
-    _fallback_to_bm25 = False  # 成功时重置降级标记
     return all_embeddings
 
 

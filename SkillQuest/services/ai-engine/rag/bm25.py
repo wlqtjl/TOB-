@@ -53,7 +53,7 @@ def tokenize(text: str) -> list[str]:
     # 提取英文/数字词
     for match in _WORD_PATTERN.finditer(text_lower):
         token = match.group()
-        if len(token) >= 2:  # 过滤单字符英文
+        if len(token) >= 2:  # 保留长度≥2的英文/数字词, 过滤单字符
             tokens.append(token)
 
     # 提取中文单字

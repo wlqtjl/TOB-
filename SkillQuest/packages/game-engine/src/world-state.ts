@@ -77,6 +77,10 @@ const DEFAULT_STATE: WorldState = {
  *
  * 当提供 seed 时, executeActionPure 使用此函数替代 Math.random(),
  * 保证相同 seed 下灾难概率判定结果完全一致 (可重现/可测试)。
+ *
+ * 注: 此函数是无状态的 — 相同 seed 始终返回相同值。
+ * 这是有意设计, 因为 executeActionPure 内每次只调用一次随机数。
+ * 如需多次调用, 调用方应递增 seed (如 seed+1, seed+2)。
  */
 function seededRandom(seed: number): number {
   let t = (seed + 0x6D2B79F5) | 0;

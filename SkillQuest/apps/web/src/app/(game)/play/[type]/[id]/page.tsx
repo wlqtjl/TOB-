@@ -22,6 +22,7 @@ import type {
   TerminalQuizLevel,
   ScenarioQuizLevel,
   VirtualizationLevel,
+  NarrativeConfig,
 } from '@skillquest/types';
 import type { VisualScene, InteractionResult } from '@skillquest/game-engine';
 import {
@@ -35,6 +36,7 @@ import {
 } from '@skillquest/game-engine';
 import UniversalGameRenderer from '../../../../../components/game/UniversalGameRenderer';
 import GameHUD from '../../../../../components/game/GameHUD';
+import NarrativeModal from '../../../../../components/game/NarrativeModal';
 import { useGameState } from '../../../../../components/game/hooks/useGameState';
 import { ErrorBoundary } from '../../../../../components/ui/ErrorBoundary';
 import { useCourseId } from '../../../../../hooks/useCourseId';
@@ -74,10 +76,15 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const tenant = tenantConfig();
   const contentType = type as ContentType;
   const [messages, setMessages] = useState<Array<{ text: string; correct: boolean }>>([]);
+  const [narrativeComplete, setNarrativeComplete] = useState(false);
 
   // Load content from shared data layer
   const content = getPlayContent(courseId, contentType);
   const totalQuestions = 1; // Will be dynamic from API
+
+  // Check for preStory narrative config
+  const preStory = (content as Record<string, unknown> | null)?.preStory as NarrativeConfig | undefined;
+  const hasNarrative = !!preStory && !narrativeComplete;
 
   const { state: gameState, answerCorrect, answerWrong } = useGameState(totalQuestions);
 
@@ -120,6 +127,14 @@ function PlayContent({ type, id }: { type: string; id: string }) {
 
   return (
     <div className="min-h-screen bg-gray-950 p-4">
+      {/* Narrative Modal (pre-story) */}
+      {hasNarrative && preStory && (
+        <NarrativeModal
+          config={preStory}
+          onComplete={() => setNarrativeComplete(true)}
+        />
+      )}
+
       {/* Header */}
       <div className="mx-auto max-w-[950px] mb-4">
         <div className="flex items-center justify-between">

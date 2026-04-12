@@ -20,6 +20,32 @@ export { TopologyEngine } from './topology-engine';
 export { ComboTracker } from './combo-tracker';
 export type { ComboState } from './combo-tracker';
 
+// WorldState + Consequences (Phase 4)
+export {
+  updateNodeInState,
+  updateLinkInState,
+  addTimelineEntry,
+  executeActionPure,
+  calculateDamageReport,
+  createWorldStateActions,
+  initialWorldStateStore,
+} from './world-state';
+export type { WorldStateStore } from './world-state';
+
+// Animation Catalog (Generic vendor-agnostic animations)
+export {
+  DEFAULT_ANIMATION_CATALOG,
+  findMatchingAnimations,
+  mergeAnimationCatalogs,
+} from './animation-catalog';
+
+// WorldState ↔ Canvas Visual Bridge
+export {
+  detectChanges,
+  applyWorldStateChanges,
+} from './world-state-visual-bridge';
+export type { StateChange, PendingAnimation } from './world-state-visual-bridge';
+
 // Visual scene protocol
 export type {
   VisualScene,

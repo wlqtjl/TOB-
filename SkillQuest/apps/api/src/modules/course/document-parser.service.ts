@@ -30,6 +30,8 @@ export interface StructuredParseResult {
   plainText: string;
   /** 提取的表格列表 (HTML 格式) */
   tables: Array<{ html: string; page: number; caption: string }>;
+  /** 提取的图片列表 (MinerU 保存的本地路径) */
+  images: Array<{ path: string; page: number; caption: string }>;
   /** 提取的图片数量 */
   imageCount: number;
   /** 使用的解析器 */
@@ -62,6 +64,7 @@ export class DocumentParserService {
           markdown: mineruResult.markdown,
           plainText: mineruResult.plain_text,
           tables: mineruResult.tables,
+          images: mineruResult.images,
           imageCount: mineruResult.images.length,
           parserUsed: mineruResult.parser_used,
           pageCount: mineruResult.page_count,
@@ -76,6 +79,7 @@ export class DocumentParserService {
       markdown: text,
       plainText: text,
       tables: [],
+      images: [],
       imageCount: 0,
       parserUsed: 'legacy',
       pageCount: 0,

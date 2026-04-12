@@ -118,6 +118,33 @@ export class CourseController {
   // ─── 文档导入 ─────────────────────────────────────────────────────
 
   /**
+   * POST /api/courses/import/analyze
+   * 文档智能预览 — 上传文档并快速分析结构，无需完整 AI 生成
+   * 返回: 标题层级、候选关卡类型分布、GPT-4o 提示词增强文本
+   */
+  @Post('import/analyze')
+  @UseInterceptors(FileInterceptor('file', {
+    limits: { fileSize: 30 * 1024 * 1024 }, // 30 MB
+  }))
+  async analyzeImport(
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ) {
+    if (!file) throw new BadRequestException('请上传文档文件（file 字段）');
+    const insights = await this.courses.analyzeImport({
+      buffer: file.buffer,
+      mimetype: file.mimetype,
+      originalname: file.originalname,
+    });
+    if (!insights) {
+      return {
+        available: false,
+        message: 'MinerU AI Engine 未启动，无法进行文档预览。请直接使用 /import 接口。',
+      };
+    }
+    return { available: true, insights };
+  }
+
+  /**
    * POST /api/courses/import
    * 接收文档文件（PDF / DOCX / TXT），启动 AI 课程生成任务
    * 表单字段: file (multipart), tenantId (text), hint (text, 可选)

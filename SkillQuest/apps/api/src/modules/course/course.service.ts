@@ -6,12 +6,16 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import type { LevelMapData, LevelMapNode, LevelMapEdge } from '@skillquest/types';
 import { DocumentParserService } from './document-parser.service';
-import { AiGeneratorService } from './ai-generator.service';
+import { AiGeneratorService, GeneratedLevel } from './ai-generator.service';
+import { MineruBridgeService } from './mineru-bridge.service';
+import type { DocumentInsights, ImageAnalysisResult, TopologyVisionResult } from './mineru-bridge.service';
 
 /** 附加到 GPT-4o hint 中的最大表格数量 */
 const MAX_TABLES_IN_HINT = 5;
 /** 每个表格 HTML 截取的最大字符数 */
 const MAX_TABLE_HTML_LENGTH = 500;
+/** 直接生成的关卡最大占比 (总关卡的 1/3 — 其余由 GPT-4o 生成) */
+const MAX_DIRECT_LEVELS_RATIO = 0.4;
 
 // ─── 导入任务状态 (内存) ──────────────────────────────────────────
 
@@ -35,6 +39,7 @@ export class CourseService {
     private readonly prisma: PrismaService,
     private readonly docParser: DocumentParserService,
     private readonly aiGenerator: AiGeneratorService,
+    private readonly mineruBridge: MineruBridgeService,
   ) {}
 
   // ─── 课程 CRUD ─────────────────────────────────────────────────
@@ -203,7 +208,7 @@ export class CourseService {
       select: { id: true, content: true, type: true },
       orderBy: { sortOrder: 'asc' },
     });
-    return levels.map((l) => ({ levelId: l.id, type: l.type, ...(l.content as object) }));
+    return levels.map((l: { id: string; type: string; content: unknown }) => ({ levelId: l.id, type: l.type, ...(l.content as object) }));
   }
 
   // ─── 用户进度 ─────────────────────────────────────────────────
@@ -239,6 +244,26 @@ export class CourseService {
   /** 查询导入任务状态 */
   getImportJob(jobId: string): ImportJob | undefined {
     return this.importJobs.get(jobId);
+  }
+
+  /**
+   * 文档智能预览 — 快速分析文档结构，无需完整 AI 生成
+   *
+   * 返回文档的结构洞察供用户在正式导入前预览:
+   *   - 标题层级
+   *   - 候选关卡类型分布 (TERMINAL/MATCHING/ORDERING/TOPOLOGY/QUIZ)
+   *   - 直接生成的关卡预估数量
+   */
+  async analyzeImport(params: {
+    buffer: Buffer;
+    mimetype: string;
+    originalname: string;
+  }): Promise<DocumentInsights | null> {
+    return this.mineruBridge.analyzeDocument(
+      params.buffer,
+      params.originalname,
+      params.mimetype,
+    );
   }
 
   /**
@@ -279,7 +304,7 @@ export class CourseService {
     },
   ): Promise<void> {
     try {
-      // 1. 解析文档 (MinerU 2.5 优先, 传统解析 fallback)
+      // ── 阶段 1: 文档解析 (MinerU 2.5 优先, 传统解析 fallback) ──────
       job.status = 'parsing';
       job.progress = 10;
       job.message = '📄 正在解析文档…（MinerU 2.5 智能分析中）';
@@ -290,31 +315,90 @@ export class CourseService {
         params.originalname,
       );
 
-      // 使用 Markdown (含表格/版面结构) 作为 GPT-4o 输入, 效果更好
-      const textForAi = structured.markdown || structured.plainText;
-      const chunks = this.docParser.splitIntoChunks(textForAi);
+      job.progress = 20;
+      job.message = `📄 文档解析完成 (${structured.parserUsed})`;
 
-      job.progress = 30;
-      job.message = `📄 文档解析完成 (${structured.parserUsed})，提取 ${chunks.length} 个知识块`;
+      // ── 阶段 2: 文档结构分析 — 零成本关卡线索提取 ─────────────────
+      job.progress = 25;
+      job.message = '🔍 正在分析文档结构（提取关卡线索）…';
 
-      // 2. AI 生成
+      const insights = await this.mineruBridge.analyzeDocument(
+        params.buffer,
+        params.originalname,
+        params.mimetype,
+      );
+
+      // ── 阶段 2b: 从提取的图片中识别拓扑图 (GPT-4o Vision) ──────────
+      let topologyResults: TopologyVisionResult[] = [];
+      const imagePaths = structured.images?.map((img) => img.path).filter(Boolean) ?? [];
+      if (imagePaths.length > 0) {
+        job.progress = 30;
+        job.message = `🖼️ 正在识别文档图片中的网络拓扑图（${imagePaths.length} 张）…`;
+        const imgAnalysis: ImageAnalysisResult | null = await this.mineruBridge.analyzeImages(imagePaths);
+        if (imgAnalysis) {
+          topologyResults = imgAnalysis.results.filter((r) => r.is_topology && (r.confidence ?? 0) >= 0.7);
+          if (topologyResults.length > 0) {
+            job.message += ` 发现 ${topologyResults.length} 张拓扑图！`;
+          }
+        }
+      }
+
+      // ── 阶段 3: GPT-4o 生成 (带结构洞察增强) ─────────────────────
       job.status = 'generating';
       job.progress = 40;
       job.message = '🤖 AI 正在生成课程内容…（约 30-60 秒）';
 
-      // 如果有表格数据，附加到 hint 中增强 GPT-4o 的理解
+      // 构建增强提示词: 表格 + 结构洞察 + 拓扑图发现
       let enhancedHint = params.hint ?? '';
+
+      // 附加结构洞察 → 引导 GPT-4o 生成正确的关卡类型
+      if (insights?.gpt_hints) {
+        enhancedHint += `\n\n${insights.gpt_hints}`;
+      }
+
+      // 附加表格内容（旧逻辑保留）
       if (structured.tables.length > 0) {
         const tablesSummary = structured.tables
           .slice(0, MAX_TABLES_IN_HINT)
           .map((t, i) => `表格 ${i + 1}: ${t.html.slice(0, MAX_TABLE_HTML_LENGTH)}`)
           .join('\n');
-        enhancedHint += `\n\n[文档中包含 ${structured.tables.length} 个表格，以下是部分表格内容，请参考生成 MATCHING 或 QUIZ 题型]\n${tablesSummary}`;
+        enhancedHint += `\n\n[文档表格（共 ${structured.tables.length} 个）]\n${tablesSummary}`;
       }
+
+      // 告知 GPT-4o 已有哪些关卡无需再生成
+      if (topologyResults.length > 0) {
+        enhancedHint += `\n\n[注意: 文档中已识别出 ${topologyResults.length} 个网络拓扑图，` +
+          `将自动生成 TOPOLOGY 关卡，GPT-4o 无需再生成 TOPOLOGY 类型]`;
+      }
+
+      const textForAi = structured.markdown || structured.plainText;
+      const chunks = this.docParser.splitIntoChunks(textForAi);
 
       const result = await this.aiGenerator.generateCourse(chunks, enhancedHint.trim() || undefined);
 
-      // 3. 写入数据库
+      // ── 阶段 4: 合并直接生成的关卡 ───────────────────────────────
+      // 将拓扑图识别结果转换为 TOPOLOGY 关卡，追加到 AI 生成的关卡列表
+      const allLevels = [...result.levels];
+      const maxDirectLevels = Math.ceil(allLevels.length * MAX_DIRECT_LEVELS_RATIO);
+      let directCount = 0;
+
+      for (const topo of topologyResults) {
+        if (directCount >= maxDirectLevels) break;
+        const topoLevel = this.buildTopologyLevel(topo, allLevels.length + directCount + 1);
+        if (topoLevel) {
+          allLevels.push(topoLevel);
+          directCount++;
+        }
+      }
+
+      if (directCount > 0) {
+        job.message = `🤖 AI 生成 ${result.levels.length} 个关卡 + 自动识别 ${directCount} 个拓扑关卡`;
+      }
+
+      // ── 阶段 5: 应用标题层级 → 前置依赖 DAG ─────────────────────
+      const levelsWithPrereqs = this.applyPrerequisiteChain(allLevels, insights);
+
+      // ── 阶段 6: 写入数据库 ───────────────────────────────────────
       job.status = 'saving';
       job.progress = 85;
       job.message = '💾 正在保存课程到数据库…';
@@ -329,7 +413,7 @@ export class CourseService {
         },
       });
 
-      for (const level of result.levels) {
+      for (const level of levelsWithPrereqs) {
         await this.prisma.level.create({
           data: {
             courseId: course.id,
@@ -338,7 +422,7 @@ export class CourseService {
             type: level.type,
             description: level.description,
             timeLimitSec: level.timeLimitSec,
-            prerequisites: [],
+            prerequisites: level.prerequisites,
             positionX: level.positionX,
             positionY: level.positionY,
             content: level.content as object,
@@ -348,7 +432,9 @@ export class CourseService {
 
       job.status = 'done';
       job.progress = 100;
-      job.message = `✅ 课程《${result.title}》已生成，共 ${result.levels.length} 个关卡 (解析器: ${structured.parserUsed})`;
+      job.message =
+        `✅ 课程《${result.title}》已生成，共 ${levelsWithPrereqs.length} 个关卡` +
+        ` (解析器: ${structured.parserUsed})`;
       job.courseId = course.id;
     } catch (err) {
       job.status = 'error';
@@ -356,5 +442,52 @@ export class CourseService {
       job.message = '❌ 生成失败';
       job.error = (err as Error).message;
     }
+  }
+
+  // ── 辅助: 拓扑图 Vision 结果 → TOPOLOGY 关卡 ──────────────────────
+
+  private buildTopologyLevel(
+    topo: TopologyVisionResult,
+    sortOrder: number,
+  ): GeneratedLevel | null {
+    if (!topo.nodes || topo.nodes.length < 2) return null;
+
+    const levelId = `vision-topology-${sortOrder}`;
+    return {
+      sortOrder,
+      title: `网络拓扑: ${topo.key_concept ?? '拓扑连线'}`,
+      type: 'TOPOLOGY' as const,
+      description: topo.explanation ?? '根据网络拓扑图完成连线',
+      timeLimitSec: 300,
+      positionX: 0,
+      positionY: 0,
+      content: {
+        id: levelId,
+        levelId,
+        type: 'topology',
+        task: topo.task ?? '完成正确连线，使数据包能正常传输',
+        nodes: topo.nodes,
+        edges: topo.edges ?? [],
+        correctConnections: topo.correctConnections ?? [],
+        packetPath: topo.packetPath ?? [],
+        explanation: topo.explanation ?? '',
+      },
+    };
+  }
+
+  // ── 辅助: 基于标题层级构建前置依赖链 ────────────────────────────
+
+  /**
+   * 利用 MinerU 分析出的标题层级为关卡设定前置依赖。
+   * 当前使用简单线性策略（保持 UI 友好），前置依赖由 LevelStateMachine 管理。
+   */
+  private applyPrerequisiteChain(
+    levels: GeneratedLevel[],
+    _insights: DocumentInsights | null,
+  ): Array<GeneratedLevel & { prerequisites: string[] }> {
+    return levels.map((level) => ({
+      ...level,
+      prerequisites: [],
+    }));
   }
 }

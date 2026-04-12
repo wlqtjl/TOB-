@@ -26,6 +26,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import { ChildProcess, spawn } from 'child_process';
+import * as fs from 'fs';
 import * as http from 'http';
 import * as path from 'path';
 
@@ -49,6 +50,58 @@ export interface MineruHealthResult {
   service: string;
   mineru_available: boolean;
   supported_formats: string[];
+}
+
+/** 文档结构智能预览结果 */
+export interface DocumentInsights {
+  word_count: number;
+  section_count: number;
+  heading_count: number;
+  cli_block_count: number;
+  comparison_table_count: number;
+  procedure_list_count: number;
+  image_count: number;
+  suggested_level_types: Record<string, number>;
+  gpt_hints: string;
+  headings: Array<{ level: number; text: string; index: number }>;
+}
+
+/** GPT-4o Vision 拓扑图识别结果 */
+export interface TopologyVisionResult {
+  filename?: string;
+  is_topology: boolean;
+  confidence: number;
+  key_concept?: string;
+  nodes?: Array<{
+    id: string;
+    type: string;
+    label: string;
+    x: number;
+    y: number;
+    ports: Array<{ id: string; label: string }>;
+  }>;
+  edges?: Array<{
+    id: string;
+    fromPortId: string;
+    toPortId: string;
+    visible: boolean;
+    bandwidth?: string;
+    vlan?: number;
+    label?: string;
+  }>;
+  correctConnections?: Array<{ fromPortId: string; toPortId: string }>;
+  packetPath?: string[];
+  task?: string;
+  explanation?: string;
+  description?: string;
+  error?: string;
+}
+
+/** 批量图片拓扑识别结果 */
+export interface ImageAnalysisResult {
+  results: TopologyVisionResult[];
+  topology_count: number;
+  total_processed: number;
 }
 
 // ── Service ──────────────────────────────────────────────────────────
@@ -117,6 +170,59 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
       const data = await this.httpGet('/health');
       return JSON.parse(data) as MineruHealthResult;
     } catch {
+      return null;
+    }
+  }
+
+  /**
+   * 文档智能预览 — 快速结构分析，无需全量 AI 生成
+   *
+   * 返回文档的结构洞察:
+   *   - CLI 代码块数 → TERMINAL 关卡候选
+   *   - 对比表格数   → MATCHING 关卡候选
+   *   - 步骤列表数   → ORDERING 关卡候选
+   *   - 图片数       → TOPOLOGY 关卡候选
+   *   - 建议关卡类型分布
+   *   - GPT-4o 提示词增强文本
+   */
+  async analyzeDocument(
+    buffer: Buffer,
+    filename: string,
+    mimetype: string,
+  ): Promise<DocumentInsights | null> {
+    if (!this.enabled) return null;
+
+    const ok = await this.ensureRunning();
+    if (!ok) return null;
+
+    try {
+      const raw = await this.callMultipart('/analyze', buffer, filename, mimetype, PARSE_TIMEOUT_MS);
+      return JSON.parse(raw) as DocumentInsights;
+    } catch (err) {
+      this.logger.warn(`文档结构分析失败: ${(err as Error).message}`);
+      return null;
+    }
+  }
+
+  /**
+   * 批量图片拓扑识别 — GPT-4o Vision
+   *
+   * 接收图片路径列表（MinerU 提取的本地图片），读取文件内容，
+   * 逐一调用 Python /analyze/images 端点进行拓扑识别。
+   *
+   * @param imagePaths 图片文件路径列表（MinerU 保存的临时路径）
+   */
+  async analyzeImages(imagePaths: string[]): Promise<ImageAnalysisResult | null> {
+    if (!this.enabled || imagePaths.length === 0) return null;
+
+    const ok = await this.ensureRunning();
+    if (!ok) return null;
+
+    try {
+      const raw = await this.callMultipartImages('/analyze/images', imagePaths);
+      return JSON.parse(raw) as ImageAnalysisResult;
+    } catch (err) {
+      this.logger.warn(`图片拓扑分析失败: ${(err as Error).message}`);
       return null;
     }
   }
@@ -236,13 +342,24 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
     filename: string,
     mimetype: string,
   ): Promise<MineruParseResult> {
+    return this.callMultipart('/parse', buffer, filename, mimetype, PARSE_TIMEOUT_MS)
+      .then((raw) => JSON.parse(raw) as MineruParseResult);
+  }
+
+  /**
+   * 通用 multipart/form-data POST（单文件）
+   */
+  private callMultipart(
+    urlPath: string,
+    buffer: Buffer,
+    filename: string,
+    mimetype: string,
+    timeoutMs: number = PARSE_TIMEOUT_MS,
+  ): Promise<string> {
     return new Promise((resolve, reject) => {
       const boundary = `----FormBoundary${Date.now().toString(36)}`;
 
-      // 构建 multipart body
       const parts: Buffer[] = [];
-
-      // file 字段
       parts.push(Buffer.from(
         `--${boundary}\r\n` +
         `Content-Disposition: form-data; name="file"; filename="${filename}"\r\n` +
@@ -250,8 +367,6 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
       ));
       parts.push(buffer);
       parts.push(Buffer.from('\r\n'));
-
-      // 结束标记
       parts.push(Buffer.from(`--${boundary}--\r\n`));
 
       const body = Buffer.concat(parts);
@@ -260,7 +375,86 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
         {
           hostname: this.host,
           port: this.port,
-          path: '/parse',
+          path: urlPath,
+          method: 'POST',
+          headers: {
+            'Content-Type': `multipart/form-data; boundary=${boundary}`,
+            'Content-Length': body.length,
+          },
+          timeout: timeoutMs,
+        },
+        (res) => {
+          const chunks: Buffer[] = [];
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => {
+            const data = Buffer.concat(chunks).toString('utf-8');
+            if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
+              resolve(data);
+            } else {
+              reject(new Error(`AI Engine 返回 ${res.statusCode}: ${data.slice(0, 500)}`));
+            }
+          });
+        },
+      );
+
+      req.on('error', reject);
+      req.on('timeout', () => {
+        req.destroy();
+        reject(new Error(`AI Engine 请求超时 (${timeoutMs / 1_000} 秒) [${urlPath}]`));
+      });
+
+      req.write(body);
+      req.end();
+    });
+  }
+
+  /**
+   * 多文件 multipart/form-data POST（用于 /analyze/images）
+   *
+   * 读取本地图片文件，构建多文件 multipart body，发送到指定端点。
+   */
+  private callMultipartImages(urlPath: string, imagePaths: string[]): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const boundary = `----FormBoundary${Date.now().toString(36)}`;
+      const parts: Buffer[] = [];
+
+      for (const imgPath of imagePaths) {
+        let imgBuffer: Buffer;
+        try {
+          imgBuffer = fs.readFileSync(imgPath);
+        } catch {
+          this.logger.warn(`无法读取图片文件: ${imgPath}`);
+          continue;
+        }
+
+        const ext = path.extname(imgPath).toLowerCase();
+        const mime = ext === '.jpg' || ext === '.jpeg' ? 'image/jpeg'
+          : ext === '.webp' ? 'image/webp'
+          : 'image/png';
+        const fname = path.basename(imgPath);
+
+        parts.push(Buffer.from(
+          `--${boundary}\r\n` +
+          `Content-Disposition: form-data; name="files"; filename="${fname}"\r\n` +
+          `Content-Type: ${mime}\r\n\r\n`,
+        ));
+        parts.push(imgBuffer);
+        parts.push(Buffer.from('\r\n'));
+      }
+
+      if (parts.length === 0) {
+        resolve(JSON.stringify({ results: [], topology_count: 0, total_processed: 0 }));
+        return;
+      }
+
+      parts.push(Buffer.from(`--${boundary}--\r\n`));
+      const body = Buffer.concat(parts);
+
+      const req = http.request(
+        {
+          hostname: this.host,
+          port: this.port,
+          path: urlPath,
           method: 'POST',
           headers: {
             'Content-Type': `multipart/form-data; boundary=${boundary}`,
@@ -274,11 +468,7 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
           res.on('end', () => {
             const data = Buffer.concat(chunks).toString('utf-8');
             if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300) {
-              try {
-                resolve(JSON.parse(data) as MineruParseResult);
-              } catch (e) {
-                reject(new Error(`解析响应 JSON 失败: ${data.slice(0, 200)}`));
-              }
+              resolve(data);
             } else {
               reject(new Error(`AI Engine 返回 ${res.statusCode}: ${data.slice(0, 500)}`));
             }
@@ -289,7 +479,7 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
       req.on('error', reject);
       req.on('timeout', () => {
         req.destroy();
-        reject(new Error(`AI Engine 请求超时 (${PARSE_TIMEOUT_MS / 1_000} 秒)`));
+        reject(new Error(`图片分析超时 (${PARSE_TIMEOUT_MS / 1_000} 秒)`));
       });
 
       req.write(body);

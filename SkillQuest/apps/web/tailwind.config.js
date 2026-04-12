@@ -63,6 +63,8 @@ module.exports = {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'float-up': 'float-up 0.8s ease-out forwards',
         'shake': 'shake 0.4s ease-in-out',
+        'node-shake': 'node-shake 0.6s ease-in-out',
+        'glow-pulse': 'glow-pulse 2.5s ease-in-out infinite',
       },
       keyframes: {
         'pulse-glow': {
@@ -77,6 +79,17 @@ module.exports = {
           '0%, 100%': { transform: 'translateX(0)' },
           '25%': { transform: 'translateX(-5px)' },
           '75%': { transform: 'translateX(5px)' },
+        },
+        'node-shake': {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '15%': { transform: 'translateX(-3px)' },
+          '30%': { transform: 'translateX(3px)' },
+          '45%': { transform: 'translateX(-2px)' },
+          '60%': { transform: 'translateX(2px)' },
+        },
+        'glow-pulse': {
+          '0%, 100%': { opacity: '0.6' },
+          '50%': { opacity: '1' },
         },
       },
     },

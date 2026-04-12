@@ -5,8 +5,6 @@
  * The universal play page loads content by: courseId + type + id
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type ContentMap = Record<string, Record<string, Record<string, unknown>>>;
 
 const PLAY_CONTENT: ContentMap = {

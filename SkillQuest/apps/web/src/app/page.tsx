@@ -92,7 +92,7 @@ export default function Home() {
       </div>
 
       {/* 功能入口 */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 max-w-4xl w-full">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4 max-w-4xl w-full">
         <Link
           href="/map"
           className="group rounded-xl border border-brand-700/50 bg-brand-950/50 p-5 transition hover:border-brand-500 hover:bg-brand-900/30"
@@ -121,6 +121,16 @@ export default function Home() {
             ⚙️ 课程管理
           </h2>
           <p className="mt-1 text-sm text-gray-500">内容管理 · AI题目生成</p>
+        </Link>
+
+        <Link
+          href="/showcase"
+          className="group rounded-xl border border-purple-700/50 bg-purple-950/20 p-5 transition hover:border-purple-500 hover:bg-purple-900/30"
+        >
+          <h2 className="text-lg font-semibold text-purple-300 group-hover:text-purple-200">
+            🎬 产品介绍
+          </h2>
+          <p className="mt-1 text-sm text-gray-500">动态展示 · 平台亮点</p>
         </Link>
       </div>
 

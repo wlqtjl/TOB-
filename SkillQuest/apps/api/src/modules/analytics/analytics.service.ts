@@ -44,7 +44,7 @@ export class AnalyticsService {
       totalScore: totalScores._sum.totalScore ?? 0,
       totalAttempts: totalScores._count,
       progressByStatus: totalProgress.reduce(
-        (acc, p) => ({ ...acc, [p.status]: p._count }),
+        (acc: Record<string, number>, p: { status: string; _count: number }) => ({ ...acc, [p.status]: p._count }),
         {} as Record<string, number>,
       ),
       recentEvents,
@@ -70,7 +70,7 @@ export class AnalyticsService {
       totalAttempts,
       averageScore: Math.round(avgScore._avg.totalScore ?? 0),
       completionByStatus: completionRate.reduce(
-        (acc, p) => ({ ...acc, [p.status]: p._count }),
+        (acc: Record<string, number>, p: { status: string; _count: number }) => ({ ...acc, [p.status]: p._count }),
         {} as Record<string, number>,
       ),
     };
@@ -91,7 +91,7 @@ export class AnalyticsService {
       period: `${days}d`,
       since: since.toISOString(),
       eventCounts: events.reduce(
-        (acc, e) => ({ ...acc, [e.event]: e._count }),
+        (acc: Record<string, number>, e: { event: string; _count: number }) => ({ ...acc, [e.event]: e._count }),
         {} as Record<string, number>,
       ),
     };

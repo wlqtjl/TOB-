@@ -120,6 +120,7 @@ enum LevelType {
   TERMINAL
   SCENARIO
   VM_PLACEMENT
+  FLOW_SIM
 }
 
 // ─── 用户进度 ───────────────────────────────────────────────────────

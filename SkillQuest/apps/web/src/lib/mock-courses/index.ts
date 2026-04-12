@@ -2,7 +2,7 @@
  * Mock Course Data Layer — Multi-Vendor Demo
  *
  * Centralizes all mock data so pages are data-agnostic.
- * Supports: 华为 HCIA · 深信服超融合 · 安超云
+ * Supports: 华为 HCIA · 深信服超融合 · 安超云 · SmartX HALO
  *
  * In production this is replaced by API calls to the NestJS backend.
  */

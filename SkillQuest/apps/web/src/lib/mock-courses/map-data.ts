@@ -85,6 +85,33 @@ const MAP_DATA: Record<string, LevelMapData> = {
       { fromLevelId: 'l7', toLevelId: 'l8', particleState: 'static' },
     ],
   },
+
+  // ─── SmartX HALO 超融合 ──────────────────────────────────────────
+  'smartx-halo': {
+    courseId: 'smartx-halo',
+    nodes: [
+      { levelId: 'l1', title: 'SMTX OS 架构概述', type: 'quiz', status: 'passed', stars: 3, x: 200, y: 100 },
+      { levelId: 'l2', title: 'ZBS 分布式存储', type: 'quiz', status: 'passed', stars: 3, x: 400, y: 80 },
+      { levelId: 'l3', title: 'ELF 虚拟化引擎', type: 'quiz', status: 'passed', stars: 2, x: 600, y: 120 },
+      { levelId: 'l4', title: 'CloudTower 集群管理', type: 'topology', status: 'passed', stars: 3, x: 350, y: 250 },
+      { levelId: 'l5', title: 'HALO 网络配置', type: 'topology', status: 'unlocked', stars: 0, x: 550, y: 230 },
+      { levelId: 'l6', title: 'ZBS 数据保护与快照', type: 'matching', status: 'unlocked', stars: 0, x: 200, y: 380 },
+      { levelId: 'l7', title: '集群扩容与迁移', type: 'scenario', status: 'locked', stars: 0, x: 450, y: 400 },
+      { levelId: 'l8', title: 'HALO 故障排查实战', type: 'scenario', status: 'locked', stars: 0, x: 650, y: 370 },
+    ],
+    edges: [
+      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'flowing' },
+      { fromLevelId: 'l2', toLevelId: 'l3', particleState: 'flowing' },
+      { fromLevelId: 'l1', toLevelId: 'l4', particleState: 'flowing' },
+      { fromLevelId: 'l3', toLevelId: 'l4', particleState: 'flowing' },
+      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'pulsing' },
+      { fromLevelId: 'l2', toLevelId: 'l6', particleState: 'pulsing' },
+      { fromLevelId: 'l4', toLevelId: 'l5', particleState: 'pulsing' },
+      { fromLevelId: 'l5', toLevelId: 'l7', particleState: 'static' },
+      { fromLevelId: 'l6', toLevelId: 'l7', particleState: 'static' },
+      { fromLevelId: 'l7', toLevelId: 'l8', particleState: 'static' },
+    ],
+  },
 };
 
 export function getMapData(courseId: string): LevelMapData | null {

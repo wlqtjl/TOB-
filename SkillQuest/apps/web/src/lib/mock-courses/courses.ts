@@ -60,6 +60,20 @@ export const COURSES: CourseInfo[] = [
     xp: 650,
     userLevel: 3,
   },
+  {
+    id: 'smartx-halo',
+    title: 'SmartX HALO 超融合',
+    vendor: 'SmartX',
+    category: 'virtualization',
+    description: 'SMTX OS 超融合集群：ZBS分布式存储、ELF虚拟化、CloudTower管理',
+    icon: '🔷',
+    levelCount: 8,
+    passedCount: 4,
+    totalStars: 24,
+    earnedStars: 11,
+    xp: 1680,
+    userLevel: 6,
+  },
 ];
 
 export function getCourse(courseId: string): CourseInfo | undefined {

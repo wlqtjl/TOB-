@@ -12,6 +12,18 @@
 import { Injectable, Logger } from '@nestjs/common';
 import OpenAI from 'openai';
 
+// ─── 模型配置 ──────────────────────────────────────────────────────
+
+/** Agent A (Generator) 使用的模型 */
+const GENERATOR_MODEL = 'gpt-4o';
+
+/**
+ * Agent B (Solver) 使用的模型
+ * 可通过环境变量 SOLVER_MODEL_NAME 配置, 默认使用 gpt-4o-mini
+ * 使用不同模型避免 Generator/Solver 之间的系统性偏差
+ */
+const SOLVER_MODEL = process.env['SOLVER_MODEL_NAME'] || 'gpt-4o-mini';
+
 // ─── 类型定义 ──────────────────────────────────────────────────────
 
 export interface RagChunk {
@@ -242,7 +254,7 @@ ${ragContext}
 
     try {
       const resp = await client.chat.completions.create({
-        model: 'gpt-4o',
+        model: GENERATOR_MODEL,
         temperature: 0.4,
         response_format: { type: 'json_object' },
         messages: [
@@ -276,7 +288,7 @@ ${ragContext}
 
     try {
       const resp = await client.chat.completions.create({
-        model: 'gpt-4o',
+        model: SOLVER_MODEL,
         temperature: 0.2,
         response_format: { type: 'json_object' },
         messages: [

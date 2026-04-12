@@ -70,6 +70,21 @@ const DEFAULT_STATE: WorldState = {
   timeline: [],
 };
 
+// ─── 确定性随机数生成器 ────────────────────────────────────────────
+
+/**
+ * 基于种子的伪随机数生成器 (Mulberry32 算法)
+ *
+ * 当提供 seed 时, executeActionPure 使用此函数替代 Math.random(),
+ * 保证相同 seed 下灾难概率判定结果完全一致 (可重现/可测试)。
+ */
+function seededRandom(seed: number): number {
+  let t = (seed + 0x6D2B79F5) | 0;
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
 // ─── 纯函数: 状态变更逻辑 (不依赖 Zustand, 便于测试) ────────────
 
 export function updateNodeInState(
@@ -126,12 +141,15 @@ export function addTimelineEntry(
  * - 应用 effects (WorldStateMutation[])
  * - 检查灾难概率
  * - 更新 SLA 分数
+ *
+ * @param seed 可选随机种子 — 传入后使用确定性 PRNG, 保证可重现结果
  */
 export function executeActionPure(
   state: WorldState,
   actionId: string,
   executedActions: string[],
   config: ConsequencesConfig,
+  seed?: number,
 ): {
   newState: WorldState;
   disaster: DisasterEvent | null;
@@ -178,7 +196,8 @@ export function executeActionPure(
     : action.disasterProbability;
 
   let disaster: DisasterEvent | null = null;
-  if (adjustedProb > 0 && Math.random() < adjustedProb) {
+  const randomValue = seed !== undefined ? seededRandom(seed) : Math.random();
+  if (adjustedProb > 0 && randomValue < adjustedProb) {
     disaster = config.disasters.find(d =>
       d.affectedNodeIds.some(nid =>
         action.effects.some(e => e.targetNodeId === nid),

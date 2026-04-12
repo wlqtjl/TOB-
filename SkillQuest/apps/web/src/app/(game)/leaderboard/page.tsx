@@ -1,23 +1,35 @@
 /**
- * 实时排行榜 — 单租户课程支持
+ * 排行榜 — Minimalist redesign
+ *
+ * Clean typography hierarchy, no emoji clutter, single accent color
  */
 
 'use client';
 
 import Link from 'next/link';
 import { Suspense } from 'react';
+import { ArrowLeft, Star, Flame, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { LeaderboardEntry } from '@skillquest/types';
 import { useCourseId } from '../../../hooks/useCourseId';
 import { COURSES, getLeaderboard, getCourse } from '../../../lib/mock-courses';
 import { tenantConfig } from '../../../lib/tenant-config';
 
 const tenant = tenantConfig();
-const CROWN_ICONS = ['👑', '🥈', '🥉'];
 
 function RankChangeIndicator({ change }: { change: number }) {
-  if (change > 0) return <span className="text-green-400 text-xs font-mono">↑{change}</span>;
-  if (change < 0) return <span className="text-red-400 text-xs font-mono">↓{Math.abs(change)}</span>;
-  return <span className="text-gray-600 text-xs">—</span>;
+  if (change > 0) return (
+    <span className="flex items-center gap-0.5 text-green-400 text-xs">
+      <TrendingUp size={12} strokeWidth={1.5} />
+      {change}
+    </span>
+  );
+  if (change < 0) return (
+    <span className="flex items-center gap-0.5 text-red-400 text-xs">
+      <TrendingDown size={12} strokeWidth={1.5} />
+      {Math.abs(change)}
+    </span>
+  );
+  return <Minus size={12} strokeWidth={1.5} className="text-base-500" />;
 }
 
 function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isCurrentUser: boolean }) {
@@ -26,46 +38,58 @@ function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isC
   return (
     <div
       className={`
-        flex items-center gap-4 rounded-xl border p-4 transition-all
+        flex items-center gap-4 rounded-xl border p-5 transition-all
         ${isCurrentUser
-          ? 'border-blue-500/50 bg-blue-900/20'
+          ? 'border-accent/30 bg-accent/5'
           : isTopThree
-            ? 'border-yellow-400/20 bg-yellow-950/10'
-            : 'border-gray-800 bg-gray-900/30'
+            ? 'border-base-600/40 bg-base-800/60'
+            : 'border-base-600/20 bg-base-800/20'
         }
       `}
     >
-      <div className="flex w-10 items-center justify-center text-lg font-bold">
-        {isTopThree ? CROWN_ICONS[entry.rank - 1] : (
-          <span className="text-gray-500">{entry.rank}</span>
+      <div className="flex w-8 items-center justify-center">
+        {isTopThree ? (
+          <span className={`text-sm font-bold ${
+            entry.rank === 1 ? 'text-yellow-400' : entry.rank === 2 ? 'text-base-200' : 'text-orange-400'
+          }`}>
+            {entry.rank}
+          </span>
+        ) : (
+          <span className="text-sm text-base-500">{entry.rank}</span>
         )}
       </div>
 
       <div className={`
-        h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold
-        ${isCurrentUser ? 'bg-blue-600' : 'bg-gray-700'}
+        flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold
+        ${isCurrentUser ? 'bg-accent/20 text-accent' : 'bg-base-700 text-base-300'}
       `}>
         {entry.displayName[0]}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`font-medium ${isCurrentUser ? 'text-blue-300' : 'text-gray-200'}`}>
+          <span className={`text-sm font-medium truncate ${isCurrentUser ? 'text-accent' : 'text-base-100'}`}>
             {entry.displayName}
           </span>
           <RankChangeIndicator change={entry.rankChange} />
         </div>
-        <div className="flex gap-3 text-xs text-gray-500">
-          <span>⭐ {entry.stars} 星</span>
-          <span>🔥 连续 {entry.streakDays} 天</span>
+        <div className="flex gap-3 text-xs text-base-400 mt-0.5">
+          <span className="flex items-center gap-1">
+            <Star size={11} strokeWidth={1.5} />
+            {entry.stars}
+          </span>
+          <span className="flex items-center gap-1">
+            <Flame size={11} strokeWidth={1.5} />
+            {entry.streakDays} 天
+          </span>
         </div>
       </div>
 
       <div className="text-right">
-        <div className={`text-lg font-bold font-mono ${isTopThree ? 'text-yellow-400' : 'text-gray-300'}`}>
+        <div className={`text-base font-semibold font-mono ${isTopThree ? 'text-base-100' : 'text-base-200'}`}>
           {entry.totalScore.toLocaleString()}
         </div>
-        <div className="text-xs text-gray-600">分</div>
+        <div className="text-xs text-base-500">分</div>
       </div>
     </div>
   );
@@ -77,22 +101,23 @@ function LeaderboardContent() {
   const { entries, currentUserId } = getLeaderboard(courseId);
 
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
+    <div className="min-h-screen bg-base-900 px-6 py-10">
       <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center justify-between">
+        {/* ── Header ── */}
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-yellow-400">🏆 实时排行榜</h1>
-            <p className="text-sm text-gray-500">{course?.title ?? courseId} · 全部学员 · 本周</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-base-100">排行榜</h1>
+            <p className="mt-1 text-sm font-light text-base-300">{course?.title ?? courseId} · 本周</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1.5">
               {['本周', '本月', '赛季', '全部'].map((period) => (
                 <button
                   key={period}
-                  className={`rounded-lg px-3 py-1 text-xs ${
+                  className={`rounded-lg px-3 py-1.5 text-xs transition ${
                     period === '本周'
-                      ? 'bg-blue-600 text-white'
-                      : 'border border-gray-700 text-gray-400 hover:border-gray-500'
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-base-400 hover:text-base-200 hover:bg-base-700/50'
                   }`}
                 >
                   {period}
@@ -101,35 +126,37 @@ function LeaderboardContent() {
             </div>
             <Link
               href="/"
-              className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-500 transition"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 transition hover:text-base-100 hover:bg-base-700/50"
             >
-              ← 返回首页
+              <ArrowLeft size={14} strokeWidth={1.5} />
+              返回
             </Link>
           </div>
         </div>
 
-        {/* 课程切换 — 显示本租户的课程 */}
+        {/* ── Course switcher ── */}
         {COURSES.length > 1 && (
-          <div className="mb-4">
-            <p className="text-xs text-gray-600 mb-2">切换课程:</p>
+          <div className="mb-6">
+            <p className="text-xs text-base-500 mb-2">切换课程</p>
             <div className="flex flex-wrap gap-2">
               {COURSES.map((c) => (
                 <Link
                   key={c.id}
                   href={`/leaderboard?course=${c.id}`}
-                  className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                  className={`rounded-lg px-3 py-1.5 text-xs transition ${
                     c.id === courseId
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-                      : 'border-gray-700 text-gray-500 hover:border-gray-500'
+                      ? 'bg-accent/10 text-accent border border-accent/30'
+                      : 'text-base-400 border border-base-600/30 hover:border-base-500 hover:text-base-200'
                   }`}
                 >
-                  {c.icon} {c.title}
+                  {c.title}
                 </Link>
               ))}
             </div>
           </div>
         )}
 
+        {/* ── Rows ── */}
         <div className="space-y-2">
           {entries.map((entry) => (
             <LeaderboardRow
@@ -140,12 +167,13 @@ function LeaderboardContent() {
           ))}
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-gray-600">
+        {/* ── Footer ── */}
+        <div className="mt-6 flex items-center justify-between text-xs text-base-500">
           <span className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-            实时更新中 (WebSocket + Redis Sorted Set)
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+            实时更新中
           </span>
-          <span>{tenant.companyName} 培训排行榜</span>
+          <span>{tenant.companyName}</span>
         </div>
       </div>
     </div>
@@ -154,7 +182,7 @@ function LeaderboardContent() {
 
 export default function LeaderboardPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-950 flex items-center justify-center"><p className="text-gray-500 animate-pulse">加载排行榜...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-base-900 flex items-center justify-center"><p className="text-base-400 animate-pulse">加载排行榜...</p></div>}>
       <LeaderboardContent />
     </Suspense>
   );

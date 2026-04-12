@@ -1,7 +1,5 @@
 /**
- * CourseSwitcher — floating course selector shown on game pages
- *
- * Allows switching between vendor courses via URL param ?course=xxx
+ * CourseSwitcher — minimal floating course selector
  */
 
 'use client';
@@ -26,13 +24,13 @@ export default function CourseSwitcher() {
         <a
           key={c.id}
           href={buildHref(c.id)}
-          className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+          className={`rounded-lg px-3 py-1.5 text-xs transition ${
             c.id === currentCourseId
-              ? 'border-blue-500 bg-blue-500/10 text-blue-400'
-              : 'border-gray-700 text-gray-500 hover:border-gray-500'
+              ? 'bg-accent/10 text-accent border border-accent/30'
+              : 'text-base-400 border border-base-600/30 hover:border-base-500 hover:text-base-200'
           }`}
         >
-          {c.icon} {c.title}
+          {c.title}
         </a>
       ))}
     </div>

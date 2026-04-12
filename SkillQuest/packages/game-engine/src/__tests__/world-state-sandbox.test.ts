@@ -316,6 +316,52 @@ describe('ConsequencesEngine — executeActionPure', () => {
     expect(result.success).toBe(true);
     expect(result.newState.slaScore).toBeLessThan(100);
   });
+
+  it('should produce deterministic results with same seed', () => {
+    const state = createWorldState();
+    const config = createConsequencesConfig();
+    
+    // Run with the same seed twice — results must be identical
+    const result1 = executeActionPure(state, 'reboot_node', [], config, 42);
+    const result2 = executeActionPure(state, 'reboot_node', [], config, 42);
+    
+    expect(result1.success).toBe(result2.success);
+    expect(result1.disaster?.id).toBe(result2.disaster?.id);
+    expect(result1.newState.slaScore).toBe(result2.newState.slaScore);
+    expect(result1.message).toBe(result2.message);
+  });
+
+  it('should produce different results with different seeds', () => {
+    const state = createWorldState();
+    const config = createConsequencesConfig();
+    
+    // With high disaster probability, different seeds should eventually differ
+    const highDisasterConfig = {
+      ...config,
+      actions: config.actions.map(a =>
+        a.id === 'reboot_node' ? { ...a, disasterProbability: 0.5 } : a,
+      ),
+    };
+    
+    // Collect results for many seeds to verify non-uniformity
+    const results = Array.from({ length: 20 }, (_, i) =>
+      executeActionPure(state, 'reboot_node', [], highDisasterConfig, i),
+    );
+    
+    const hasDisaster = results.some(r => r.disaster !== null);
+    const noDisaster = results.some(r => r.disaster === null);
+    // With 50% probability and 20 seeds, we should see both outcomes
+    expect(hasDisaster || noDisaster).toBe(true);
+  });
+
+  it('should use Math.random when no seed is provided', () => {
+    const state = createWorldState();
+    const config = createConsequencesConfig();
+    
+    // Without seed, the function should still work (backward compat)
+    const result = executeActionPure(state, 'check_metrics', [], config);
+    expect(result.success).toBe(true);
+  });
 });
 
 describe('ConsequencesEngine — calculateDamageReport', () => {

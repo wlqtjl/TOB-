@@ -1,7 +1,8 @@
 """
-RAG Pipeline Tests — chunker + retriever
+RAG Pipeline Tests — chunker + retriever + BM25 fallback
 
-Tests the full document → chunk → embed (mock) → retrieve pipeline.
+Tests the full document → chunk → embed (mock) → retrieve pipeline,
+including BM25 text retrieval as fallback when embedding is unavailable.
 """
 
 import math
@@ -14,6 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from rag.chunker import chunk_markdown, DocumentChunk, _split_by_headings, _split_paragraphs, _merge_short_paragraphs
 from rag.retriever import cosine_similarity, retrieve_relevant_chunks, RetrievalResult
+from rag.bm25 import tokenize, build_bm25_index, bm25_score, bm25_retrieve, BM25Index
 
 
 # ─── Chunker Tests ─────────────────────────────────────────────────
@@ -241,12 +243,184 @@ class TestRetrieveRelevantChunks:
     def test_empty_inputs(self):
         assert retrieve_relevant_chunks([], self.chunks, self.embeddings) == []
         assert retrieve_relevant_chunks([1.0], [], []) == []
-        assert retrieve_relevant_chunks([1.0], self.chunks, []) == []
+        # Empty chunk_embeddings with query_text -> BM25 fallback
+        results = retrieve_relevant_chunks(
+            [1.0], self.chunks, [], query_text="ZBS副本", min_score=0.0,
+        )
+        assert len(results) >= 1  # BM25 should return results
 
     def test_results_sorted_by_score(self):
         query_emb = [0.5, 0.5, 0.5]
         results = retrieve_relevant_chunks(
             query_emb, self.chunks, self.embeddings, top_k=3, min_score=0.0,
+        )
+        scores = [r.score for r in results]
+        assert scores == sorted(scores, reverse=True)
+
+
+# ─── BM25 Tests ───────────────────────────────────────────────────
+
+
+class TestTokenize:
+    def test_english_words(self):
+        tokens = tokenize("Hello World Python")
+        assert "hello" in tokens
+        assert "world" in tokens
+        assert "python" in tokens
+
+    def test_chinese_chars(self):
+        tokens = tokenize("三副本策略")
+        assert "三" in tokens
+        assert "副" in tokens
+        assert "本" in tokens
+
+    def test_mixed_content(self):
+        tokens = tokenize("ZBS 三副本 storage")
+        assert "zbs" in tokens
+        assert "storage" in tokens
+        assert "三" in tokens
+
+    def test_empty_input(self):
+        assert tokenize("") == []
+        assert tokenize("   ") == []
+
+    def test_filters_single_chars(self):
+        tokens = tokenize("a b c hello")
+        assert "hello" in tokens
+        # Single English chars should be filtered
+        assert "a" not in tokens
+
+
+class TestBM25Index:
+    def setup_method(self):
+        self.texts = [
+            "ZBS使用三副本策略保证数据可靠性",
+            "网络配置VLAN和交换机设置",
+            "集群扩容步骤与运维指南",
+        ]
+        self.index = build_bm25_index(self.texts)
+
+    def test_index_creation(self):
+        assert self.index.n_docs == 3
+        assert self.index.avg_doc_length > 0
+        assert len(self.index.doc_term_freqs) == 3
+        assert len(self.index.doc_lengths) == 3
+
+    def test_doc_freqs(self):
+        # "zbs" only appears in doc 0
+        assert self.index.doc_freqs.get("zbs", 0) == 1
+
+    def test_score_relevant_higher(self):
+        s0 = bm25_score(self.index, "ZBS副本", 0)
+        s1 = bm25_score(self.index, "ZBS副本", 1)
+        assert s0 > s1
+
+    def test_score_empty_query(self):
+        assert bm25_score(self.index, "", 0) == 0.0
+
+    def test_score_out_of_range(self):
+        assert bm25_score(self.index, "test", 99) == 0.0
+
+    def test_score_non_negative(self):
+        for i in range(3):
+            score = bm25_score(self.index, "ZBS网络集群", i)
+            assert score >= 0.0
+
+
+class TestBM25Retrieve:
+    def setup_method(self):
+        self.chunks = [
+            DocumentChunk(content="ZBS使用三副本策略", chapter_title="存储", index=0,
+                          metadata={"has_tech_spec": True}),
+            DocumentChunk(content="网络配置VLAN设置", chapter_title="网络", index=1),
+            DocumentChunk(content="集群扩容步骤说明", chapter_title="运维", index=2),
+        ]
+        texts = [c.content for c in self.chunks]
+        self.index = build_bm25_index(texts)
+
+    def test_basic_retrieval(self):
+        results = bm25_retrieve(self.index, self.chunks, "ZBS副本", top_k=2, min_score=0.0)
+        assert len(results) >= 1
+        assert results[0][0].chapter_title == "存储"
+
+    def test_top_k_limit(self):
+        results = bm25_retrieve(self.index, self.chunks, "ZBS网络集群", top_k=1, min_score=0.0)
+        assert len(results) <= 1
+
+    def test_chapter_weight(self):
+        results_no_weight = bm25_retrieve(
+            self.index, self.chunks, "ZBS网络", top_k=3, min_score=0.0,
+        )
+        results_with_weight = bm25_retrieve(
+            self.index, self.chunks, "ZBS网络", top_k=3, min_score=0.0,
+            chapter_weight="存储",
+        )
+        # With chapter weight, storage should rank higher or equal
+        if results_no_weight and results_with_weight:
+            storage_rank_no = next(
+                (i for i, r in enumerate(results_no_weight) if r[0].chapter_title == "存储"), -1
+            )
+            storage_rank_w = next(
+                (i for i, r in enumerate(results_with_weight) if r[0].chapter_title == "存储"), -1
+            )
+            assert storage_rank_w <= storage_rank_no
+
+    def test_tech_spec_boost(self):
+        results = bm25_retrieve(self.index, self.chunks, "ZBS副本", top_k=3, min_score=0.0)
+        assert results[0][0].metadata.get("has_tech_spec") is True
+
+    def test_empty_inputs(self):
+        assert bm25_retrieve(self.index, [], "query") == []
+        assert bm25_retrieve(self.index, self.chunks, "") == []
+
+    def test_results_sorted_by_score(self):
+        results = bm25_retrieve(self.index, self.chunks, "ZBS网络集群", top_k=3, min_score=0.0)
+        scores = [r[1] for r in results]
+        assert scores == sorted(scores, reverse=True)
+
+
+class TestRetrieverBM25Fallback:
+    """Test that retrieve_relevant_chunks falls back to BM25 when embeddings are empty"""
+
+    def setup_method(self):
+        self.chunks = [
+            DocumentChunk(content="ZBS使用三副本策略", chapter_title="存储", index=0,
+                          metadata={"has_tech_spec": True}),
+            DocumentChunk(content="网络配置VLAN设置", chapter_title="网络", index=1),
+            DocumentChunk(content="集群扩容步骤说明", chapter_title="运维", index=2),
+        ]
+
+    def test_fallback_with_empty_embedding(self):
+        results = retrieve_relevant_chunks(
+            query_embedding=[],
+            chunks=self.chunks,
+            chunk_embeddings=[],
+            top_k=2,
+            min_score=0.0,
+            query_text="ZBS副本",
+        )
+        assert len(results) >= 1
+        assert results[0].chunk.chapter_title == "存储"
+        assert results[0].embedding == []  # BM25 returns empty embedding
+
+    def test_fallback_without_query_text(self):
+        results = retrieve_relevant_chunks(
+            query_embedding=[],
+            chunks=self.chunks,
+            chunk_embeddings=[],
+            top_k=2,
+            min_score=0.0,
+        )
+        assert results == []  # No query_text, can't do BM25
+
+    def test_fallback_preserves_sort_order(self):
+        results = retrieve_relevant_chunks(
+            query_embedding=[],
+            chunks=self.chunks,
+            chunk_embeddings=[],
+            top_k=3,
+            min_score=0.0,
+            query_text="ZBS网络集群",
         )
         scores = [r.score for r in results]
         assert scores == sorted(scores, reverse=True)

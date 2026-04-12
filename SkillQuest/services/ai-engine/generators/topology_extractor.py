@@ -149,10 +149,10 @@ async def extract_topology_from_image(image_bytes: bytes) -> dict:
 
     except json.JSONDecodeError as e:
         logger.error(f"GPT-4o 返回非 JSON: {e}")
-        return {"is_topology": False, "confidence": 0.0, "error": f"JSON parse error: {e}"}
+        return {"is_topology": False, "confidence": 0.0}
     except Exception as e:
         logger.error(f"GPT-4o Vision 调用失败: {e}")
-        return {"is_topology": False, "confidence": 0.0, "error": str(e)}
+        return {"is_topology": False, "confidence": 0.0}
 
 
 # ── SkillQuest 格式转换 ───────────────────────────────────────────────

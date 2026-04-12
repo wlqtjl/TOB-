@@ -1013,3 +1013,113 @@ export interface PhysicsTickInput {
   worldNodes: WorldNode[];
   worldLinks: WorldLink[];
 }
+
+// ─── Data Gravity 物理交互系统 ──────────────────────────────────────
+
+/** 2D 向量 */
+export interface Vec2 {
+  x: number;
+  y: number;
+}
+
+/** 引力节点状态 */
+export type GravityNodeStatus = 'normal' | 'failed' | 'overloaded';
+
+/** 引力节点 (引力源) */
+export interface GravityNode {
+  id: string;
+  position: Vec2;
+  mass: number;
+  status: GravityNodeStatus;
+  /** 剩余存储容量 (0-1) */
+  capacity: number;
+  /** 可用带宽 (0-1) */
+  bandwidth: number;
+  /** 节点标签 */
+  label: string;
+}
+
+/** 数据粒子 (受力质点) */
+export interface DataParticle {
+  id: string;
+  position: Vec2;
+  velocity: Vec2;
+  acceleration: Vec2;
+  /** 固定质量 */
+  mass: number;
+  /** 副本组标识 — 同组粒子互斥 */
+  replicaId: string;
+  /** 粒子颜色 (多普勒色移) */
+  color: string;
+  /** 粒子拖尾历史位置 */
+  trail: Vec2[];
+  /** 元数据 (引力透镜显示) */
+  metadata: Record<string, string | number>;
+}
+
+/** 碰撞段 (ForceShield 生成) */
+export interface CollisionSegment {
+  id: string;
+  start: Vec2;
+  end: Vec2;
+  /** 剩余生命周期 (ms) */
+  lifetimeMs: number;
+  /** 反弹系数 (0-1) */
+  restitution: number;
+}
+
+/** 引力锚点 (GravityAnchor 生成) */
+export interface GravityAnchor {
+  id: string;
+  position: Vec2;
+  mass: number;
+  /** 剩余生命周期 (ms) */
+  lifetimeMs: number;
+}
+
+/** 引力枪工具类型 */
+export type GravityGunToolType =
+  | 'gravity_anchor'
+  | 'force_shield'
+  | 'the_lens'
+  | 'singularity';
+
+/** 引力透镜状态 */
+export interface LensState {
+  active: boolean;
+  position: Vec2;
+  radius: number;
+}
+
+/** Data Gravity 物理世界状态 */
+export interface DataGravityState {
+  nodes: GravityNode[];
+  particles: DataParticle[];
+  anchors: GravityAnchor[];
+  segments: CollisionSegment[];
+  lens: LensState;
+  /** 万有引力常数 */
+  G: number;
+  /** 摩擦系数 (模拟网络延迟) */
+  friction: number;
+  /** 粒子拖尾最大长度 */
+  maxTrailLength: number;
+  /** 累计能量损耗 */
+  totalEnergyLoss: number;
+  /** 上一次 tick 的总位移 */
+  lastTickDisplacement: number;
+}
+
+/** 能量监测数据 */
+export interface EnergyMetrics {
+  /** 当前 tick 所有粒子位移总和 */
+  displacement: number;
+  /** 系统总动能 */
+  kineticEnergy: number;
+  /** 系统总势能 */
+  potentialEnergy: number;
+  /** 带宽能量损耗率 (位移/秒) */
+  bandwidthLossRate: number;
+  /** 系统熵增 (操作导致的引力波动度量) */
+  entropyDelta: number;
+}

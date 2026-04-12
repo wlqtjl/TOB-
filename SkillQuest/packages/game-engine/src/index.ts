@@ -144,3 +144,28 @@ export {
   vmPlacementAdapter,
   mapAdapter,
 } from './adapters';
+
+// Data Gravity — "数据引力" 物理交互系统
+export {
+  // Vec2
+  vec2, add, sub, scale, length, lengthSq, normalize, distance, distanceSq,
+  dot, cross, reflect, clampLength, ZERO,
+  // CorePhysicsEngine
+  dopplerColor, computeNodeGravity, computeAnchorGravity, computeAntiAffinityForce,
+  checkSegmentCollision, tickParticle, updatePhysics, createDataGravityState,
+  // NodeManager
+  computeNodeMass, createGravityNode, updateNodeStatus, updateNodeCapacity,
+  updateNodeBandwidth, updateNode, updateNodeInGravityState,
+  addNodeToGravityState, removeNodeFromGravityState,
+  injectNodeFailure, recoverNode,
+  // GravityGunController
+  resetIdCounter, createGravityAnchor, placeGravityAnchor,
+  createForceShield, placeForceShield,
+  activateLens, updateLensPosition, deactivateLens, getParticlesInLens,
+  applySingularity, executeGravityGunAction,
+  // EnergyMonitor
+  computeKineticEnergy, computePotentialEnergy, computeTotalDisplacement,
+  computeEntropyDelta, computeEnergyMetrics,
+  createEntropyHistory, recordEntropy, averageEntropy, peakEntropy,
+} from './data-gravity';
+export type { GravityGunAction, EntropyHistory } from './data-gravity';

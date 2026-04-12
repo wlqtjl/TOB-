@@ -10,3 +10,4 @@ export { terminalAdapter, activateTerminalFlow } from './terminal-adapter';
 export { scenarioAdapter, highlightOptimalPath } from './scenario-adapter';
 export { vmPlacementAdapter } from './vm-placement-adapter';
 export { mapAdapter } from './map-adapter';
+export { flowSimAdapter, activateFlowStep, activateAllFlowSteps, injectFault } from './flow-sim-adapter';

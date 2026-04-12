@@ -15,6 +15,7 @@ import type {
   ScenarioQuizLevel,
   VirtualizationLevel,
   LevelMapData,
+  FlowSimLevel,
 } from '@skillquest/types';
 
 import {
@@ -31,6 +32,10 @@ import {
   highlightOptimalPath,
   vmPlacementAdapter,
   mapAdapter,
+  flowSimAdapter,
+  activateFlowStep,
+  activateAllFlowSteps,
+  injectFault,
 } from '../adapters';
 
 import type { VisualScene } from '../visual-scene';
@@ -468,6 +473,157 @@ describe('VisualScene Protocol - Adapter Tests', () => {
       const scene = mapAdapter(mockMapData);
       const lockedEntity = scene.entities.find((e) => e.id === 'l3');
       expect(lockedEntity?.style.opacity).toBe(0.5);
+    });
+  });
+
+  // ─── flowSimAdapter ─────────────────────────────────────────────────
+
+  const mockFlowSim: FlowSimLevel = {
+    id: 'fs-1',
+    levelId: 'level-flow-1',
+    type: 'flow_sim',
+    mode: 'route',
+    task: 'ZBS写请求路径: 观察Access→Meta→Chunk三副本写入过程',
+    nodes: [
+      { id: 'client', label: 'Client', icon: '💻', role: 'client', x: 80, y: 280, faultable: false },
+      { id: 'access', label: 'Access', icon: '🔀', role: 'gateway', x: 240, y: 280, faultable: false },
+      { id: 'meta', label: 'Meta', icon: '🗃️', role: 'control', x: 400, y: 140, faultable: true },
+      { id: 'chunk1', label: 'Chunk-1', icon: '💾', role: 'data', x: 560, y: 200, faultable: true },
+      { id: 'chunk2', label: 'Chunk-2', icon: '💾', role: 'data', x: 700, y: 140, faultable: true },
+    ],
+    steps: [
+      { id: 's1', from: 'client', to: 'access', data: 'Write(block42)', annotation: '客户端发起写请求', delayMs: 0, color: '#8b5cf6' },
+      { id: 's2', from: 'access', to: 'meta', data: 'GetLease(block42)', annotation: 'Access向Meta申请租约', delayMs: 300, color: '#fbbf24' },
+      { id: 's3', from: 'meta', to: 'access', data: 'Lease([chunk1,chunk2])', annotation: 'Meta返回租约', delayMs: 600, color: '#fbbf24' },
+      { id: 's4', from: 'access', to: 'chunk1', data: 'Write(data)', annotation: '写入Primary', delayMs: 900, color: '#22c55e' },
+      { id: 's5', from: 'chunk1', to: 'chunk2', data: 'Sync(data)', annotation: '同步副本', delayMs: 1200, color: '#60a5fa' },
+    ],
+    decisions: [
+      {
+        id: 'd1',
+        afterStepId: 's3',
+        question: '写请求应发给哪个Chunk节点?',
+        options: ['chunk1', 'chunk2'],
+        correctOptions: ['chunk1'],
+        wrongFeedback: '错误! 应发给Primary',
+        correctFeedback: '正确! Primary负责接收写入',
+      },
+    ],
+    faults: [
+      {
+        id: 'f1',
+        beforeStepId: 's4',
+        affectedNodeId: 'meta',
+        description: 'Meta Leader 宕机',
+        expectedRecoveryStepIds: [],
+      },
+    ],
+    playbackSpeed: 1.0,
+    playbackSpeedOptions: [0.1, 0.5, 1, 2, 5, 10],
+    explanation: 'ZBS三副本写路径',
+  };
+
+  describe('flowSimAdapter', () => {
+    it('should produce a valid scene from FlowSimLevel', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      assertValidScene(scene);
+      expect(scene.sourceType).toBe('flow_sim');
+      expect(scene.entities).toHaveLength(5); // 5 nodes
+      expect(scene.connections).toHaveLength(5); // 5 steps
+    });
+
+    it('should create entity per node with correct role group', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const clientEntity = scene.entities.find((e) => e.id === 'client');
+      expect(clientEntity).toBeDefined();
+      expect(clientEntity?.group).toBe('client');
+
+      const metaEntity = scene.entities.find((e) => e.id === 'meta');
+      expect(metaEntity?.group).toBe('control');
+    });
+
+    it('should create one connection per step with particles disabled initially', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      // All connections start disabled (activated progressively during replay)
+      expect(scene.connections.every((c) => !c.particleConfig.enabled)).toBe(true);
+    });
+
+    it('should have a click interaction for each decision', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      // 1 decision → 1 click interaction
+      expect(scene.interactions).toHaveLength(1);
+      expect(scene.interactions[0].type).toBe('click');
+    });
+
+    it('should validate correct decision option', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const result = scene.interactions[0].validate({ entityId: 'chunk1' });
+      expect(result.correct).toBe(true);
+      expect(result.message).toContain('正确');
+    });
+
+    it('should reject incorrect decision option', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const result = scene.interactions[0].validate({ entityId: 'chunk2' });
+      expect(result.correct).toBe(false);
+      expect(result.message).toContain('错误');
+    });
+
+    it('activateFlowStep should enable particles on the targeted step connection', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const activated = activateFlowStep(scene, 's1', 1.0);
+      const s1Conn = activated.connections.find((c) => c.id === 's1');
+      expect(s1Conn?.particleConfig.enabled).toBe(true);
+      // Other connections stay disabled
+      const s2Conn = activated.connections.find((c) => c.id === 's2');
+      expect(s2Conn?.particleConfig.enabled).toBe(false);
+    });
+
+    it('activateFlowStep should scale particle speed with playbackSpeed', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const slow = activateFlowStep(scene, 's1', 0.1);
+      const fast = activateFlowStep(scene, 's1', 10);
+      const slowSpeed = slow.connections.find((c) => c.id === 's1')!.particleConfig.speed;
+      const fastSpeed = fast.connections.find((c) => c.id === 's1')!.particleConfig.speed;
+      expect(fastSpeed).toBeGreaterThan(slowSpeed);
+    });
+
+    it('activateAllFlowSteps should enable particles on every connection', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const activated = activateAllFlowSteps(scene, 1.0);
+      expect(activated.connections.every((c) => c.particleConfig.enabled)).toBe(true);
+    });
+
+    it('injectFault should change faulted node style and disable its connections', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const faulted = injectFault(scene, 'meta');
+      const metaEntity = faulted.entities.find((e) => e.id === 'meta');
+      expect(metaEntity?.style.stroke).toBe('#ef4444');
+      expect(metaEntity?.metadata['faulted']).toBe(true);
+      // Connections involving meta should have particles disabled
+      const metaConns = faulted.connections.filter((c) => c.from === 'meta' || c.to === 'meta');
+      expect(metaConns.every((c) => !c.particleConfig.enabled)).toBe(true);
+    });
+
+    it('observe mode should have a click interaction even with no decisions', () => {
+      const observeLevel: FlowSimLevel = {
+        ...mockFlowSim,
+        mode: 'observe',
+        decisions: [],
+      };
+      const scene = flowSimAdapter(observeLevel);
+      expect(scene.interactions).toHaveLength(1);
+      expect(scene.interactions[0].type).toBe('click');
+    });
+
+    it('should clamp playbackSpeed to 0.1-10 range in activateFlowStep', () => {
+      const scene = flowSimAdapter(mockFlowSim);
+      const slowConn = activateFlowStep(scene, 's1', 0.001).connections.find((c) => c.id === 's1')!;
+      const fastConn = activateFlowStep(scene, 's1', 100).connections.find((c) => c.id === 's1')!;
+      // 0.001 clamped to 0.1 → speed = 80 * 0.1 = 8
+      // 100 clamped to 10 → speed = 80 * 10 = 800
+      expect(slowConn.particleConfig.speed).toBeCloseTo(8, 0);
+      expect(fastConn.particleConfig.speed).toBeCloseTo(800, 0);
     });
   });
 });

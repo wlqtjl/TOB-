@@ -34,20 +34,9 @@ function LevelContent({ levelId }: { levelId: string }) {
 
   const currentQuestion = questions[currentIdx];
 
-  if (!currentQuestion) {
-    return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-2xl text-gray-400">😕 未找到关卡题目</p>
-          <p className="mt-2 text-sm text-gray-600">课程: {course?.title ?? courseId} · 关卡: {levelId}</p>
-          <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-400 hover:underline text-sm">← 返回地图</a>
-        </div>
-      </div>
-    );
-  }
-
-  // Build VisualScene for the current question
+  // Build VisualScene for the current question (safe even if currentQuestion is undefined)
   const scene = useMemo(() => {
+    if (!currentQuestion) return null;
     const base = quizAdapter(currentQuestion);
     if (answered) {
       return highlightCorrectOption(base, currentQuestion.correctOptionIds);
@@ -57,7 +46,7 @@ function LevelContent({ levelId }: { levelId: string }) {
 
   const handleInteraction = useCallback(
     (result: InteractionResult) => {
-      if (answered) return;
+      if (answered || !currentQuestion) return;
       setAnswered(true);
 
       if (result.correct) {
@@ -76,6 +65,18 @@ function LevelContent({ levelId }: { levelId: string }) {
       nextQuestion();
     }
   }, [currentIdx, questions.length, nextQuestion]);
+
+  if (!currentQuestion || !scene) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-2xl text-gray-400">😕 未找到关卡题目</p>
+          <p className="mt-2 text-sm text-gray-600">课程: {course?.title ?? courseId} · 关卡: {levelId}</p>
+          <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-400 hover:underline text-sm">← 返回地图</a>
+        </div>
+      </div>
+    );
+  }
 
   const levelTitle = course ? `${course.title} · 关卡答题` : `关卡: ${levelId}`;
 

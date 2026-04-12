@@ -400,7 +400,7 @@ export class MineruBridgeService implements OnModuleDestroy, OnApplicationShutdo
       req.on('error', reject);
       req.on('timeout', () => {
         req.destroy();
-        reject(new Error(`AI Engine 请求超时 (${timeoutMs / 1_000} 秒) [${urlPath}]`));
+        reject(new Error(`AI Engine 请求超时 (${(timeoutMs / 1_000).toFixed(1)} 秒) [${urlPath}]`));
       });
 
       req.write(body);

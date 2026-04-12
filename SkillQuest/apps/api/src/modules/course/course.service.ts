@@ -14,7 +14,7 @@ import type { DocumentInsights, ImageAnalysisResult, TopologyVisionResult } from
 const MAX_TABLES_IN_HINT = 5;
 /** 每个表格 HTML 截取的最大字符数 */
 const MAX_TABLE_HTML_LENGTH = 500;
-/** 直接生成的关卡最大占比 (总关卡的 1/3 — 其余由 GPT-4o 生成) */
+/** 直接生成的关卡最大占比 (总关卡的 40%) */
 const MAX_DIRECT_LEVELS_RATIO = 0.4;
 
 // ─── 导入任务状态 (内存) ──────────────────────────────────────────

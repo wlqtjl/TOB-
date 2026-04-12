@@ -1,7 +1,7 @@
 [project]
 name = "skillquest-ai-engine"
-version = "0.2.0"
-description = "SkillQuest AI Engine — MinerU 2.5 文档解析 + LLM题目生成 + 拓扑图识别"
+version = "0.3.0"
+description = "SkillQuest AI Engine — MinerU 2.5 文档解析 + 结构分析 + LLM题目生成 + GPT-4o Vision拓扑图识别"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.110.0",

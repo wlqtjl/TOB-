@@ -220,11 +220,19 @@ def _enrich_for_skillquest(result: dict) -> dict:
             "toPortId": to_port_id,
         })
 
-    # 隐藏部分连线（增加游戏性）——隐藏最后 1/3 的连线
+    # Hide edges to increase challenge — shuffle indices first to avoid
+    # always hiding the same (potentially critical) edges, while keeping
+    # at least 2 visible edges to give players enough connectivity context.
     if len(skillquest_edges) >= 3:
         hide_count = max(1, len(skillquest_edges) // 3)
-        for edge in skillquest_edges[-hide_count:]:
-            edge["visible"] = False
+        # Work on a shuffled index list so hidden edges are random, not always the last ones
+        import random as _random
+        candidate_indices = list(range(1, len(skillquest_edges)))  # never hide edge 0 (entry point)
+        _random.shuffle(candidate_indices)
+        hidden_indices = set(candidate_indices[:hide_count])
+        for idx, edge in enumerate(skillquest_edges):
+            if idx in hidden_indices:
+                edge["visible"] = False
 
     # 简化的 packetPath（经过所有节点的第一个端口）
     packet_path: list[str] = []

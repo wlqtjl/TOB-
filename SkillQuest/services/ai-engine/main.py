@@ -309,7 +309,7 @@ async def analyze_images(
 
         except Exception as e:
             logger.error(f"图片分析失败 ({fname}): {e}")
-            results.append({"filename": fname, "is_topology": False, "error": str(e)})
+            results.append({"filename": fname, "is_topology": False, "error": "图片处理失败，请检查格式是否正确"})
 
     return {
         "results": results,
@@ -333,6 +333,9 @@ async def extract_topology(
         raise HTTPException(status_code=400, detail="文件内容为空")
 
     result = await extract_topology_from_image(file_bytes)
+    # Return only known safe fields (strip internal error details)
+    if not result.get("is_topology") and result.get("error"):
+        result = {"is_topology": False, "confidence": result.get("confidence", 0.0), "description": "拓扑识别失败，请检查图片格式"}
     return result
 
 

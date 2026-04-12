@@ -64,7 +64,7 @@ const MAP_DATA: Record<string, LevelMapData> = {
       { levelId: 'l5', title: 'ZBS CLI 运维', type: 'terminal', status: 'unlocked', stars: 0, x: 550, y: 230 },
       { levelId: 'l6', title: '故障恢复与重建', type: 'scenario', status: 'locked', stars: 0, x: 200, y: 380 },
       { levelId: 'l7', title: '性能诊断', type: 'scenario', status: 'locked', stars: 0, x: 450, y: 400 },
-      { levelId: 'l8', title: 'ZBS 高级调优', type: 'vm_placement', status: 'locked', stars: 0, x: 650, y: 370 },
+      { levelId: 'l8', title: 'ZBS 高级调优', type: 'scenario', status: 'locked', stars: 0, x: 650, y: 370 },
     ],
     edges: [
       { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'flowing' },

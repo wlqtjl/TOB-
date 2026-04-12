@@ -24,7 +24,7 @@ import type {
   VisualConnection,
   EntityStyle,
 } from '../visual-scene';
-import { findMatchingAnimations } from '../animation-catalog';
+import { findMatchingAnimations } from './animation-catalog';
 
 // ─── 状态到视觉的映射 ─────────────────────────────────────────────
 

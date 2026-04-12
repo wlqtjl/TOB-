@@ -1,27 +1,64 @@
 import Link from 'next/link';
 import { COURSES } from '../lib/mock-courses';
+import { tenantConfig } from '../lib/tenant-config';
+
+const tenant = tenantConfig();
 
 export default function Home() {
+  // In a B2B single-tenant deployment, all courses belong to this tenant
+  const activeCourses = COURSES;
+  const totalLevels = activeCourses.reduce((s, c) => s + c.levelCount, 0);
+  const totalPassed = activeCourses.reduce((s, c) => s + c.passedCount, 0);
+  const totalStars = activeCourses.reduce((s, c) => s + c.earnedStars, 0);
+  const maxStars = activeCourses.reduce((s, c) => s + c.totalStars, 0);
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 p-8">
-      {/* 品牌标识 */}
+      {/* 品牌标识 — 显示部署厂商的品牌 */}
       <div className="text-center">
-        <h1 className="text-5xl font-bold bg-gradient-to-r from-brand-400 to-game-gold bg-clip-text text-transparent">
-          SkillQuest
-        </h1>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          {tenant.logoUrl ? (
+            <img src={tenant.logoUrl} alt={tenant.companyName} className="h-12" />
+          ) : (
+            <span className="text-5xl">{tenant.icon}</span>
+          )}
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-brand-400 to-game-gold bg-clip-text text-transparent">
+            {tenant.platformName}
+          </h1>
+        </div>
         <p className="mt-3 text-lg text-gray-400">
-          通用游戏化产品技能培训平台
+          {tenant.tagline}
         </p>
         <p className="mt-1 text-sm text-gray-600">
-          支持华为 · 深信服 · 安超云 · 锐捷 · SmartX 等任意厂商课程
+          {tenant.welcomeMessage}
         </p>
       </div>
 
-      {/* 多厂商课程卡片 */}
+      {/* 学习概览 */}
+      <div className="grid grid-cols-4 gap-4 text-center max-w-3xl w-full">
+        <div className="rounded-xl border border-blue-500/30 bg-blue-950/20 p-4">
+          <p className="text-2xl font-bold text-blue-300">{activeCourses.length}</p>
+          <p className="text-xs text-gray-500">培训课程</p>
+        </div>
+        <div className="rounded-xl border border-yellow-500/30 bg-yellow-950/20 p-4">
+          <p className="text-2xl font-bold text-yellow-300">{totalLevels}</p>
+          <p className="text-xs text-gray-500">实训关卡</p>
+        </div>
+        <div className="rounded-xl border border-green-500/30 bg-green-950/20 p-4">
+          <p className="text-2xl font-bold text-green-300">{totalPassed}/{totalLevels}</p>
+          <p className="text-xs text-gray-500">已通关</p>
+        </div>
+        <div className="rounded-xl border border-orange-500/30 bg-orange-950/20 p-4">
+          <p className="text-2xl font-bold text-orange-300">⭐ {totalStars}/{maxStars}</p>
+          <p className="text-xs text-gray-500">获得星数</p>
+        </div>
+      </div>
+
+      {/* 课程列表 — 单个厂商的课程目录 */}
       <div className="w-full max-w-4xl">
-        <h2 className="text-sm font-medium text-gray-500 mb-3">📚 选择课程开始闯关</h2>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {COURSES.map((course) => (
+        <h2 className="text-sm font-medium text-gray-500 mb-3">📚 我的培训课程</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {activeCourses.map((course) => (
             <Link
               key={course.id}
               href={`/map?course=${course.id}`}
@@ -33,7 +70,7 @@ export default function Home() {
                   <h3 className="text-lg font-semibold text-brand-300 group-hover:text-brand-200">
                     {course.title}
                   </h3>
-                  <span className="text-xs text-gray-600">{course.vendor}</span>
+                  <span className="text-xs text-gray-600">{course.category}</span>
                 </div>
               </div>
               <p className="mt-2 text-sm text-gray-500">{course.description}</p>
@@ -41,6 +78,13 @@ export default function Home() {
                 <span>⭐ {course.earnedStars}/{course.totalStars}</span>
                 <span>📊 {course.passedCount}/{course.levelCount} 关</span>
                 <span>🔥 XP {course.xp}</span>
+              </div>
+              {/* 进度条 */}
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-gray-800">
+                <div
+                  className="h-1.5 rounded-full bg-blue-500 transition-all"
+                  style={{ width: `${Math.round((course.passedCount / course.levelCount) * 100)}%` }}
+                />
               </div>
             </Link>
           ))}
@@ -66,7 +110,7 @@ export default function Home() {
           <h2 className="text-lg font-semibold text-yellow-300 group-hover:text-yellow-200">
             🏆 实时排行榜
           </h2>
-          <p className="mt-1 text-sm text-gray-500">WebSocket · Redis Sorted Set</p>
+          <p className="mt-1 text-sm text-gray-500">员工 · 代理商 · 团队排名</p>
         </Link>
 
         <Link
@@ -80,13 +124,10 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* 技术栈标签 */}
-      <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-        {['Next.js 15', 'NestJS', 'Canvas 2D Particles', 'Redis', 'PostgreSQL', 'FastAPI', 'GPT-4o'].map((tech) => (
-          <span key={tech} className="rounded-full border border-gray-800 px-3 py-1">
-            {tech}
-          </span>
-        ))}
+      {/* 底部品牌信息 */}
+      <div className="text-center text-xs text-gray-700 space-y-1">
+        <p>{tenant.copyright}</p>
+        <p>Powered by SkillQuest 通用游戏化培训引擎</p>
       </div>
     </main>
   );

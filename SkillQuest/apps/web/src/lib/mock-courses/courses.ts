@@ -1,5 +1,11 @@
 /**
- * Course catalog — multi-vendor
+ * Course catalog — single-tenant B2B deployment
+ *
+ * In production, courses are created by the deploying company (via document
+ * import or manual creation). The vendor field is the deploying company.
+ *
+ * For demo purposes, this shows SmartX as the example tenant with multiple
+ * product training courses under one company.
  */
 
 export interface CourseInfo {
@@ -19,50 +25,8 @@ export interface CourseInfo {
 
 export const COURSES: CourseInfo[] = [
   {
-    id: 'huawei-hcia-datacom',
-    title: '华为 HCIA-Datacom',
-    vendor: '华为',
-    category: 'network',
-    description: '数通基础认证：VLAN、路由协议、VRP命令行',
-    icon: '🌐',
-    levelCount: 8,
-    passedCount: 3,
-    totalStars: 24,
-    earnedStars: 8,
-    xp: 1250,
-    userLevel: 5,
-  },
-  {
-    id: 'sangfor-hci',
-    title: '深信服超融合 HCI',
-    vendor: '深信服',
-    category: 'virtualization',
-    description: '超融合部署：aSAN存储、虚拟机调度、高可用、备份恢复',
-    icon: '🏗️',
-    levelCount: 8,
-    passedCount: 2,
-    totalStars: 24,
-    earnedStars: 5,
-    xp: 980,
-    userLevel: 4,
-  },
-  {
-    id: 'anchao-cloud',
-    title: '安超云 OS',
-    vendor: '安超',
-    category: 'cloud',
-    description: '私有云部署：云主机管理、存储策略、网络虚拟化、监控运维',
-    icon: '☁️',
-    levelCount: 8,
-    passedCount: 1,
-    totalStars: 24,
-    earnedStars: 3,
-    xp: 650,
-    userLevel: 3,
-  },
-  {
     id: 'smartx-halo',
-    title: 'SmartX HALO 超融合',
+    title: 'SMTX OS 超融合部署',
     vendor: 'SmartX',
     category: 'virtualization',
     description: 'SMTX OS 超融合集群：ZBS分布式存储、ELF虚拟化、CloudTower管理',
@@ -73,6 +37,48 @@ export const COURSES: CourseInfo[] = [
     earnedStars: 11,
     xp: 1680,
     userLevel: 6,
+  },
+  {
+    id: 'smartx-migration',
+    title: 'VMware 迁移实战',
+    vendor: 'SmartX',
+    category: 'virtualization',
+    description: '从 VMware 迁移到 SMTX OS：V2V工具、兼容性评估、迁移步骤',
+    icon: '🔄',
+    levelCount: 6,
+    passedCount: 2,
+    totalStars: 18,
+    earnedStars: 5,
+    xp: 920,
+    userLevel: 4,
+  },
+  {
+    id: 'smartx-zbs',
+    title: 'ZBS 分布式存储原理',
+    vendor: 'SmartX',
+    category: 'storage',
+    description: 'ZBS 架构深度解析：数据分布、副本策略、故障恢复、性能优化',
+    icon: '💾',
+    levelCount: 8,
+    passedCount: 3,
+    totalStars: 24,
+    earnedStars: 8,
+    xp: 1250,
+    userLevel: 5,
+  },
+  {
+    id: 'smartx-cloudtower',
+    title: 'CloudTower 运维管理',
+    vendor: 'SmartX',
+    category: 'cloud',
+    description: 'CloudTower 多集群管理：监控告警、资源调度、自动化运维、API集成',
+    icon: '🏗️',
+    levelCount: 6,
+    passedCount: 1,
+    totalStars: 18,
+    earnedStars: 3,
+    xp: 650,
+    userLevel: 3,
   },
 ];
 

@@ -1,5 +1,5 @@
 /**
- * 课程管理页面 — 展示所有可用课程 + 文档上传生成新课程
+ * 课程管理页面 — 单租户课程管理后台
  *
  * Phase 1: 静态课程列表 (从共享数据层读取)
  * Phase 2: 文档上传 → GPT-4o → 自动生成7种题型关卡 ✅ 已实现
@@ -11,7 +11,10 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { COURSES } from '../../lib/mock-courses';
+import { tenantConfig } from '../../lib/tenant-config';
 import CourseImportDialog from '../../components/ui/CourseImportDialog';
+
+const tenant = tenantConfig();
 
 export default function CoursesPage() {
   const router = useRouter();
@@ -19,7 +22,6 @@ export default function CoursesPage() {
 
   const handleImportSuccess = (courseId: string) => {
     setShowImport(false);
-    // 跳转到新课程的地图页
     router.push(`/map?course=${courseId}`);
   };
 
@@ -29,9 +31,9 @@ export default function CoursesPage() {
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-200">⚙️ 课程管理</h1>
+            <h1 className="text-2xl font-bold text-gray-200">⚙️ {tenant.adminTitle}</h1>
             <p className="text-sm text-gray-500">
-              当前已配置 {COURSES.length} 门课程 · 支持任意厂商
+              {tenant.companyName} · 当前已配置 {COURSES.length} 门培训课程
             </p>
           </div>
           <Link
@@ -46,10 +48,10 @@ export default function CoursesPage() {
         <div className="mb-6 rounded-xl border border-dashed border-blue-500/40 bg-blue-950/10 p-6 text-center">
           <p className="text-lg text-blue-300">📄 上传培训文档自动生成课程</p>
           <p className="mt-2 text-sm text-gray-500">
-            支持 PDF / Word / TXT — AI 自动提取知识点并生成 7 种题型关卡
+            支持 PDF / Word / TXT — MinerU 智能解析 + AI 自动提取知识点并生成 7 种题型关卡
           </p>
           <p className="mt-1 text-xs text-gray-600">
-            SmartX 超融合 · 深信服 HCI · 安超云 OS · 华为认证教材 — 全部支持
+            上传您的产品文档、技术白皮书、认证教材，AI 自动转化为游戏化培训课程
           </p>
           <button
             onClick={() => setShowImport(true)}
@@ -74,10 +76,10 @@ export default function CoursesPage() {
                     <p className="text-sm text-gray-500">{course.description}</p>
                     <div className="mt-2 flex gap-2">
                       <span className="rounded-full bg-gray-800 px-2.5 py-0.5 text-xs text-gray-400">
-                        {course.vendor}
+                        {course.category}
                       </span>
                       <span className="rounded-full bg-gray-800 px-2.5 py-0.5 text-xs text-gray-400">
-                        {course.category}
+                        {course.levelCount} 关卡
                       </span>
                     </div>
                   </div>
@@ -113,12 +115,12 @@ export default function CoursesPage() {
           ))}
         </div>
 
-        {/* Platform stats */}
+        {/* Platform capabilities */}
         <div className="mt-8 grid grid-cols-4 gap-4 text-center">
           {[
-            { label: '支持厂商', value: '3+', icon: '🏢' },
-            { label: '关卡类型', value: '7种', icon: '🎮' },
+            { label: '关卡类型', value: '8种', icon: '🎮' },
             { label: '渲染引擎', value: 'Canvas 2D', icon: '🖼️' },
+            { label: '文档解析', value: 'MinerU', icon: '📄' },
             { label: 'AI引擎', value: 'GPT-4o', icon: '🤖' },
           ].map((stat) => (
             <div key={stat.label} className="rounded-xl border border-gray-800 bg-gray-900/20 p-4">
@@ -127,6 +129,11 @@ export default function CoursesPage() {
               <p className="text-xs text-gray-500">{stat.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-8 text-center text-xs text-gray-700">
+          <p>{tenant.copyright}</p>
         </div>
       </div>
 

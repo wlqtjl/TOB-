@@ -1,92 +1,11 @@
 /**
- * Map data for each course — multi-vendor
+ * Map data for each course — single-tenant B2B (SmartX demo)
  */
 
 import type { LevelMapData } from '@skillquest/types';
 
 const MAP_DATA: Record<string, LevelMapData> = {
-  // ─── 华为 HCIA ──────────────────────────────────────────────────
-  'huawei-hcia-datacom': {
-    courseId: 'huawei-hcia-datacom',
-    nodes: [
-      { levelId: 'l1', title: '网络基础概念', type: 'quiz', status: 'passed', stars: 3, x: 200, y: 100 },
-      { levelId: 'l2', title: 'OSI七层模型', type: 'quiz', status: 'passed', stars: 2, x: 400, y: 80 },
-      { levelId: 'l3', title: 'TCP/IP协议栈', type: 'quiz', status: 'passed', stars: 3, x: 600, y: 120 },
-      { levelId: 'l4', title: 'VLAN配置实验', type: 'topology', status: 'unlocked', stars: 0, x: 350, y: 250 },
-      { levelId: 'l5', title: 'VRP命令行基础', type: 'terminal', status: 'unlocked', stars: 0, x: 550, y: 230 },
-      { levelId: 'l6', title: 'STP协议原理', type: 'quiz', status: 'locked', stars: 0, x: 200, y: 380 },
-      { levelId: 'l7', title: 'OSPF路由配置', type: 'topology', status: 'locked', stars: 0, x: 450, y: 400 },
-      { levelId: 'l8', title: '故障排查实战', type: 'scenario', status: 'locked', stars: 0, x: 650, y: 370 },
-    ],
-    edges: [
-      { fromLevelId: 'l1', toLevelId: 'l4', particleState: 'pulsing' },
-      { fromLevelId: 'l2', toLevelId: 'l4', particleState: 'pulsing' },
-      { fromLevelId: 'l2', toLevelId: 'l5', particleState: 'pulsing' },
-      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'pulsing' },
-      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'flowing' },
-      { fromLevelId: 'l2', toLevelId: 'l3', particleState: 'flowing' },
-      { fromLevelId: 'l4', toLevelId: 'l6', particleState: 'static' },
-      { fromLevelId: 'l4', toLevelId: 'l7', particleState: 'static' },
-      { fromLevelId: 'l5', toLevelId: 'l7', particleState: 'static' },
-      { fromLevelId: 'l5', toLevelId: 'l8', particleState: 'static' },
-    ],
-  },
-
-  // ─── 深信服超融合 HCI ────────────────────────────────────────────
-  'sangfor-hci': {
-    courseId: 'sangfor-hci',
-    nodes: [
-      { levelId: 'l1', title: '超融合架构概述', type: 'quiz', status: 'passed', stars: 2, x: 200, y: 100 },
-      { levelId: 'l2', title: 'aSAN分布式存储', type: 'quiz', status: 'passed', stars: 3, x: 400, y: 80 },
-      { levelId: 'l3', title: '虚拟机创建与调度', type: 'topology', status: 'unlocked', stars: 0, x: 600, y: 120 },
-      { levelId: 'l4', title: '网络虚拟化配置', type: 'topology', status: 'unlocked', stars: 0, x: 350, y: 250 },
-      { levelId: 'l5', title: 'HCI命令行管理', type: 'terminal', status: 'locked', stars: 0, x: 550, y: 230 },
-      { levelId: 'l6', title: '高可用与故障迁移', type: 'scenario', status: 'locked', stars: 0, x: 200, y: 380 },
-      { levelId: 'l7', title: '备份与容灾策略', type: 'quiz', status: 'locked', stars: 0, x: 450, y: 400 },
-      { levelId: 'l8', title: '超融合故障排查', type: 'scenario', status: 'locked', stars: 0, x: 650, y: 370 },
-    ],
-    edges: [
-      { fromLevelId: 'l1', toLevelId: 'l3', particleState: 'pulsing' },
-      { fromLevelId: 'l2', toLevelId: 'l3', particleState: 'pulsing' },
-      { fromLevelId: 'l2', toLevelId: 'l4', particleState: 'pulsing' },
-      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'flowing' },
-      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'static' },
-      { fromLevelId: 'l4', toLevelId: 'l5', particleState: 'static' },
-      { fromLevelId: 'l3', toLevelId: 'l6', particleState: 'static' },
-      { fromLevelId: 'l5', toLevelId: 'l7', particleState: 'static' },
-      { fromLevelId: 'l6', toLevelId: 'l8', particleState: 'static' },
-      { fromLevelId: 'l7', toLevelId: 'l8', particleState: 'static' },
-    ],
-  },
-
-  // ─── 安超云 OS ──────────────────────────────────────────────────
-  'anchao-cloud': {
-    courseId: 'anchao-cloud',
-    nodes: [
-      { levelId: 'l1', title: '安超云平台概述', type: 'quiz', status: 'passed', stars: 3, x: 200, y: 100 },
-      { levelId: 'l2', title: '云主机生命周期', type: 'ordering', status: 'unlocked', stars: 0, x: 400, y: 80 },
-      { levelId: 'l3', title: '存储池与卷管理', type: 'quiz', status: 'unlocked', stars: 0, x: 600, y: 120 },
-      { levelId: 'l4', title: '虚拟网络配置', type: 'topology', status: 'locked', stars: 0, x: 350, y: 250 },
-      { levelId: 'l5', title: '安超云CLI操作', type: 'terminal', status: 'locked', stars: 0, x: 550, y: 230 },
-      { levelId: 'l6', title: '资源调度策略', type: 'matching', status: 'locked', stars: 0, x: 200, y: 380 },
-      { levelId: 'l7', title: '监控与告警配置', type: 'scenario', status: 'locked', stars: 0, x: 450, y: 400 },
-      { levelId: 'l8', title: '云平台故障演练', type: 'scenario', status: 'locked', stars: 0, x: 650, y: 370 },
-    ],
-    edges: [
-      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'pulsing' },
-      { fromLevelId: 'l1', toLevelId: 'l3', particleState: 'pulsing' },
-      { fromLevelId: 'l2', toLevelId: 'l4', particleState: 'static' },
-      { fromLevelId: 'l3', toLevelId: 'l4', particleState: 'static' },
-      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'static' },
-      { fromLevelId: 'l4', toLevelId: 'l6', particleState: 'static' },
-      { fromLevelId: 'l4', toLevelId: 'l7', particleState: 'static' },
-      { fromLevelId: 'l5', toLevelId: 'l7', particleState: 'static' },
-      { fromLevelId: 'l6', toLevelId: 'l8', particleState: 'static' },
-      { fromLevelId: 'l7', toLevelId: 'l8', particleState: 'static' },
-    ],
-  },
-
-  // ─── SmartX HALO 超融合 ──────────────────────────────────────────
+  // ─── SMTX OS 超融合部署 ──────────────────────────────────────────
   'smartx-halo': {
     courseId: 'smartx-halo',
     nodes: [
@@ -110,6 +29,75 @@ const MAP_DATA: Record<string, LevelMapData> = {
       { fromLevelId: 'l5', toLevelId: 'l7', particleState: 'static' },
       { fromLevelId: 'l6', toLevelId: 'l7', particleState: 'static' },
       { fromLevelId: 'l7', toLevelId: 'l8', particleState: 'static' },
+    ],
+  },
+
+  // ─── VMware 迁移实战 ──────────────────────────────────────────────
+  'smartx-migration': {
+    courseId: 'smartx-migration',
+    nodes: [
+      { levelId: 'l1', title: '迁移评估与兼容性检查', type: 'quiz', status: 'passed', stars: 3, x: 200, y: 100 },
+      { levelId: 'l2', title: 'V2V 工具使用', type: 'ordering', status: 'passed', stars: 2, x: 450, y: 80 },
+      { levelId: 'l3', title: '虚拟机迁移步骤', type: 'ordering', status: 'unlocked', stars: 0, x: 700, y: 120 },
+      { levelId: 'l4', title: '存储迁移策略', type: 'matching', status: 'unlocked', stars: 0, x: 350, y: 260 },
+      { levelId: 'l5', title: '迁移后验证', type: 'terminal', status: 'locked', stars: 0, x: 550, y: 260 },
+      { levelId: 'l6', title: '迁移故障排查', type: 'scenario', status: 'locked', stars: 0, x: 450, y: 400 },
+    ],
+    edges: [
+      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'flowing' },
+      { fromLevelId: 'l2', toLevelId: 'l3', particleState: 'pulsing' },
+      { fromLevelId: 'l1', toLevelId: 'l4', particleState: 'pulsing' },
+      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'static' },
+      { fromLevelId: 'l4', toLevelId: 'l5', particleState: 'static' },
+      { fromLevelId: 'l5', toLevelId: 'l6', particleState: 'static' },
+    ],
+  },
+
+  // ─── ZBS 分布式存储原理 ──────────────────────────────────────────
+  'smartx-zbs': {
+    courseId: 'smartx-zbs',
+    nodes: [
+      { levelId: 'l1', title: 'ZBS 整体架构', type: 'quiz', status: 'passed', stars: 3, x: 200, y: 100 },
+      { levelId: 'l2', title: '数据分布与一致性', type: 'quiz', status: 'passed', stars: 2, x: 400, y: 80 },
+      { levelId: 'l3', title: '副本策略配置', type: 'matching', status: 'passed', stars: 3, x: 600, y: 120 },
+      { levelId: 'l4', title: '存储池管理', type: 'topology', status: 'unlocked', stars: 0, x: 350, y: 250 },
+      { levelId: 'l5', title: 'ZBS CLI 运维', type: 'terminal', status: 'unlocked', stars: 0, x: 550, y: 230 },
+      { levelId: 'l6', title: '故障恢复与重建', type: 'scenario', status: 'locked', stars: 0, x: 200, y: 380 },
+      { levelId: 'l7', title: '性能诊断', type: 'scenario', status: 'locked', stars: 0, x: 450, y: 400 },
+      { levelId: 'l8', title: 'ZBS 高级调优', type: 'vm_placement', status: 'locked', stars: 0, x: 650, y: 370 },
+    ],
+    edges: [
+      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'flowing' },
+      { fromLevelId: 'l2', toLevelId: 'l3', particleState: 'flowing' },
+      { fromLevelId: 'l1', toLevelId: 'l4', particleState: 'pulsing' },
+      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'pulsing' },
+      { fromLevelId: 'l4', toLevelId: 'l6', particleState: 'static' },
+      { fromLevelId: 'l5', toLevelId: 'l6', particleState: 'static' },
+      { fromLevelId: 'l5', toLevelId: 'l7', particleState: 'static' },
+      { fromLevelId: 'l6', toLevelId: 'l8', particleState: 'static' },
+      { fromLevelId: 'l7', toLevelId: 'l8', particleState: 'static' },
+    ],
+  },
+
+  // ─── CloudTower 运维管理 ──────────────────────────────────────────
+  'smartx-cloudtower': {
+    courseId: 'smartx-cloudtower',
+    nodes: [
+      { levelId: 'l1', title: 'CloudTower 架构与部署', type: 'quiz', status: 'passed', stars: 3, x: 200, y: 100 },
+      { levelId: 'l2', title: '多集群纳管', type: 'topology', status: 'unlocked', stars: 0, x: 450, y: 80 },
+      { levelId: 'l3', title: '监控告警配置', type: 'matching', status: 'unlocked', stars: 0, x: 700, y: 120 },
+      { levelId: 'l4', title: '自动化运维策略', type: 'ordering', status: 'locked', stars: 0, x: 350, y: 260 },
+      { levelId: 'l5', title: 'API 集成开发', type: 'terminal', status: 'locked', stars: 0, x: 550, y: 260 },
+      { levelId: 'l6', title: '运维故障处理', type: 'scenario', status: 'locked', stars: 0, x: 450, y: 400 },
+    ],
+    edges: [
+      { fromLevelId: 'l1', toLevelId: 'l2', particleState: 'pulsing' },
+      { fromLevelId: 'l1', toLevelId: 'l3', particleState: 'pulsing' },
+      { fromLevelId: 'l2', toLevelId: 'l4', particleState: 'static' },
+      { fromLevelId: 'l3', toLevelId: 'l4', particleState: 'static' },
+      { fromLevelId: 'l3', toLevelId: 'l5', particleState: 'static' },
+      { fromLevelId: 'l4', toLevelId: 'l6', particleState: 'static' },
+      { fromLevelId: 'l5', toLevelId: 'l6', particleState: 'static' },
     ],
   },
 };

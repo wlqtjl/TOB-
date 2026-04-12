@@ -13,6 +13,7 @@
 'use client';
 
 import React, { useMemo, useCallback, useState, Suspense } from 'react';
+import Link from 'next/link';
 import type {
   TopologyQuizLevel,
   MatchingQuestion,
@@ -36,9 +37,9 @@ import UniversalGameRenderer from '../../../../../components/game/UniversalGameR
 import GameHUD from '../../../../../components/game/GameHUD';
 import { useGameState } from '../../../../../components/game/hooks/useGameState';
 import { ErrorBoundary } from '../../../../../components/ui/ErrorBoundary';
-import CourseSwitcher from '../../../../../components/ui/CourseSwitcher';
 import { useCourseId } from '../../../../../hooks/useCourseId';
-import { getPlayContent, getPlayContentTypes, getCourse } from '../../../../../lib/mock-courses';
+import { COURSES, getPlayContent, getPlayContentTypes, getCourse } from '../../../../../lib/mock-courses';
+import { tenantConfig } from '../../../../../lib/tenant-config';
 
 // ─── Adapter dispatch ──────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ const TYPE_LABELS = getPlayContentTypes();
 function PlayContent({ type, id }: { type: string; id: string }) {
   const courseId = useCourseId();
   const course = getCourse(courseId);
+  const tenant = tenantConfig();
   const contentType = type as ContentType;
   const [messages, setMessages] = useState<Array<{ text: string; correct: boolean }>>([]);
 
@@ -168,17 +170,33 @@ function PlayContent({ type, id }: { type: string; id: string }) {
         ))}
       </div>
 
-      {/* Course switcher + type switcher */}
+      {/* Course tabs + type switcher */}
       <div className="mx-auto max-w-[950px] mt-6 space-y-4">
-        <div>
-          <p className="text-xs text-gray-600 mb-2">切换课程:</p>
-          <CourseSwitcher />
-        </div>
+        {COURSES.length > 1 && (
+          <div>
+            <p className="text-xs text-gray-600 mb-2">切换课程:</p>
+            <div className="flex flex-wrap gap-2">
+              {COURSES.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/play/${type}/${id}?course=${c.id}`}
+                  className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                    c.id === courseId
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                      : 'border-gray-700 text-gray-500 hover:border-gray-500'
+                  }`}
+                >
+                  {c.icon} {c.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
         <div>
           <p className="text-xs text-gray-600 mb-2">切换关卡类型:</p>
           <div className="flex flex-wrap gap-2">
             {Object.entries(TYPE_LABELS).map(([key, label]) => (
-              <a
+              <Link
                 key={key}
                 href={`/play/${key}/demo?course=${courseId}`}
                 className={`rounded-lg border px-3 py-1.5 text-xs transition ${
@@ -188,7 +206,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
                 }`}
               >
                 {label}
-              </a>
+              </Link>
             ))}
           </div>
         </div>

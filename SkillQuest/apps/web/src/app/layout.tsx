@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
+import { tenantConfig } from '../lib/tenant-config';
 import './globals.css';
 
+const tenant = tenantConfig();
+
 export const metadata: Metadata = {
-  title: 'SkillQuest — 游戏化产品技能培训平台',
-  description:
-    '通用游戏化产品技能培训平台，支持华为/深信服/安超云/锐捷/SmartX等任意厂商课程闯关。',
+  title: `${tenant.platformName} — 游戏化技能培训`,
+  description: `${tenant.companyName} ${tenant.tagline}`,
 };
 
 export default function RootLayout({

@@ -1,19 +1,22 @@
 /**
- * 闯关地图页面 — Canvas 粒子流 + 多厂商课程支持
+ * 闯关地图页面 — Canvas 粒子流 + 单租户课程展示
  *
  * 核心: VisualScene 协议 + UniversalGameRenderer
- * 通过 ?course=xxx 参数切换不同厂商课程
+ * 通过 ?course=xxx 参数切换本租户的不同课程
  */
 
 'use client';
 
+import Link from 'next/link';
 import { Suspense } from 'react';
 import { mapAdapter } from '@skillquest/game-engine';
 import UniversalGameRenderer from '../../../components/game/UniversalGameRenderer';
-import CourseSwitcher from '../../../components/ui/CourseSwitcher';
 import { ErrorBoundary } from '../../../components/ui/ErrorBoundary';
 import { useCourseId } from '../../../hooks/useCourseId';
-import { getMapData, getCourse } from '../../../lib/mock-courses';
+import { COURSES, getMapData, getCourse } from '../../../lib/mock-courses';
+import { tenantConfig } from '../../../lib/tenant-config';
+
+const tenant = tenantConfig();
 
 function MapContent() {
   const courseId = useCourseId();
@@ -45,18 +48,42 @@ function MapContent() {
             {course.title} · {mapData.nodes.length}个关卡 · {passedNodes}个已通关
           </p>
         </div>
-        <div className="flex gap-4 text-sm text-gray-400">
-          <span>⭐ 总星数: {course.earnedStars}/{course.totalStars}</span>
-          <span>🔥 XP: {course.xp.toLocaleString()}</span>
-          <span>📊 Level {course.userLevel}</span>
+        <div className="flex items-center gap-4">
+          <div className="flex gap-4 text-sm text-gray-400">
+            <span>⭐ 总星数: {course.earnedStars}/{course.totalStars}</span>
+            <span>🔥 XP: {course.xp.toLocaleString()}</span>
+            <span>📊 Level {course.userLevel}</span>
+          </div>
+          <Link
+            href="/"
+            className="rounded-lg border border-gray-700 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-500 transition"
+          >
+            ← 返回首页
+          </Link>
         </div>
       </div>
 
-      {/* 课程切换 */}
-      <div className="mb-4">
-        <p className="text-xs text-gray-600 mb-2">切换课程:</p>
-        <CourseSwitcher />
-      </div>
+      {/* 课程切换 — 显示本租户的课程 */}
+      {COURSES.length > 1 && (
+        <div className="mb-4">
+          <p className="text-xs text-gray-600 mb-2">切换课程:</p>
+          <div className="flex flex-wrap gap-2">
+            {COURSES.map((c) => (
+              <Link
+                key={c.id}
+                href={`/map?course=${c.id}`}
+                className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                  c.id === courseId
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                    : 'border-gray-700 text-gray-500 hover:border-gray-500'
+                }`}
+              >
+                {c.icon} {c.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Canvas 粒子地图 */}
       <div className="mx-auto max-w-[900px]">
@@ -83,7 +110,7 @@ function MapContent() {
           </span>
         </div>
         <p className="text-xs text-gray-600">
-          Canvas 粒子引擎 · 通用游戏平台
+          {tenant.companyName} · Canvas 粒子引擎
         </p>
       </div>
     </div>

@@ -1,10 +1,11 @@
 /**
- * Mock Course Data Layer — Multi-Vendor Demo
+ * Mock Course Data Layer — Single-Tenant B2B Demo
  *
  * Centralizes all mock data so pages are data-agnostic.
- * Supports: 华为 HCIA · 深信服超融合 · 安超云
+ * Demo: SmartX as the deploying tenant with 4 product courses
  *
  * In production this is replaced by API calls to the NestJS backend.
+ * Each deploying company creates their own courses via document import.
  */
 
 export { COURSES, getCourse, getCourseIds, getDefaultCourseId } from './courses';

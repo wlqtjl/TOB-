@@ -39,6 +39,10 @@ class DocumentChunk:
 
 _HEADING_RE = re.compile(r'^(#{1,3})\s+(.+)$', re.MULTILINE)
 
+_TECH_SPEC_RE = re.compile(
+    r'(?:>\s*\d+|<\s*\d+|≥|≤|延迟|阈值|带宽|IOPS|吞吐|ms|GB|TB|MHz|Gbps)'
+)
+
 
 def _split_by_headings(markdown: str) -> list[tuple[str, str]]:
     """按标题分割 Markdown, 返回 [(chapter_title, content), ...]"""
@@ -159,10 +163,7 @@ def chunk_markdown(
 
             has_code = '```' in text
             has_table = '|' in text and text.count('|') >= 4
-            has_tech_spec = bool(re.search(
-                r'(?:>\s*\d+|<\s*\d+|≥|≤|延迟|阈值|带宽|IOPS|吞吐|ms|GB|TB|MHz|Gbps)',
-                text
-            ))
+            has_tech_spec = bool(_TECH_SPEC_RE.search(text))
 
             all_chunks.append(DocumentChunk(
                 content=text,

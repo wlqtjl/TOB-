@@ -32,6 +32,11 @@ class EditDto {
   feedback?: string;
 }
 
+class PaginationQuery {
+  page!: string;
+  pageSize!: string;
+}
+
 // ─── Controller ───────────────────────────────────────────────────
 
 @Controller('review')
@@ -47,8 +52,10 @@ export class ReviewController {
     @Query('page') page = '1',
     @Query('pageSize') pageSize = '20',
   ) {
-    const skip = (parseInt(page) - 1) * parseInt(pageSize);
-    const take = parseInt(pageSize);
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const pageSizeNum = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
+    const skip = (pageNum - 1) * pageSizeNum;
+    const take = pageSizeNum;
 
     const where: Record<string, unknown> = {
       reviewStatus: { in: ['PENDING', 'NEEDS_REVISION'] },
@@ -71,8 +78,8 @@ export class ReviewController {
     return {
       items: levels,
       total,
-      page: parseInt(page),
-      pageSize: parseInt(pageSize),
+      page: pageNum,
+      pageSize: pageSizeNum,
       hasMore: skip + take < total,
     };
   }

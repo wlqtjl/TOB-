@@ -171,8 +171,10 @@ export function executeActionPure(
   const hasPreCheck = executedActions.some(a =>
     config.actions.find(ca => ca.id === a)?.isOptimal === true,
   );
+  // Pre-check reduces disaster probability by 70%
+  const DISASTER_PROBABILITY_REDUCTION = 0.3;
   const adjustedProb = hasPreCheck
-    ? action.disasterProbability * 0.3 // 做过检查, 概率降低 70%
+    ? action.disasterProbability * DISASTER_PROBABILITY_REDUCTION
     : action.disasterProbability;
 
   let disaster: DisasterEvent | null = null;

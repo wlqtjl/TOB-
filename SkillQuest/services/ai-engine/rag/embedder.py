@@ -19,6 +19,7 @@ EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIMENSIONS = 1536
 MAX_BATCH_SIZE = 2048
 MAX_RETRIES = 3
+MAX_TEXT_LENGTH = 30000  # ~8K tokens for text-embedding-3-small
 
 
 def _get_openai_client() -> Optional[object]:
@@ -62,7 +63,7 @@ async def embed_texts(texts: list[str]) -> list[list[float]]:
     for batch_start in range(0, len(texts), MAX_BATCH_SIZE):
         batch = texts[batch_start:batch_start + MAX_BATCH_SIZE]
         # 截断过长文本 (embedding 模型最大 8191 tokens)
-        batch = [t[:30000] if len(t) > 30000 else t for t in batch]
+        batch = [t[:MAX_TEXT_LENGTH] if len(t) > MAX_TEXT_LENGTH else t for t in batch]
 
         for attempt in range(MAX_RETRIES):
             try:

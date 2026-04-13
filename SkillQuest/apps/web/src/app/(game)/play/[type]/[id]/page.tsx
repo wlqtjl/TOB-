@@ -40,8 +40,9 @@ import NarrativeModal from '../../../../../components/game/NarrativeModal';
 import { useGameState } from '../../../../../components/game/hooks/useGameState';
 import { ErrorBoundary } from '../../../../../components/ui/ErrorBoundary';
 import { useCourseId } from '../../../../../hooks/useCourseId';
-import { COURSES, getPlayContent, getPlayContentTypes, getCourse } from '../../../../../lib/mock-courses';
+import { COURSES, getPlayContent, getPlayContentTypes, getCourse, getLevelBriefing } from '../../../../../lib/mock-courses';
 import { tenantConfig } from '../../../../../lib/tenant-config';
+import LevelBriefingModal from '../../../../../components/game/LevelBriefingModal';
 
 // ─── Adapter dispatch ──────────────────────────────────────────────
 
@@ -68,6 +69,25 @@ function adaptContent(type: ContentType, data: Record<string, unknown>): VisualS
 
 const TYPE_LABELS = getPlayContentTypes();
 
+// ─── Content field helpers ─────────────────────────────────────────
+
+/** Safely extract a string field from untyped content record */
+function getContentField(content: Record<string, unknown> | null, field: string): string | undefined {
+  if (!content || typeof content !== 'object') return undefined;
+  const val = content[field];
+  return typeof val === 'string' ? val : undefined;
+}
+
+/** Safely extract a NarrativeConfig from untyped content record */
+function getContentNarrative(content: Record<string, unknown> | null): NarrativeConfig | undefined {
+  if (!content || typeof content !== 'object') return undefined;
+  const val = content.preStory;
+  if (val && typeof val === 'object' && 'channel' in (val as object) && 'messages' in (val as object)) {
+    return val as NarrativeConfig;
+  }
+  return undefined;
+}
+
 // ─── Page Component ────────────────────────────────────────────────
 
 function PlayContent({ type, id }: { type: string; id: string }) {
@@ -77,13 +97,18 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const contentType = type as ContentType;
   const [messages, setMessages] = useState<Array<{ text: string; correct: boolean }>>([]);
   const [narrativeComplete, setNarrativeComplete] = useState(false);
+  const [briefingDismissed, setBriefingDismissed] = useState(false);
 
   // Load content from shared data layer
   const content = getPlayContent(courseId, contentType);
   const totalQuestions = 1; // Will be dynamic from API
 
+  // Load level briefing (content.levelId maps to briefing data)
+  const contentLevelId = getContentField(content, 'levelId');
+  const briefing = contentLevelId ? getLevelBriefing(courseId, contentLevelId) : null;
+
   // Check for preStory narrative config
-  const preStory = (content as Record<string, unknown> | null)?.preStory as NarrativeConfig | undefined;
+  const preStory = getContentNarrative(content);
   const hasNarrative = !!preStory && !narrativeComplete;
 
   const { state: gameState, answerCorrect, answerWrong } = useGameState(totalQuestions);
@@ -127,8 +152,17 @@ function PlayContent({ type, id }: { type: string; id: string }) {
 
   return (
     <div className="min-h-screen bg-gray-950 p-4">
-      {/* Narrative Modal (pre-story) */}
-      {hasNarrative && preStory && (
+      {/* 关卡前知识普及 (在 Narrative 之前展示) */}
+      {briefing && !briefingDismissed && (
+        <LevelBriefingModal
+          briefing={briefing}
+          onStart={() => setBriefingDismissed(true)}
+          onSkip={() => setBriefingDismissed(true)}
+        />
+      )}
+
+      {/* Narrative Modal (pre-story, 只在知识普及完成后展示) */}
+      {briefingDismissed && hasNarrative && preStory && (
         <NarrativeModal
           config={preStory}
           onComplete={() => setNarrativeComplete(true)}

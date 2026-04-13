@@ -13,4 +13,5 @@ export { getMapData } from './map-data';
 export { getLevelQuestions } from './level-questions';
 export { getLeaderboard } from './leaderboard-data';
 export { getPlayContent, getPlayContentTypes } from './play-content';
+export { getLevelBriefing, getCourseBriefings } from './briefing-data';
 export type { CourseInfo } from './courses';

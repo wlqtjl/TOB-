@@ -40,9 +40,9 @@ const NODE_COLORS: Record<string, string> = {
 };
 
 const INITIAL_NODES: { label: string; x: number; y: number; cap: number; bw: number }[] = [
-  { label: '\u5B58\u50A8\u8282\u70B9-A', x: 200, y: 300, cap: 1.0, bw: 1.0 },
-  { label: '\u5B58\u50A8\u8282\u70B9-B', x: 500, y: 300, cap: 0.8, bw: 0.9 },
-  { label: '\u5B58\u50A8\u8282\u70B9-C', x: 350, y: 500, cap: 0.6, bw: 0.7 },
+  { label: '存储节点-A', x: 200, y: 300, cap: 1.0, bw: 1.0 },
+  { label: '存储节点-B', x: 500, y: 300, cap: 0.8, bw: 0.9 },
+  { label: '存储节点-C', x: 350, y: 500, cap: 0.6, bw: 0.7 },
 ];
 
 /* ────────────────── helpers ────────────────── */
@@ -176,8 +176,6 @@ export default function DataGravityPage() {
       // glow
       ctx.beginPath();
       ctx.arc(n.position.x, n.position.y, 32, 0, Math.PI * 2);
-      ctx.fillStyle = color.replace(')', ',0.12)').replace('rgb', 'rgba').replace('#', '');
-      // manual hex->rgba for glow
       ctx.fillStyle = `${color}1f`;
       ctx.fill();
       // circle
@@ -210,9 +208,14 @@ export default function DataGravityPage() {
   }, []);
 
   /* ── animation loop ── */
+  /* ── init on mount only ── */
+  const initRef = useRef(false);
   useEffect(() => {
-    initState();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!initRef.current) {
+      initRef.current = true;
+      initState();
+    }
+  }, [initState]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -365,12 +368,12 @@ export default function DataGravityPage() {
       {/* ── Left Panel ── */}
       <aside className="flex w-56 shrink-0 flex-col gap-6 border-r border-base-600/30 bg-base-800/40 backdrop-blur p-4 overflow-y-auto">
         <Link href="/" className="flex items-center gap-2 text-xs text-base-400 hover:text-accent transition-colors">
-          <ArrowLeft size={14} strokeWidth={1.5} /> \u8FD4\u56DE\u9996\u9875
+          <ArrowLeft size={14} strokeWidth={1.5} /> 返回首页
         </Link>
 
         {/* tools */}
         <div>
-          <h3 className="text-xs font-semibold text-base-400 mb-2">\u5DE5\u5177\u680F</h3>
+          <h3 className="text-xs font-semibold text-base-400 mb-2">工具栏</h3>
           <div className="grid grid-cols-2 gap-2">
             {TOOLS.map((t) => (
               <button
@@ -391,7 +394,7 @@ export default function DataGravityPage() {
 
         {/* node toggles */}
         <div>
-          <h3 className="text-xs font-semibold text-base-400 mb-2">\u8282\u70B9\u72B6\u6001</h3>
+          <h3 className="text-xs font-semibold text-base-400 mb-2">节点状态</h3>
           <div className="space-y-1.5">
             {nodeList.map((n) => (
               <button
@@ -412,7 +415,7 @@ export default function DataGravityPage() {
 
         {/* sliders */}
         <div>
-          <h3 className="text-xs font-semibold text-base-400 mb-2">\u7269\u7406\u53C2\u6570</h3>
+          <h3 className="text-xs font-semibold text-base-400 mb-2">物理参数</h3>
           <label className="block text-[10px] text-base-400 mb-1">
             G = {gConst}
           </label>
@@ -470,7 +473,7 @@ export default function DataGravityPage() {
 
       {/* ── Right Panel ── */}
       <aside className="flex w-56 shrink-0 flex-col gap-4 border-l border-base-600/30 bg-base-800/40 backdrop-blur p-4 overflow-y-auto">
-        <h3 className="text-xs font-semibold text-base-400">\u80FD\u91CF\u6307\u6807</h3>
+        <h3 className="text-xs font-semibold text-base-400">能量指标</h3>
         {metrics && (
           <>
             <MetricBar label="Kinetic Energy" value={metrics.kineticEnergy} max={500} Icon={Activity} />

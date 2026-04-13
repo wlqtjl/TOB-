@@ -69,6 +69,25 @@ function adaptContent(type: ContentType, data: Record<string, unknown>): VisualS
 
 const TYPE_LABELS = getPlayContentTypes();
 
+// ─── Content field helpers ─────────────────────────────────────────
+
+/** Safely extract a string field from untyped content record */
+function getContentField(content: Record<string, unknown> | null, field: string): string | undefined {
+  if (!content || typeof content !== 'object') return undefined;
+  const val = content[field];
+  return typeof val === 'string' ? val : undefined;
+}
+
+/** Safely extract a NarrativeConfig from untyped content record */
+function getContentNarrative(content: Record<string, unknown> | null): NarrativeConfig | undefined {
+  if (!content || typeof content !== 'object') return undefined;
+  const val = content.preStory;
+  if (val && typeof val === 'object' && 'channel' in (val as object) && 'messages' in (val as object)) {
+    return val as NarrativeConfig;
+  }
+  return undefined;
+}
+
 // ─── Page Component ────────────────────────────────────────────────
 
 function PlayContent({ type, id }: { type: string; id: string }) {
@@ -85,11 +104,11 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const totalQuestions = 1; // Will be dynamic from API
 
   // Load level briefing (content.levelId maps to briefing data)
-  const contentLevelId = (content as Record<string, unknown> | null)?.levelId as string | undefined;
+  const contentLevelId = getContentField(content, 'levelId');
   const briefing = contentLevelId ? getLevelBriefing(courseId, contentLevelId) : null;
 
   // Check for preStory narrative config
-  const preStory = (content as Record<string, unknown> | null)?.preStory as NarrativeConfig | undefined;
+  const preStory = getContentNarrative(content);
   const hasNarrative = !!preStory && !narrativeComplete;
 
   const { state: gameState, answerCorrect, answerWrong } = useGameState(totalQuestions);

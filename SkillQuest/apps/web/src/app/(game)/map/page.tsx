@@ -13,7 +13,9 @@ import { mapAdapter } from '@skillquest/game-engine';
 import UniversalGameRenderer from '../../../components/game/UniversalGameRenderer';
 import { ErrorBoundary } from '../../../components/ui/ErrorBoundary';
 import { useCourseId } from '../../../hooks/useCourseId';
+import { useApiData } from '../../../hooks/useApiData';
 import { COURSES, getMapData, getCourse } from '../../../lib/mock-courses';
+import { fetchMapData } from '../../../lib/api-client';
 import { tenantConfig } from '../../../lib/tenant-config';
 
 const tenant = tenantConfig();
@@ -21,7 +23,13 @@ const tenant = tenantConfig();
 function MapContent() {
   const courseId = useCourseId();
   const course = getCourse(courseId);
-  const mapData = getMapData(courseId);
+  const mockMapData = getMapData(courseId);
+
+  // Try API first, fall back to mock
+  const { data: mapData } = useApiData(
+    mockMapData,
+    () => fetchMapData(courseId),
+  );
 
   if (!mapData || !course) {
     return (

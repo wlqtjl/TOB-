@@ -1,7 +1,8 @@
 /**
  * 排行榜 — Minimalist redesign
  *
- * Clean typography hierarchy, no emoji clutter, single accent color
+ * Clean typography hierarchy, no emoji clutter, single accent color.
+ * Fetches from backend API when available, falls back to mock data.
  */
 
 'use client';
@@ -11,7 +12,9 @@ import { Suspense } from 'react';
 import { ArrowLeft, Star, Flame, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { LeaderboardEntry } from '@skillquest/types';
 import { useCourseId } from '../../../hooks/useCourseId';
+import { useApiData } from '../../../hooks/useApiData';
 import { COURSES, getLeaderboard, getCourse } from '../../../lib/mock-courses';
+import { fetchLeaderboard } from '../../../lib/api-client';
 import { tenantConfig } from '../../../lib/tenant-config';
 
 const tenant = tenantConfig();
@@ -98,7 +101,21 @@ function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isC
 function LeaderboardContent() {
   const courseId = useCourseId();
   const course = getCourse(courseId);
-  const { entries, currentUserId } = getLeaderboard(courseId);
+  const mockData = getLeaderboard(courseId);
+
+  // Try API first, fall back to mock data
+  const { data: leaderboardData } = useApiData(
+    mockData,
+    async () => {
+      const apiEntries = await fetchLeaderboard(courseId);
+      if (apiEntries && apiEntries.length > 0) {
+        return { entries: apiEntries, currentUserId: apiEntries[0]?.userId ?? '' };
+      }
+      return null;
+    },
+  );
+
+  const { entries, currentUserId } = leaderboardData;
 
   return (
     <div className="min-h-screen bg-base-900 px-6 py-10">

@@ -532,6 +532,256 @@ export interface LevelBriefing {
   tips?: string[];
 }
 
+// ─── 徽章系统 (Badge System) ────────────────────────────────────────
+
+export type BadgeCategory = 'progress' | 'mastery' | 'streak' | 'social' | 'special';
+export type BadgeRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
+
+export interface BadgeDefinition {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: BadgeCategory;
+  rarity: BadgeRarity;
+  condition: BadgeCondition;
+  xpReward: number;
+}
+
+export interface BadgeCondition {
+  type: 'level_clear_count' | 'perfect_score_count' | 'streak_days' | 'total_xp' | 'course_complete' | 'star_count';
+  threshold: number;
+  courseId?: string;
+}
+
+export interface UserBadge {
+  id: string;
+  userId: string;
+  badge: BadgeDefinition;
+  unlockedAt: string;
+}
+
+// ─── 玩家等级系统 (Player Level System) ─────────────────────────────
+
+export interface PlayerLevelDef {
+  level: number;
+  xpRequired: number;
+  title: string;
+  perks: string;
+}
+
+export interface PlayerProgress {
+  currentLevel: number;
+  currentXp: number;
+  nextLevelXp: number;
+  title: string;
+  progressPercent: number;
+}
+
+// ─── 学习路径 (Learning Path) ──────────────────────────────────────
+
+export type JobRole = 'field_engineer' | 'sales' | 'partner_employee' | 'trainer' | 'all';
+export type ExperienceLevel = 'junior' | 'mid' | 'senior' | 'expert';
+export type AdaptiveDifficulty = 'easy' | 'normal' | 'hard';
+
+export interface CourseGroup {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string;
+  targetRole: JobRole;
+  courseDag: string[][];
+  difficulty: AdaptiveDifficulty;
+  sortOrder: number;
+}
+
+export interface LearningPathInfo {
+  id: string;
+  userId: string;
+  courseGroup: CourseGroup;
+  recommendedSeq: string[];
+  currentCourseId: string;
+  progress: number;
+  adaptiveDiff: AdaptiveDifficulty;
+  startedAt: string;
+}
+
+export interface UserProfileExtended {
+  userId: string;
+  jobRole: JobRole;
+  department: string;
+  experienceLevel: ExperienceLevel;
+  company: string;
+  bio: string;
+  skillMap: Record<string, number>;
+  totalStudyTime: number;
+  loginStreak: number;
+  lastActiveAt: string;
+}
+
+export interface LearningRecommendation {
+  courseId: string;
+  courseTitle: string;
+  reason: string;
+  priority: number;
+  matchScore: number;
+}
+
+// ─── 课程版本控制 (Course Versioning) ──────────────────────────────
+
+export interface CourseVersionInfo {
+  id: string;
+  courseId: string;
+  version: string;
+  changelog: string;
+  creatorId: string;
+  reviewerId: string;
+  approverId: string;
+  publishedAt: string | null;
+  deprecatedAt: string | null;
+  createdAt: string;
+}
+
+// ─── 课程翻译 (i18n) ──────────────────────────────────────────────
+
+export type TranslationStatus = 'pending' | 'completed' | 'verified';
+
+export interface CourseTranslationInfo {
+  courseId: string;
+  languageCode: string;
+  translatedTitle: string;
+  translatedDesc: string;
+  translationStatus: TranslationStatus;
+}
+
+// ─── 学员反馈 (Level Feedback) ─────────────────────────────────────
+
+export type FeedbackTag = 'bug' | 'unclear' | 'outdated' | 'too_easy' | 'too_hard' | 'great';
+
+export interface LevelFeedbackInfo {
+  id: string;
+  userId: string;
+  levelId: string;
+  difficultyRating: number;
+  clarityRating: number;
+  relevanceRating: number;
+  feedbackText: string;
+  tag: FeedbackTag;
+  createdAt: string;
+}
+
+export interface LevelQualityMetrics {
+  levelId: string;
+  avgDifficulty: number;
+  avgClarity: number;
+  avgRelevance: number;
+  passRate: number;
+  avgAttempts: number;
+  avgCompletionTime: number;
+  feedbackCount: number;
+  needsRevision: boolean;
+}
+
+// ─── AI 预算 (AI Budget) ──────────────────────────────────────────
+
+export interface AIBudgetInfo {
+  tenantId: string;
+  monthlyBudgetUsd: number;
+  currentSpendUsd: number;
+  alertThreshold: number;
+  usagePercent: number;
+  resetDate: string;
+}
+
+export interface AIUsageEntry {
+  api: string;
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  modelVersion: string;
+  createdAt: string;
+}
+
+// ─── 审计日志 (Audit Log) ──────────────────────────────────────────
+
+export interface AuditLogEntry {
+  id: string;
+  userId: string;
+  tenantId: string;
+  action: string;
+  resource: string;
+  resourceId: string;
+  details: Record<string, unknown>;
+  ipAddress: string;
+  createdAt: string;
+}
+
+// ─── 学习分析 (Learning Analytics) ─────────────────────────────────
+
+export interface CourseAnalytics {
+  courseId: string;
+  courseTitle: string;
+  totalLearners: number;
+  completedCount: number;
+  avgScore: number;
+  passRate: number;
+  avgCompletionTime: number;
+  topChallenges: { levelId: string; levelTitle: string; failRate: number }[];
+}
+
+export interface LearnerAnalytics {
+  userId: string;
+  displayName: string;
+  totalCoursesStarted: number;
+  totalCoursesCompleted: number;
+  totalXp: number;
+  totalStudyTime: number;
+  skillProfile: Record<string, number>;
+  recentActivity: { date: string; minutesStudied: number; levelsCompleted: number }[];
+}
+
+export interface OrgAnalytics {
+  orgId: string;
+  period: string;
+  totalUsers: number;
+  activeUsers: number;
+  coursesCompleted: number;
+  avgCompletionRate: number;
+  departmentHeatmap: { department: string; coursesCompleted: number; avgScore: number }[];
+  topLearners: { userId: string; displayName: string; xp: number }[];
+}
+
+// ─── 组织和权限 (Organization & Permission) ────────────────────────
+
+export type OrgType = 'vendor' | 'partner_reseller' | 'partner_employee';
+
+export interface OrganizationInfo {
+  id: string;
+  tenantId: string;
+  name: string;
+  parentOrgId: string | null;
+  orgType: OrgType;
+  maxUsers: number;
+  maxCourses: number;
+  ssoConfig: SSOConfig;
+}
+
+export interface SSOConfig {
+  provider: 'okta' | 'azure_ad' | 'saml' | 'ldap' | 'none';
+  clientId?: string;
+  tenantId?: string;
+  domain?: string;
+  enabled: boolean;
+}
+
+export interface PermissionEntry {
+  userId: string;
+  action: 'view' | 'edit' | 'delete' | 'manage_users' | 'approve_courses';
+  scope: 'org' | 'department' | 'personal';
+  resourceId: string;
+}
+
 // ─── API 响应/请求 ─────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

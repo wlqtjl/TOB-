@@ -14,6 +14,10 @@ import {
   Settings,
   Presentation,
   Orbit,
+  Award,
+  User,
+  LineChart,
+  GitBranch,
 } from 'lucide-react';
 import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
@@ -100,7 +104,7 @@ export default function Home() {
       </div>
 
       {/* ── Nav Entries ── */}
-      <div className="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {[
           { href: '/map', label: '闯关地图', desc: 'Canvas 粒子流 · 知识DAG图', Icon: Map },
           { href: '/leaderboard', label: '实时排行榜', desc: '员工 · 团队排名', Icon: Trophy },
@@ -108,6 +112,10 @@ export default function Home() {
           { href: '/admin/dashboard', label: '数据看板', desc: '统计分析 · 数据导出', Icon: BarChart3 },
           { href: '/showcase', label: '产品介绍', desc: '动态展示 · 平台亮点', Icon: Presentation },
           { href: '/data-gravity', label: '数据引力场', desc: '物理可视化 · 数据流动', Icon: Orbit },
+          { href: '/achievements', label: 'Achievements', desc: 'Badges / Level / Milestones', Icon: Award },
+          { href: '/profile', label: 'Profile', desc: 'Stats / Skills / Progress', Icon: User },
+          { href: '/analytics', label: 'Analytics', desc: 'Reports / Insights / ROI', Icon: LineChart },
+          { href: '/learning-path', label: 'Learning Path', desc: 'Skill Tree / Recommendations', Icon: GitBranch },
         ].map((item) => (
           <Link
             key={item.href}

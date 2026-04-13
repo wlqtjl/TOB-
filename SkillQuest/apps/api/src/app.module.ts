@@ -6,6 +6,11 @@ import { GameEngineModule } from './modules/game-engine/game-engine.module';
 import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { EnterpriseModule } from './modules/enterprise/enterprise.module';
+import { BadgeModule } from './modules/badge/badge.module';
+import { LearningPathModule } from './modules/learning-path/learning-path.module';
+import { FeedbackModule } from './modules/feedback/feedback.module';
+import { AIBudgetModule } from './modules/ai-budget/ai-budget.module';
+import { AuditModule } from './modules/audit/audit.module';
 import { PrismaService } from './prisma.service';
 
 @Module({
@@ -17,6 +22,11 @@ import { PrismaService } from './prisma.service';
     LeaderboardModule,
     AnalyticsModule,
     EnterpriseModule,
+    BadgeModule,
+    LearningPathModule,
+    FeedbackModule,
+    AIBudgetModule,
+    AuditModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

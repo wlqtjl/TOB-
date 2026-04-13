@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
+OPENAI_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
 
 SYSTEM_PROMPT = """你是专业的企业培训课程设计专家。
 根据提供的培训材料，生成符合布鲁姆教育目标分类的题目。
@@ -195,7 +196,7 @@ async def generate_level_from_material(
 
         user_prompt = _build_user_prompt(content, vendor, difficulty)
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=OPENAI_TIMEOUT_SECONDS) as client:
             response = await client.post(
                 "https://api.openai.com/v1/chat/completions",
                 headers={

@@ -8,12 +8,11 @@ Covers:
 """
 
 import os
+from unittest.mock import patch
+
 import pytest
 
-# Ensure no API key is set for fallback tests
-os.environ.pop("OPENAI_API_KEY", None)
-
-from generators.question_generator import (  # noqa: E402
+from generators.question_generator import (
     generate_level_from_material,
     _generate_fallback_questions,
     _build_user_prompt,
@@ -136,22 +135,31 @@ class TestAsyncGenerator:
     @pytest.mark.asyncio
     async def test_generates_fallback_without_api_key(self):
         """Without OPENAI_API_KEY, should use fallback generator."""
-        result = await generate_level_from_material(
-            content="SmartX SMTX OS integrates compute, storage, and networking.",
-            vendor="SmartX",
-            difficulty="beginner",
-        )
-        assert result["status"] == "fallback"
-        assert "questions" in result
-        assert len(result["questions"]) > 0
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("OPENAI_API_KEY", None)
+            # Re-import to pick up env change
+            import generators.question_generator as qg
+            qg.OPENAI_API_KEY = ""
+            result = await generate_level_from_material(
+                content="SmartX SMTX OS integrates compute, storage, and networking.",
+                vendor="SmartX",
+                difficulty="beginner",
+            )
+            assert result["status"] == "fallback"
+            assert "questions" in result
+            assert len(result["questions"]) > 0
 
     @pytest.mark.asyncio
     async def test_generates_with_different_difficulties(self):
-        for diff in ("beginner", "intermediate", "advanced"):
-            result = await generate_level_from_material(
-                content="Test content for generation.",
-                vendor="TestVendor",
-                difficulty=diff,
-            )
-            assert result["difficulty"] == diff
-            assert "questions" in result
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("OPENAI_API_KEY", None)
+            import generators.question_generator as qg
+            qg.OPENAI_API_KEY = ""
+            for diff in ("beginner", "intermediate", "advanced"):
+                result = await generate_level_from_material(
+                    content="Test content for generation.",
+                    vendor="TestVendor",
+                    difficulty=diff,
+                )
+                assert result["difficulty"] == diff
+                assert "questions" in result

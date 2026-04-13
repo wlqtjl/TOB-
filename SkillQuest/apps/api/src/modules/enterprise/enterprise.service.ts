@@ -62,6 +62,9 @@ interface CachedToken {
   expiresAt: number;
 }
 
+/** Buffer (ms) before token expiry to trigger refresh — 5 minutes */
+const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
+
 // ─── Service ─────────────────────────────────────────────────────────
 
 @Injectable()
@@ -195,7 +198,7 @@ export class EnterpriseService {
     if (!this.wechatConfig) return null;
 
     // Return cached token if still valid (with 5-min buffer)
-    if (this.wechatToken && this.wechatToken.expiresAt > Date.now() + 300_000) {
+    if (this.wechatToken && this.wechatToken.expiresAt > Date.now() + TOKEN_REFRESH_BUFFER_MS) {
       return this.wechatToken.token;
     }
 
@@ -312,7 +315,7 @@ export class EnterpriseService {
   private async getFeishuTenantToken(): Promise<string | null> {
     if (!this.feishuConfig) return null;
 
-    if (this.feishuTenantToken && this.feishuTenantToken.expiresAt > Date.now() + 300_000) {
+    if (this.feishuTenantToken && this.feishuTenantToken.expiresAt > Date.now() + TOKEN_REFRESH_BUFFER_MS) {
       return this.feishuTenantToken.token;
     }
 

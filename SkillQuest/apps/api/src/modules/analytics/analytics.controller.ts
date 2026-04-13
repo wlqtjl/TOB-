@@ -41,6 +41,7 @@ export class AnalyticsController {
     @Res() res: Response,
   ) {
     const report = await this.analytics.getCourseReport(tenantId);
+    // BOM (Byte Order Mark) for proper UTF-8 encoding in Excel and other tools
     const bom = '\uFEFF';
     const headers = ['Course', 'Vendor', 'Category', 'Levels', 'Attempts', 'Avg Score', 'Passed', 'Completion Rate'];
     const rows = report.map((r) => [

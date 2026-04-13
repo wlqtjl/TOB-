@@ -100,7 +100,7 @@ export default function DataGravityPage() {
           replicaId: `replica-${r}`,
           color: '#58A6FF',
           trail: [],
-          metadata: { dataId: `data-${p}` },
+          metadata: { dataId: `data-r${r}-p${p}` },
         });
       }
     }
@@ -278,8 +278,10 @@ export default function DataGravityPage() {
   }, []);
 
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (toolRef.current === 'force_shield' && dragStart.current && stateRef.current) {
-      stateRef.current = placeForceShield(stateRef.current, dragStart.current, canvasPos(e));
+    if (toolRef.current === 'force_shield' && dragStart.current) {
+      if (stateRef.current) {
+        stateRef.current = placeForceShield(stateRef.current, dragStart.current, canvasPos(e));
+      }
       dragStart.current = null;
     }
   }, []);

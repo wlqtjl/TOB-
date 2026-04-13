@@ -51,7 +51,7 @@ function exportToCsv(filename: string, headers: string[], rows: string[][]) {
     ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(',')),
   ].join('\n');
 
-  // BOM (Byte Order Mark) for proper UTF-8 encoding in Excel
+  // BOM (Byte Order Mark) required for Excel to correctly display non-ASCII characters in UTF-8 CSV
   const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

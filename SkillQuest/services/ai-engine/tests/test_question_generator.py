@@ -132,34 +132,35 @@ class TestDifficultyConfig:
 class TestAsyncGenerator:
     """Test the main generate_level_from_material function."""
 
+    @pytest.fixture(autouse=True)
+    def _clear_api_key(self):
+        """Ensure OPENAI_API_KEY is unset for fallback testing."""
+        with patch.dict(os.environ, {"OPENAI_API_KEY": ""}):
+            import generators.question_generator as qg
+            original = qg.OPENAI_API_KEY
+            qg.OPENAI_API_KEY = ""
+            yield
+            qg.OPENAI_API_KEY = original
+
     @pytest.mark.asyncio
     async def test_generates_fallback_without_api_key(self):
         """Without OPENAI_API_KEY, should use fallback generator."""
-        with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("OPENAI_API_KEY", None)
-            # Re-import to pick up env change
-            import generators.question_generator as qg
-            qg.OPENAI_API_KEY = ""
-            result = await generate_level_from_material(
-                content="SmartX SMTX OS integrates compute, storage, and networking.",
-                vendor="SmartX",
-                difficulty="beginner",
-            )
-            assert result["status"] == "fallback"
-            assert "questions" in result
-            assert len(result["questions"]) > 0
+        result = await generate_level_from_material(
+            content="SmartX SMTX OS integrates compute, storage, and networking.",
+            vendor="SmartX",
+            difficulty="beginner",
+        )
+        assert result["status"] == "fallback"
+        assert "questions" in result
+        assert len(result["questions"]) > 0
 
     @pytest.mark.asyncio
     async def test_generates_with_different_difficulties(self):
-        with patch.dict(os.environ, {}, clear=False):
-            os.environ.pop("OPENAI_API_KEY", None)
-            import generators.question_generator as qg
-            qg.OPENAI_API_KEY = ""
-            for diff in ("beginner", "intermediate", "advanced"):
-                result = await generate_level_from_material(
-                    content="Test content for generation.",
-                    vendor="TestVendor",
-                    difficulty=diff,
-                )
-                assert result["difficulty"] == diff
-                assert "questions" in result
+        for diff in ("beginner", "intermediate", "advanced"):
+            result = await generate_level_from_material(
+                content="Test content for generation.",
+                vendor="TestVendor",
+                difficulty=diff,
+            )
+            assert result["difficulty"] == diff
+            assert "questions" in result

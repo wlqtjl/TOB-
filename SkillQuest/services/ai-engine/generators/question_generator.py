@@ -25,7 +25,18 @@ logger = logging.getLogger(__name__)
 
 OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
 OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
-OPENAI_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
+
+# Timeout for OpenAI API requests (seconds)
+try:
+    OPENAI_TIMEOUT_SECONDS: float = float(os.getenv("OPENAI_TIMEOUT_SECONDS", "60"))
+except ValueError:
+    OPENAI_TIMEOUT_SECONDS = 60.0
+
+# Content truncation limit sent to GPT-4o (characters)
+MAX_CONTENT_LENGTH = 4000
+
+# Minimum paragraph length to be considered for question generation
+MIN_PARAGRAPH_LENGTH = 20
 
 SYSTEM_PROMPT = """你是专业的企业培训课程设计专家。
 根据提供的培训材料，生成符合布鲁姆教育目标分类的题目。
@@ -86,7 +97,7 @@ def _build_user_prompt(
 难度: {difficulty}
 布鲁姆层级: {cfg["bloom_level"]}
 培训材料:
-{content[:4000]}
+{content[:MAX_CONTENT_LENGTH]}
 
 请严格按照以下JSON schema生成题目:
 
@@ -135,7 +146,7 @@ def _generate_fallback_questions(
     difficulty: Literal["beginner", "intermediate", "advanced"],
 ) -> dict[str, Any]:
     """Generate basic fallback questions when OpenAI API is unavailable."""
-    paragraphs = [p.strip() for p in content.split("\n") if len(p.strip()) > 20]
+    paragraphs = [p.strip() for p in content.split("\n") if len(p.strip()) > MIN_PARAGRAPH_LENGTH]
     questions: list[dict[str, Any]] = []
 
     for i, para in enumerate(paragraphs[:3]):

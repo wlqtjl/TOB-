@@ -504,10 +504,10 @@ export class CourseService {
 
     // If we have heading insights, group levels by chapter sections
     if (insights?.headings && insights.headings.length > 0) {
-      // H1 and H2 headings are treated as chapter boundaries
-      const TOP_LEVEL_HEADING_THRESHOLD = 2;
+      // H1 and H2 headings are treated as chapter boundaries for grouping
+      const MAX_CHAPTER_HEADING_LEVEL = 2;
       const topHeadings = insights.headings.filter(
-        (h: { level: number }) => h.level <= TOP_LEVEL_HEADING_THRESHOLD,
+        (h: { level: number }) => h.level <= MAX_CHAPTER_HEADING_LEVEL,
       );
       const chapterCount = Math.max(topHeadings.length, 1);
       const levelsPerChapter = Math.ceil(sorted.length / chapterCount);

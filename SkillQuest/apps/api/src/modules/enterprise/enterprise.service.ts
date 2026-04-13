@@ -62,7 +62,8 @@ interface CachedToken {
   expiresAt: number;
 }
 
-/** Buffer (ms) before token expiry to trigger refresh — 5 minutes */
+/** Buffer (ms) before token expiry to trigger refresh. Prevents using tokens
+ *  that expire during an in-flight request (accounts for clock skew + network latency). */
 const TOKEN_REFRESH_BUFFER_MS = 5 * 60 * 1000;
 
 // ─── Service ─────────────────────────────────────────────────────────

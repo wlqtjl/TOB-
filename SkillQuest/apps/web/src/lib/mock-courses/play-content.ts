@@ -121,12 +121,12 @@ export function getPlayContent(courseId: string, type: string): Record<string, u
 
 export function getPlayContentTypes(): Record<string, string> {
   return {
-    topology: '🔗 拓扑连线',
-    matching: '🔀 知识配对',
-    ordering: '📋 步骤排序',
-    quiz: '📝 选择题',
-    terminal: '💻 命令行',
-    scenario: '🔍 故障排查',
-    vm_placement: '🖥️ VM调度',
+    topology: '拓扑连线',
+    matching: '知识配对',
+    ordering: '步骤排序',
+    quiz: '选择题',
+    terminal: '命令行',
+    scenario: '故障排查',
+    vm_placement: 'VM调度',
   };
 }

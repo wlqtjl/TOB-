@@ -32,6 +32,7 @@ import {
   Mail,
   ChevronDown,
   Check,
+  Orbit,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -62,6 +63,7 @@ const FEATURES: { Icon: LucideIcon; title: string; desc: string }[] = [
   { Icon: MapIcon,   title: '知识地图',    desc: 'Canvas粒子流DAG图，可视化学习路径' },
   { Icon: Building2, title: 'B2B白标',     desc: '单租户部署，品牌完全自定义' },
   { Icon: BarChart3, title: '数据分析',    desc: '学习进度、掌握率、团队报表' },
+  { Icon: Orbit,    title: '数据引力可视化', desc: '物理引擎驱动的数据流动力学实时仿真' },
 ];
 
 /* ───────────────────── hooks ──────────────────────── */
@@ -335,7 +337,7 @@ export default function ShowcasePage() {
       <section ref={feat.ref} className="py-28 px-6">
         <div className="max-w-5xl mx-auto">
           <h2 className={`text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-4 transition-all duration-700 ${feat.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
-            六大核心能力
+            七大核心能力
           </h2>
           <p className={`text-center text-base-400 mb-16 transition-all duration-700 delay-200 ${feat.visible ? 'opacity-100' : 'opacity-0'}`}>
             从文档导入到游戏化学习的完整闭环

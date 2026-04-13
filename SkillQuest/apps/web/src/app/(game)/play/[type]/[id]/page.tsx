@@ -128,7 +128,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
       }
       setMessages((prev) => [
         ...prev,
-        { text: result.message ?? (result.correct ? '✅ 正确！' : '❌ 错误'), correct: result.correct },
+        { text: result.message ?? (result.correct ? '正确！' : '错误'), correct: result.correct },
       ]);
     },
     [id, answerCorrect, answerWrong],
@@ -138,7 +138,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-2xl text-gray-400">😕 未找到关卡内容</p>
+          <p className="text-2xl text-gray-400">未找到关卡内容</p>
           <p className="mt-2 text-sm text-gray-600">
             课程: {course?.title ?? courseId} · 类型: {type} · ID: {id}
           </p>
@@ -235,7 +235,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
                       : 'border-gray-700 text-gray-500 hover:border-gray-500'
                   }`}
                 >
-                  {c.icon} {c.title}
+                  {c.title}
                 </Link>
               ))}
             </div>

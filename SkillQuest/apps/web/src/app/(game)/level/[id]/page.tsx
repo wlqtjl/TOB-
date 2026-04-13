@@ -24,7 +24,9 @@ function LevelContent({ levelId }: { levelId: string }) {
   const allQuestions = getLevelQuestions(courseId);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answered, setAnswered] = useState(false);
-  const briefing = getLevelBriefing(courseId, levelId);
+  // Map URL levelId (e.g. '1') to data levelId (e.g. 'l1')
+  const dataLevelId = levelId.startsWith('l') ? levelId : `l${levelId}`;
+  const briefing = getLevelBriefing(courseId, dataLevelId);
   const [briefingDismissed, setBriefingDismissed] = useState(false);
 
   // Filter questions for this level if possible, otherwise use all
@@ -73,7 +75,7 @@ function LevelContent({ levelId }: { levelId: string }) {
     return (
       <div className="min-h-screen bg-gray-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-2xl text-gray-400">😕 未找到关卡题目</p>
+          <p className="text-2xl text-gray-400">未找到关卡题目</p>
           <p className="mt-2 text-sm text-gray-600">课程: {course?.title ?? courseId} · 关卡: {levelId}</p>
           <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-400 hover:underline text-sm">← 返回地图</a>
         </div>
@@ -144,7 +146,7 @@ function LevelContent({ levelId }: { levelId: string }) {
             <p className={`font-bold ${
               gameState.answers[gameState.answers.length - 1]?.correct ? 'text-green-400' : 'text-red-400'
             }`}>
-              {gameState.answers[gameState.answers.length - 1]?.correct ? '✅ 回答正确！' : '❌ 回答错误'}
+              {gameState.answers[gameState.answers.length - 1]?.correct ? '回答正确！' : '回答错误'}
             </p>
             <p className="mt-2 text-sm text-gray-300">{currentQuestion.explanation}</p>
           </div>
@@ -171,7 +173,7 @@ function LevelContent({ levelId }: { levelId: string }) {
               href={`/map?course=${courseId}`}
               className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 transition"
             >
-              🎉 完成关卡
+              完成关卡
             </a>
           )}
         </div>

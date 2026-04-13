@@ -11,6 +11,7 @@
  */
 
 import React from 'react';
+import { AlertTriangle, BarChart3, Search, CheckCircle, BookOpen } from 'lucide-react';
 
 // ─── 类型定义 ──────────────────────────────────────────────────────
 
@@ -77,7 +78,7 @@ export default function IncidentReportModal({
         {/* 头部 — 事故告警 */}
         <div className="bg-red-900/40 px-6 py-4 border-b border-red-500/20">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🚨</span>
+            <AlertTriangle size={24} strokeWidth={1.5} className="text-red-400" />
             <div>
               <h2 className="text-lg font-bold text-red-400">事故复盘报告</h2>
               <p className="text-sm text-red-300/70">{report.disasterName}</p>
@@ -93,7 +94,7 @@ export default function IncidentReportModal({
 
           {/* 损失仪表盘 */}
           <div>
-            <h3 className="text-sm font-semibold text-white/70 mb-2">📊 损失评估</h3>
+            <h3 className="text-sm font-semibold text-white/70 mb-2 flex items-center gap-1.5"><BarChart3 size={14} strokeWidth={1.5} className="text-white/50" /> 损失评估</h3>
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-gray-800/50 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-400 mb-1">业务停摆</div>
@@ -119,7 +120,7 @@ export default function IncidentReportModal({
 
           {/* 操作对比时间线 */}
           <div>
-            <h3 className="text-sm font-semibold text-white/70 mb-2">🔍 操作对比</h3>
+            <h3 className="text-sm font-semibold text-white/70 mb-2 flex items-center gap-1.5"><Search size={14} strokeWidth={1.5} className="text-white/50" /> 操作对比</h3>
             <div className="space-y-2">
               {report.playerActions.map((action, i) => (
                 <div
@@ -145,7 +146,7 @@ export default function IncidentReportModal({
 
           {/* 专家推荐路径 */}
           <div>
-            <h3 className="text-sm font-semibold text-white/70 mb-2">✅ 专家推荐路径</h3>
+            <h3 className="text-sm font-semibold text-white/70 mb-2 flex items-center gap-1.5"><CheckCircle size={14} strokeWidth={1.5} className="text-white/50" /> 专家推荐路径</h3>
             <div className="flex flex-wrap gap-2">
               {report.optimalActions.map((action, i) => (
                 <React.Fragment key={i}>
@@ -163,7 +164,7 @@ export default function IncidentReportModal({
           {/* 知识点 */}
           {report.knowledgePoints && report.knowledgePoints.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-white/70 mb-2">📖 关联知识点</h3>
+              <h3 className="text-sm font-semibold text-white/70 mb-2 flex items-center gap-1.5"><BookOpen size={14} strokeWidth={1.5} className="text-white/50" /> 关联知识点</h3>
               <div className="flex flex-wrap gap-2">
                 {report.knowledgePoints.map((kp, i) => (
                   <span key={i} className="px-2 py-1 bg-blue-900/30 border border-blue-500/20 rounded text-xs text-blue-400">

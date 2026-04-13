@@ -47,14 +47,14 @@ const CHANNEL_STYLES: Record<NarrativeChannel, { bg: string; border: string; hea
     bg: 'bg-[#0d1117]',
     border: 'border-blue-500/30',
     headerBg: 'bg-blue-900/40',
-    icon: '💬',
+    icon: 'DT',
     name: '钉钉群消息',
   },
   wechat_work: {
     bg: 'bg-[#0d1117]',
     border: 'border-green-500/30',
     headerBg: 'bg-green-900/40',
-    icon: '💬',
+    icon: 'WX',
     name: '企业微信',
   },
   slack: {
@@ -75,7 +75,7 @@ const CHANNEL_STYLES: Record<NarrativeChannel, { bg: string; border: string; hea
     bg: 'bg-[#0d1117]',
     border: 'border-yellow-500/30',
     headerBg: 'bg-yellow-900/40',
-    icon: '📧',
+    icon: '@',
     name: '紧急邮件',
   },
 };
@@ -179,7 +179,7 @@ export default function NarrativeModal({ config, onComplete }: NarrativeModalPro
                 </div>
                 {msg.imageUrl && (
                   <div className="mt-2 rounded-lg bg-gray-800/50 p-2 text-xs text-gray-400">
-                    📎 [截图附件]
+                    [截图附件]
                   </div>
                 )}
               </div>

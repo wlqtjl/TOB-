@@ -1,0 +1,47 @@
+{
+  "version": "1.0",
+  "pack_id": "smartx-v1",
+  "description": "SmartX HALO 超融合集群仿真 Pack — Phase 1 MVP",
+  "author": "SmartX Inc.",
+  "compatibility": "omni-sim>=2.0",
+  "entities": [
+    {
+      "id": "halo-node-01", "entity_type": "Server", "label": "HALO 主节点 01",
+      "components": { "cpu": 0.2, "cpu_cores": 32, "memory": 0.3, "memory_gb": 256.0, "network_tx": 0.1, "network_rx": 0.05 },
+      "behaviors": { "cpu_growth_rate": 0.01, "burst_threshold": 0.9 },
+      "tags": ["production", "primary-node"]
+    },
+    {
+      "id": "halo-node-02", "entity_type": "Server", "label": "HALO 主节点 02",
+      "components": { "cpu": 0.25, "cpu_cores": 32, "memory": 0.35, "memory_gb": 256.0, "network_tx": 0.08, "network_rx": 0.06 },
+      "behaviors": { "cpu_growth_rate": 0.008, "burst_threshold": 0.9 },
+      "tags": ["production", "secondary-node"]
+    },
+    {
+      "id": "halo-node-03", "entity_type": "Server", "label": "HALO 存储节点 01",
+      "components": { "cpu": 0.15, "cpu_cores": 16, "memory": 0.6, "memory_gb": 512.0, "network_tx": 0.3, "network_rx": 0.25 },
+      "behaviors": { "cpu_growth_rate": 0.005, "burst_threshold": 0.85 },
+      "tags": ["production", "storage-node"]
+    },
+    {
+      "id": "core-switch-01", "entity_type": "Switch", "label": "核心交换机 01",
+      "components": { "cpu": 0.1, "cpu_cores": 4, "memory": 0.2, "memory_gb": 16.0, "network_tx": 0.4, "network_rx": 0.4 },
+      "behaviors": { "cpu_growth_rate": 0.002, "burst_threshold": 0.95 },
+      "tags": ["network", "core"]
+    },
+    {
+      "id": "vm-app-01", "entity_type": "VM", "label": "应用 VM 01",
+      "components": { "cpu": 0.45, "cpu_cores": 8, "memory": 0.55, "memory_gb": 32.0, "network_tx": 0.15, "network_rx": 0.12 },
+      "behaviors": { "cpu_growth_rate": 0.015, "burst_threshold": 0.85 },
+      "tags": ["vm", "application"]
+    }
+  ],
+  "topology": {
+    "links": [
+      { "from": "halo-node-01", "to": "core-switch-01", "bandwidth_gbps": 25 },
+      { "from": "halo-node-02", "to": "core-switch-01", "bandwidth_gbps": 25 },
+      { "from": "halo-node-03", "to": "core-switch-01", "bandwidth_gbps": 10 },
+      { "from": "vm-app-01",    "to": "halo-node-01",   "bandwidth_gbps": 1  }
+    ]
+  }
+}

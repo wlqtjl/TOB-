@@ -66,13 +66,15 @@ export class ScoringEngine {
 
     // 星级
     const accuracy = totalCount > 0 ? correctCount / totalCount : 0;
-    let stars: 1 | 2 | 3;
+    let stars: 0 | 1 | 2 | 3;
     if (accuracy >= STAR_THRESHOLDS.three) {
       stars = 3;
     } else if (accuracy >= STAR_THRESHOLDS.two) {
       stars = 2;
-    } else {
+    } else if (accuracy >= STAR_THRESHOLDS.one) {
       stars = 1;
+    } else {
+      stars = 0;
     }
 
     // XP

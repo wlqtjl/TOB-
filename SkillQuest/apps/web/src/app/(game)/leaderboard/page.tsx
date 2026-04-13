@@ -1,26 +1,38 @@
 /**
- * 实时排行榜 — 对标 Data Center 资源/收益可视化
+ * 排行榜 — Minimalist redesign
+ *
+ * Clean typography hierarchy, no emoji clutter, single accent color.
+ * Fetches from backend API when available, falls back to mock data.
  */
 
+'use client';
+
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { ArrowLeft, Star, Flame, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import type { LeaderboardEntry } from '@skillquest/types';
+import { useCourseId } from '../../../hooks/useCourseId';
+import { useApiData } from '../../../hooks/useApiData';
+import { COURSES, getLeaderboard, getCourse } from '../../../lib/mock-courses';
+import { fetchLeaderboard } from '../../../lib/api-client';
+import { tenantConfig } from '../../../lib/tenant-config';
 
-const mockLeaderboard: LeaderboardEntry[] = [
-  { userId: 'u1', displayName: '王磊', avatarUrl: '', totalScore: 12500, rank: 1, rankChange: 0, stars: 24, streakDays: 15 },
-  { userId: 'u2', displayName: '李明', avatarUrl: '', totalScore: 11800, rank: 2, rankChange: 1, stars: 22, streakDays: 12 },
-  { userId: 'u3', displayName: '张三', avatarUrl: '', totalScore: 11200, rank: 3, rankChange: -1, stars: 21, streakDays: 10 },
-  { userId: 'u4', displayName: '赵燕', avatarUrl: '', totalScore: 9800, rank: 4, rankChange: 2, stars: 18, streakDays: 8 },
-  { userId: 'u5', displayName: '周伟 (你)', avatarUrl: '', totalScore: 9500, rank: 5, rankChange: 3, stars: 16, streakDays: 7 },
-  { userId: 'u6', displayName: '孙涛', avatarUrl: '', totalScore: 8900, rank: 6, rankChange: -2, stars: 15, streakDays: 5 },
-  { userId: 'u7', displayName: '吴芳', avatarUrl: '', totalScore: 8200, rank: 7, rankChange: 0, stars: 14, streakDays: 4 },
-  { userId: 'u8', displayName: '陈刚', avatarUrl: '', totalScore: 7500, rank: 8, rankChange: -1, stars: 12, streakDays: 3 },
-];
-
-const CROWN_ICONS = ['👑', '🥈', '🥉'];
+const tenant = tenantConfig();
 
 function RankChangeIndicator({ change }: { change: number }) {
-  if (change > 0) return <span className="text-green-400 text-xs font-mono">↑{change}</span>;
-  if (change < 0) return <span className="text-red-400 text-xs font-mono">↓{Math.abs(change)}</span>;
-  return <span className="text-gray-600 text-xs">—</span>;
+  if (change > 0) return (
+    <span className="flex items-center gap-0.5 text-green-400 text-xs">
+      <TrendingUp size={12} strokeWidth={1.5} />
+      {change}
+    </span>
+  );
+  if (change < 0) return (
+    <span className="flex items-center gap-0.5 text-red-400 text-xs">
+      <TrendingDown size={12} strokeWidth={1.5} />
+      {Math.abs(change)}
+    </span>
+  );
+  return <Minus size={12} strokeWidth={1.5} className="text-base-500" />;
 }
 
 function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isCurrentUser: boolean }) {
@@ -29,46 +41,157 @@ function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isC
   return (
     <div
       className={`
-        flex items-center gap-4 rounded-xl border p-4 transition-all
+        flex items-center gap-4 rounded-xl border p-5 transition-all
         ${isCurrentUser
-          ? 'border-blue-500/50 bg-blue-900/20'
+          ? 'border-accent/30 bg-accent/5'
           : isTopThree
-            ? 'border-yellow-400/20 bg-yellow-950/10'
-            : 'border-gray-800 bg-gray-900/30'
+            ? 'border-base-600/40 bg-base-800/60'
+            : 'border-base-600/20 bg-base-800/20'
         }
       `}
     >
-      <div className="flex w-10 items-center justify-center text-lg font-bold">
-        {isTopThree ? CROWN_ICONS[entry.rank - 1] : (
-          <span className="text-gray-500">{entry.rank}</span>
+      <div className="flex w-8 items-center justify-center">
+        {isTopThree ? (
+          <span className={`text-sm font-bold ${
+            entry.rank === 1 ? 'text-yellow-400' : entry.rank === 2 ? 'text-base-200' : 'text-orange-400'
+          }`}>
+            {entry.rank}
+          </span>
+        ) : (
+          <span className="text-sm text-base-500">{entry.rank}</span>
         )}
       </div>
 
       <div className={`
-        h-10 w-10 rounded-full flex items-center justify-center text-sm font-bold
-        ${isCurrentUser ? 'bg-blue-600' : 'bg-gray-700'}
+        flex h-9 w-9 items-center justify-center rounded-full text-xs font-semibold
+        ${isCurrentUser ? 'bg-accent/20 text-accent' : 'bg-base-700 text-base-300'}
       `}>
         {entry.displayName[0]}
       </div>
 
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className={`font-medium ${isCurrentUser ? 'text-blue-300' : 'text-gray-200'}`}>
+          <span className={`text-sm font-medium truncate ${isCurrentUser ? 'text-accent' : 'text-base-100'}`}>
             {entry.displayName}
           </span>
           <RankChangeIndicator change={entry.rankChange} />
         </div>
-        <div className="flex gap-3 text-xs text-gray-500">
-          <span>⭐ {entry.stars} 星</span>
-          <span>🔥 连续 {entry.streakDays} 天</span>
+        <div className="flex gap-3 text-xs text-base-400 mt-0.5">
+          <span className="flex items-center gap-1">
+            <Star size={11} strokeWidth={1.5} />
+            {entry.stars}
+          </span>
+          <span className="flex items-center gap-1">
+            <Flame size={11} strokeWidth={1.5} />
+            {entry.streakDays} 天
+          </span>
         </div>
       </div>
 
       <div className="text-right">
-        <div className={`text-lg font-bold font-mono ${isTopThree ? 'text-yellow-400' : 'text-gray-300'}`}>
+        <div className={`text-base font-semibold font-mono ${isTopThree ? 'text-base-100' : 'text-base-200'}`}>
           {entry.totalScore.toLocaleString()}
         </div>
-        <div className="text-xs text-gray-600">分</div>
+        <div className="text-xs text-base-500">分</div>
+      </div>
+    </div>
+  );
+}
+
+function LeaderboardContent() {
+  const courseId = useCourseId();
+  const course = getCourse(courseId);
+  const mockData = getLeaderboard(courseId);
+
+  // Try API first, fall back to mock data
+  const { data: leaderboardData } = useApiData(
+    mockData,
+    async () => {
+      const apiEntries = await fetchLeaderboard(courseId);
+      if (apiEntries && apiEntries.length > 0) {
+        return { entries: apiEntries, currentUserId: apiEntries[0]?.userId ?? '' };
+      }
+      return null;
+    },
+  );
+
+  const { entries, currentUserId } = leaderboardData;
+
+  return (
+    <div className="min-h-screen bg-base-900 px-6 py-10">
+      <div className="mx-auto max-w-2xl">
+        {/* ── Header ── */}
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-base-100">排行榜</h1>
+            <p className="mt-1 text-sm font-light text-base-300">{course?.title ?? courseId} · 本周</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1.5">
+              {['本周', '本月', '赛季', '全部'].map((period) => (
+                <button
+                  key={period}
+                  className={`rounded-lg px-3 py-1.5 text-xs transition ${
+                    period === '本周'
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-base-400 hover:text-base-200 hover:bg-base-700/50'
+                  }`}
+                >
+                  {period}
+                </button>
+              ))}
+            </div>
+            <Link
+              href="/"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 transition hover:text-base-100 hover:bg-base-700/50"
+            >
+              <ArrowLeft size={14} strokeWidth={1.5} />
+              返回
+            </Link>
+          </div>
+        </div>
+
+        {/* ── Course switcher ── */}
+        {COURSES.length > 1 && (
+          <div className="mb-6">
+            <p className="text-xs text-base-500 mb-2">切换课程</p>
+            <div className="flex flex-wrap gap-2">
+              {COURSES.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/leaderboard?course=${c.id}`}
+                  className={`rounded-lg px-3 py-1.5 text-xs transition ${
+                    c.id === courseId
+                      ? 'bg-accent/10 text-accent border border-accent/30'
+                      : 'text-base-400 border border-base-600/30 hover:border-base-500 hover:text-base-200'
+                  }`}
+                >
+                  {c.title}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Rows ── */}
+        <div className="space-y-2">
+          {entries.map((entry) => (
+            <LeaderboardRow
+              key={entry.userId}
+              entry={entry}
+              isCurrentUser={entry.userId === currentUserId}
+            />
+          ))}
+        </div>
+
+        {/* ── Footer ── */}
+        <div className="mt-6 flex items-center justify-between text-xs text-base-500">
+          <span className="flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
+            实时更新中
+          </span>
+          <span>{tenant.companyName}</span>
+        </div>
       </div>
     </div>
   );
@@ -76,44 +199,8 @@ function LeaderboardRow({ entry, isCurrentUser }: { entry: LeaderboardEntry; isC
 
 export default function LeaderboardPage() {
   return (
-    <div className="min-h-screen bg-gray-950 p-6">
-      <div className="mx-auto max-w-2xl">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-yellow-400">🏆 实时排行榜</h1>
-            <p className="text-sm text-gray-500">华为 HCIA-Datacom · 全部学员 · 本周</p>
-          </div>
-          <div className="flex gap-2">
-            {['本周', '本月', '赛季', '全部'].map((period) => (
-              <button
-                key={period}
-                className={`rounded-lg px-3 py-1 text-xs ${
-                  period === '本周'
-                    ? 'bg-blue-600 text-white'
-                    : 'border border-gray-700 text-gray-400 hover:border-gray-500'
-                }`}
-              >
-                {period}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          {mockLeaderboard.map((entry) => (
-            <LeaderboardRow
-              key={entry.userId}
-              entry={entry}
-              isCurrentUser={entry.userId === 'u5'}
-            />
-          ))}
-        </div>
-
-        <div className="mt-4 flex items-center justify-center gap-2 text-xs text-gray-600">
-          <span className="inline-block h-2 w-2 rounded-full bg-green-400 animate-pulse" />
-          实时更新中 (WebSocket + Redis Sorted Set)
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<div className="min-h-screen bg-base-900 flex items-center justify-center"><p className="text-base-400 animate-pulse">加载排行榜...</p></div>}>
+      <LeaderboardContent />
+    </Suspense>
   );
 }

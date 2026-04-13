@@ -15,7 +15,8 @@ import { useGameState } from '../../../../components/game/hooks/useGameState';
 import { ErrorBoundary } from '../../../../components/ui/ErrorBoundary';
 import CourseSwitcher from '../../../../components/ui/CourseSwitcher';
 import { useCourseId } from '../../../../hooks/useCourseId';
-import { getLevelQuestions, getCourse } from '../../../../lib/mock-courses';
+import { getLevelQuestions, getCourse, getLevelBriefing } from '../../../../lib/mock-courses';
+import LevelBriefingModal from '../../../../components/game/LevelBriefingModal';
 
 function LevelContent({ levelId }: { levelId: string }) {
   const courseId = useCourseId();
@@ -23,6 +24,8 @@ function LevelContent({ levelId }: { levelId: string }) {
   const allQuestions = getLevelQuestions(courseId);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answered, setAnswered] = useState(false);
+  const briefing = getLevelBriefing(courseId, levelId);
+  const [briefingDismissed, setBriefingDismissed] = useState(false);
 
   // Filter questions for this level if possible, otherwise use all
   const questions = useMemo(() => {
@@ -82,6 +85,15 @@ function LevelContent({ levelId }: { levelId: string }) {
 
   return (
     <div className="min-h-screen bg-gray-950 p-4">
+      {/* 关卡前知识普及 */}
+      {briefing && !briefingDismissed && (
+        <LevelBriefingModal
+          briefing={briefing}
+          onStart={() => setBriefingDismissed(true)}
+          onSkip={() => setBriefingDismissed(true)}
+        />
+      )}
+
       {/* 课程切换 */}
       <div className="mx-auto max-w-[950px] mb-3">
         <CourseSwitcher />

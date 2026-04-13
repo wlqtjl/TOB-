@@ -485,6 +485,53 @@ export interface LevelMapEdge {
   particleState: 'flowing' | 'static' | 'pulsing';
 }
 
+// ─── 关卡前知识普及 (Level Briefing) ──────────────────────────────
+
+/** 知识点条目 — 关卡涉及的核心概念 */
+export interface KnowledgePoint {
+  /** 知识点关键词 (如 "ZBS 分布式存储") */
+  term: string;
+  /** 一句话定义/描述 */
+  definition: string;
+}
+
+/** 关卡任务目标 */
+export interface LevelObjective {
+  /** 目标描述 */
+  text: string;
+  /** 是否为主要目标 (vs 可选加分项) */
+  primary: boolean;
+}
+
+/**
+ * 关卡前知识普及配置 — 在正式开始闯关前展示
+ *
+ * 解决用户"登录后懵逼"的问题：
+ * 1. 告诉用户这关要学什么知识
+ * 2. 告诉用户这关的目标是什么
+ * 3. 给用户一个心理预期（难度、题型、时间）
+ */
+export interface LevelBriefing {
+  /** 对应关卡 ID */
+  levelId: string;
+  /** 关卡标题 */
+  title: string;
+  /** 关卡简介 — 一句话描述这关要做什么 */
+  summary: string;
+  /** 本关涉及的核心知识点列表 */
+  knowledgePoints: KnowledgePoint[];
+  /** 本关任务目标 */
+  objectives: LevelObjective[];
+  /** 关卡类型提示 (如 "选择题", "拓扑连线") */
+  gameTypeHint: string;
+  /** 预计完成时间 (分钟) */
+  estimatedMinutes: number;
+  /** 难度等级 */
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  /** 可选: 小贴士/攻略提示 */
+  tips?: string[];
+}
+
 // ─── API 响应/请求 ─────────────────────────────────────────────────
 
 export interface ApiResponse<T> {

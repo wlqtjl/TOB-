@@ -23,7 +23,7 @@ import type {
   VisualEntity,
   VisualConnection,
   EntityStyle,
-} from '../visual-scene';
+} from './visual-scene';
 import { findMatchingAnimations } from './animation-catalog';
 
 // ─── 状态到视觉的映射 ─────────────────────────────────────────────
@@ -139,8 +139,8 @@ export function detectChanges(
     if (!prevNode) continue;
 
     for (const sub of nodeSubscriptions) {
-      const oldVal = (prevNode as Record<string, unknown>)[sub.field];
-      const newVal = (nextNode as Record<string, unknown>)[sub.field];
+      const oldVal = (prevNode as unknown as Record<string, unknown>)[sub.field];
+      const newVal = (nextNode as unknown as Record<string, unknown>)[sub.field];
 
       if (oldVal === newVal) continue;
 
@@ -181,8 +181,8 @@ export function detectChanges(
     if (!prevLink) continue;
 
     for (const sub of linkSubscriptions) {
-      const oldVal = (prevLink as Record<string, unknown>)[sub.field];
-      const newVal = (nextLink as Record<string, unknown>)[sub.field];
+      const oldVal = (prevLink as unknown as Record<string, unknown>)[sub.field];
+      const newVal = (nextLink as unknown as Record<string, unknown>)[sub.field];
 
       if (oldVal === newVal) continue;
       if (sub.condition && !sub.condition(oldVal, newVal)) continue;

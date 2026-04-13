@@ -29,10 +29,10 @@ import type { EntropyHistory } from '@skillquest/game-engine';
 /* ────────────────── constants ────────────────── */
 
 const TOOLS: { id: GravityGunToolType; label: string; Icon: typeof Anchor }[] = [
-  { id: 'gravity_anchor', label: 'GravityAnchor', Icon: Anchor },
-  { id: 'force_shield',   label: 'ForceShield',  Icon: Shield },
-  { id: 'the_lens',       label: 'TheLens',       Icon: ScanSearch },
-  { id: 'singularity',    label: 'Singularity',   Icon: Atom },
+  { id: 'gravity_anchor', label: '引力锚点', Icon: Anchor },
+  { id: 'force_shield',   label: '能量护盾',  Icon: Shield },
+  { id: 'the_lens',       label: '引力透镜',   Icon: ScanSearch },
+  { id: 'singularity',    label: '奇点引爆',   Icon: Atom },
 ];
 
 const NODE_COLORS: Record<string, string> = {
@@ -273,13 +273,13 @@ export default function DataGravityPage() {
     const tool = toolRef.current;
     if (tool === 'force_shield') { dragStart.current = pos; return; }
     if (tool === 'gravity_anchor' && stateRef.current) {
-      placeGravityAnchor(stateRef.current, pos);
+      stateRef.current = placeGravityAnchor(stateRef.current, pos);
     }
   }, []);
 
   const handleMouseUp = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (toolRef.current === 'force_shield' && dragStart.current && stateRef.current) {
-      placeForceShield(stateRef.current, dragStart.current, canvasPos(e));
+      stateRef.current = placeForceShield(stateRef.current, dragStart.current, canvasPos(e));
       dragStart.current = null;
     }
   }, []);
@@ -288,17 +288,17 @@ export default function DataGravityPage() {
     if (toolRef.current !== 'the_lens' || !stateRef.current) return;
     const pos = canvasPos(e);
     if (!lensActive.current) {
-      activateLens(stateRef.current, pos, 60);
+      stateRef.current = activateLens(stateRef.current, pos, 60);
       lensActive.current = true;
     } else {
-      updateLensPosition(stateRef.current, pos);
+      stateRef.current = updateLensPosition(stateRef.current, pos);
     }
     setLensInfo(getParticlesInLens(stateRef.current));
   }, []);
 
   const handleMouseLeave = useCallback(() => {
     if (lensActive.current && stateRef.current) {
-      deactivateLens(stateRef.current);
+      stateRef.current = deactivateLens(stateRef.current);
       lensActive.current = false;
       setLensInfo([]);
     }
@@ -306,7 +306,7 @@ export default function DataGravityPage() {
 
   const handleDoubleClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     if (toolRef.current === 'singularity' && stateRef.current) {
-      applySingularity(stateRef.current, canvasPos(e), { power: 120 });
+      stateRef.current = applySingularity(stateRef.current, canvasPos(e), { power: 120 });
     }
   }, []);
 
@@ -314,7 +314,7 @@ export default function DataGravityPage() {
     toolRef.current = t;
     setActiveTool(t);
     if (t !== 'the_lens' && lensActive.current && stateRef.current) {
-      deactivateLens(stateRef.current);
+      stateRef.current = deactivateLens(stateRef.current);
       lensActive.current = false;
       setLensInfo([]);
     }
@@ -324,8 +324,13 @@ export default function DataGravityPage() {
     if (!stateRef.current) return;
     const node = stateRef.current.nodes.find((n) => n.id === nodeId);
     if (!node) return;
-    if (node.status === 'failed') recoverNode(stateRef.current, nodeId);
-    else injectNodeFailure(stateRef.current, nodeId);
+    if (node.status === 'failed') {
+      stateRef.current = recoverNode(stateRef.current, nodeId);
+    } else {
+      stateRef.current = injectNodeFailure(stateRef.current, nodeId);
+    }
+    // Update node list and force re-render
+    setNodeList([...stateRef.current.nodes]);
   }, []);
 
   const handleReset = useCallback(() => { initState(); }, [initState]);
@@ -435,14 +440,14 @@ export default function DataGravityPage() {
         </div>
 
         <div className="text-xs text-base-400">
-          Particles: <span className="text-base-100 font-semibold">{particleCount}</span>
+          粒子: <span className="text-base-100 font-semibold">{particleCount}</span>
         </div>
 
         <button
           onClick={handleReset}
           className="flex items-center justify-center gap-1.5 rounded-lg border border-base-600/30 bg-base-800/30 py-2 text-xs text-base-300 hover:border-accent/30 hover:text-accent transition-all"
         >
-          <RotateCcw size={12} strokeWidth={1.5} /> Reset
+          <RotateCcw size={12} strokeWidth={1.5} /> 重置
         </button>
       </aside>
 
@@ -476,20 +481,20 @@ export default function DataGravityPage() {
         <h3 className="text-xs font-semibold text-base-400">能量指标</h3>
         {metrics && (
           <>
-            <MetricBar label="Kinetic Energy" value={metrics.kineticEnergy} max={500} Icon={Activity} />
-            <MetricBar label="Potential Energy" value={metrics.potentialEnergy} max={500} Icon={Gauge} />
-            <MetricBar label="Bandwidth Loss" value={metrics.bandwidthLossRate} max={1} Icon={Zap} />
-            <MetricBar label="Entropy Delta" value={metrics.entropyDelta} max={5} Icon={TrendingDown} />
+            <MetricBar label="动能 (KE)" value={metrics.kineticEnergy} max={500} Icon={Activity} />
+            <MetricBar label="势能 (PE)" value={metrics.potentialEnergy} max={500} Icon={Gauge} />
+            <MetricBar label="带宽损耗" value={metrics.bandwidthLossRate} max={1} Icon={Zap} />
+            <MetricBar label="熵增" value={metrics.entropyDelta} max={5} Icon={TrendingDown} />
 
             <div className="mt-1">
-              <span className="text-[10px] text-base-400">Total Displacement</span>
+              <span className="text-[10px] text-base-400">总位移量</span>
               <p className="text-sm font-semibold text-base-100">{metrics.displacement.toFixed(1)}</p>
             </div>
           </>
         )}
 
         <div>
-          <span className="text-[10px] text-base-400">Entropy History</span>
+          <span className="text-[10px] text-base-400">熵增历史</span>
           <Sparkline />
         </div>
       </aside>

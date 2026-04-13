@@ -24,6 +24,7 @@ function LevelContent({ levelId }: { levelId: string }) {
   const allQuestions = getLevelQuestions(courseId);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answered, setAnswered] = useState(false);
+  const [startTime] = useState(() => Date.now());
   // Map URL levelId (e.g. '1') to data levelId (e.g. 'l1')
   const dataLevelId = levelId.startsWith('l') ? levelId : `l${levelId}`;
   const briefing = getLevelBriefing(courseId, dataLevelId);
@@ -70,6 +71,24 @@ function LevelContent({ levelId }: { levelId: string }) {
       nextQuestion();
     }
   }, [currentIdx, questions.length, nextQuestion]);
+
+  /** Build results page URL with game stats */
+  const buildResultsUrl = useCallback(() => {
+    const timeLimit = questions.length * 30;
+    const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+    const timeRemaining = Math.max(0, timeLimit - elapsedSec);
+    const correctCount = gameState.answers.filter((a) => a.correct).length;
+    const params = new URLSearchParams({
+      course: courseId,
+      level: levelId,
+      correct: String(correctCount),
+      total: String(questions.length),
+      timeRemaining: String(timeRemaining),
+      timeLimit: String(timeLimit),
+      combo: String(gameState.combo.max),
+    });
+    return `/results?${params.toString()}`;
+  }, [courseId, levelId, questions.length, startTime, gameState]);
 
   if (!currentQuestion || !scene) {
     return (
@@ -170,10 +189,10 @@ function LevelContent({ levelId }: { levelId: string }) {
           )}
           {answered && currentIdx === questions.length - 1 && (
             <a
-              href={`/map?course=${courseId}`}
+              href={buildResultsUrl()}
               className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 transition"
             >
-              完成关卡
+              View Results
             </a>
           )}
         </div>

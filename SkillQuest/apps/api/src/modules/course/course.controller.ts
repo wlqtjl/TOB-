@@ -76,6 +76,54 @@ export class CourseController {
     return this.courses.getPlayContent(levelId);
   }
 
+  /** 获取关卡知识普及 (briefing) — 由 Level.preStory JSON 存储 */
+  @Get(':courseId/briefing/:levelId')
+  async getLevelBriefing(
+    @Param('courseId') courseId: string,
+    @Param('levelId') levelId: string,
+  ) {
+    const level = await this.courses.getLevel(levelId);
+    if (!level) return null;
+    // preStory field contains briefing data as JSON
+    const preStory = (level as Record<string, unknown>).preStory;
+    if (preStory && typeof preStory === 'object') return preStory;
+    // Fallback: generate basic briefing from level metadata
+    return {
+      levelId: level.id,
+      title: level.title,
+      summary: level.description,
+      knowledgePoints: [],
+      objectives: [
+        { text: `Complete ${level.title} with 60% or higher accuracy`, primary: true },
+      ],
+      gameTypeHint: level.type,
+      estimatedMinutes: Math.ceil(level.timeLimitSec / 60),
+      difficulty: 'beginner',
+      tips: [],
+    };
+  }
+
+  /** 获取关卡剧情 (narrative/preStory) */
+  @Get('levels/:levelId/narrative')
+  async getLevelNarrative(@Param('levelId') levelId: string) {
+    const level = await this.courses.getLevel(levelId);
+    if (!level) return null;
+    const preStory = (level as Record<string, unknown>).preStory;
+    if (preStory && typeof preStory === 'object' && 'channel' in (preStory as Record<string, unknown>)) {
+      return preStory;
+    }
+    // Default narrative for levels without preStory
+    return {
+      channel: 'terminal',
+      title: level.title,
+      messages: [
+        { role: 'System', text: `New training task: ${level.title}`, style: 'info' },
+        { role: 'System', text: level.description || 'Complete this challenge to advance.', style: 'normal' },
+      ],
+      autoPlayDelayMs: 800,
+    };
+  }
+
   /** 创建关卡 */
   @Post(':courseId/levels')
   createLevel(

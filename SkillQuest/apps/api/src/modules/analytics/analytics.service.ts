@@ -98,4 +98,47 @@ export class AnalyticsService {
       ),
     };
   }
-}
+
+  /** 获取课程统计报表 (用于 CSV 导出) */
+  async getCourseReport(tenantId?: string) {
+    const where = tenantId ? { tenantId } : {};
+    const courses = await this.prisma.course.findMany({
+      where,
+      include: {
+        levels: {
+          select: { id: true },
+        },
+      },
+    });
+
+    const report = [];
+    for (const course of courses) {
+      const levelIds = course.levels.map((l: { id: string }) => l.id);
+      const levelCount = levelIds.length;
+
+      const [totalAttempts, avgScore, passedCount] = await Promise.all([
+        this.prisma.score.count({ where: { levelId: { in: levelIds } } }),
+        this.prisma.score.aggregate({
+          where: { levelId: { in: levelIds } },
+          _avg: { totalScore: true },
+        }),
+        this.prisma.userProgress.count({
+          where: { levelId: { in: levelIds }, status: 'PASSED' },
+        }),
+      ]);
+
+      report.push({
+        id: course.id,
+        title: course.title,
+        vendor: course.vendor,
+        category: course.category,
+        levelCount,
+        totalAttempts,
+        averageScore: Math.round(avgScore._avg.totalScore ?? 0),
+        passedCount,
+        completionRate: levelCount > 0 ? Math.round((passedCount / levelCount) * 100) : 0,
+      });
+    }
+
+    return report;
+  }

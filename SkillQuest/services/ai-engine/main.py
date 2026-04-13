@@ -636,6 +636,49 @@ async def rag_query(req: RagQueryRequest) -> dict:
     }
 
 
+# ── 题目生成 ──────────────────────────────────────────────────────────
+
+
+class GenerateRequest(BaseModel):
+    """题目生成请求"""
+    content: str
+    """培训材料文本 (Markdown 或纯文本)"""
+    vendor: str = "通用"
+    """厂商名称"""
+    difficulty: str = "beginner"
+    """难度: beginner / intermediate / advanced"""
+
+
+@app.post("/generate")
+async def generate_questions(req: GenerateRequest) -> dict:
+    """
+    从培训材料文本生成关卡题目
+
+    调用 GPT-4o API 生成单选题、排序题、连线题。
+    若 OPENAI_API_KEY 未设置或 API 调用失败，自动降级为规则生成。
+    """
+    from generators.question_generator import generate_level_from_material
+
+    if not req.content.strip():
+        raise HTTPException(status_code=400, detail="培训材料内容不能为空")
+
+    difficulty = req.difficulty if req.difficulty in ("beginner", "intermediate", "advanced") else "beginner"
+
+    logger.info(
+        f"生成题目: vendor={req.vendor}, difficulty={difficulty}, "
+        f"content_len={len(req.content)}"
+    )
+
+    result = await generate_level_from_material(
+        content=req.content,
+        vendor=req.vendor,
+        difficulty=difficulty,  # type: ignore[arg-type]
+    )
+
+    logger.info(f"题目生成完成: status={result.get('status')}, questions={len(result.get('questions', []))}")
+    return result
+
+
 # ── 启动入口 ──────────────────────────────────────────────────────────
 
 if __name__ == "__main__":

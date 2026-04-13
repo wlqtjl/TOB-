@@ -170,10 +170,10 @@ function LevelContent({ levelId }: { levelId: string }) {
           )}
           {answered && currentIdx === questions.length - 1 && (
             <a
-              href={`/map?course=${courseId}`}
+              href={`/results?course=${courseId}&level=${levelId}&correct=${gameState.answers.filter(a => a.correct).length}&total=${questions.length}&timeRemaining=${Math.max(0, questions.length * 30 - Math.floor((Date.now() - performance.now()) / 1000))}&timeLimit=${questions.length * 30}&combo=${gameState.combo.max}`}
               className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 transition"
             >
-              完成关卡
+              View Results
             </a>
           )}
         </div>

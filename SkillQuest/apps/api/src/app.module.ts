@@ -5,6 +5,7 @@ import { CourseModule } from './modules/course/course.module';
 import { GameEngineModule } from './modules/game-engine/game-engine.module';
 import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { EnterpriseModule } from './modules/enterprise/enterprise.module';
 import { PrismaService } from './prisma.service';
 
 @Module({
@@ -15,6 +16,7 @@ import { PrismaService } from './prisma.service';
     GameEngineModule,
     LeaderboardModule,
     AnalyticsModule,
+    EnterpriseModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

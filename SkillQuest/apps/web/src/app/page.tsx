@@ -100,11 +100,12 @@ export default function Home() {
       </div>
 
       {/* ── Nav Entries ── */}
-      <div className="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-5">
+      <div className="grid w-full max-w-3xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
         {[
           { href: '/map', label: '闯关地图', desc: 'Canvas 粒子流 · 知识DAG图', Icon: Map },
           { href: '/leaderboard', label: '实时排行榜', desc: '员工 · 团队排名', Icon: Trophy },
           { href: '/courses', label: '课程管理', desc: '内容管理 · AI题目生成', Icon: Settings },
+          { href: '/admin/dashboard', label: '数据看板', desc: '统计分析 · 数据导出', Icon: BarChart3 },
           { href: '/showcase', label: '产品介绍', desc: '动态展示 · 平台亮点', Icon: Presentation },
           { href: '/data-gravity', label: '数据引力场', desc: '物理可视化 · 数据流动', Icon: Orbit },
         ].map((item) => (

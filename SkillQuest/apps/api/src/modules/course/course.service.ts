@@ -479,15 +479,67 @@ export class CourseService {
 
   /**
    * 利用 MinerU 分析出的标题层级为关卡设定前置依赖。
-   * 当前使用简单线性策略（保持 UI 友好），前置依赖由 LevelStateMachine 管理。
+   *
+   * 策略:
+   * 1. 同章节内关卡按 sortOrder 线性依赖 (level N → level N+1)
+   * 2. 不同章节的首个关卡依赖前一章节的最后一个关卡
+   * 3. 无 insights 时使用纯线性链: level[0] → level[1] → … → level[N]
+   *
+   * 这确保了:
+   * - 同一章节知识点按顺序学习
+   * - 不同章节间有先后顺序
+   * - DAG 无环 (纯线性 + 分章节结构保证)
    */
   private applyPrerequisiteChain(
     levels: GeneratedLevel[],
-    _insights: DocumentInsights | null,
+    insights: DocumentInsights | null,
   ): Array<GeneratedLevel & { prerequisites: string[] }> {
-    return levels.map((level) => ({
+    if (levels.length === 0) return [];
+
+    // Sort by sortOrder to establish ordering
+    const sorted = [...levels].sort((a, b) => a.sortOrder - b.sortOrder);
+
+    // Generate stable level IDs for prerequisite references
+    const levelIds = sorted.map((_, i) => `level-${i + 1}`);
+
+    // If we have heading insights, group levels by chapter sections
+    if (insights?.headings && insights.headings.length > 0) {
+      // Group levels into chapters: distribute evenly across top-level headings
+      const topHeadings = insights.headings.filter(
+        (h: { level: number }) => h.level <= 2,
+      );
+      const chapterCount = Math.max(topHeadings.length, 1);
+      const levelsPerChapter = Math.ceil(sorted.length / chapterCount);
+
+      const result: Array<GeneratedLevel & { prerequisites: string[] }> = [];
+
+      for (let i = 0; i < sorted.length; i++) {
+        const prerequisites: string[] = [];
+
+        if (i > 0) {
+          const currentChapter = Math.floor(i / levelsPerChapter);
+          const prevChapter = Math.floor((i - 1) / levelsPerChapter);
+          const chapterStart = currentChapter * levelsPerChapter;
+
+          if (currentChapter === prevChapter || i === chapterStart) {
+            // Same chapter or first level of new chapter: depend on previous level
+            prerequisites.push(levelIds[i - 1]);
+          }
+        }
+
+        result.push({
+          ...sorted[i],
+          prerequisites,
+        });
+      }
+
+      return result;
+    }
+
+    // Fallback: simple linear chain
+    return sorted.map((level, i) => ({
       ...level,
-      prerequisites: [],
+      prerequisites: i > 0 ? [levelIds[i - 1]] : [],
     }));
   }
 }

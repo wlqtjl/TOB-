@@ -47,14 +47,14 @@ const CHANNEL_STYLES: Record<NarrativeChannel, { bg: string; border: string; hea
     bg: 'bg-[#0d1117]',
     border: 'border-blue-500/30',
     headerBg: 'bg-blue-900/40',
-    icon: 'DT',
+    icon: '钉钉',
     name: '钉钉群消息',
   },
   wechat_work: {
     bg: 'bg-[#0d1117]',
     border: 'border-green-500/30',
     headerBg: 'bg-green-900/40',
-    icon: 'WX',
+    icon: '企微',
     name: '企业微信',
   },
   slack: {

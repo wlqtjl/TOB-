@@ -277,6 +277,7 @@ function ReviewDetailView({
   const [editContent, setEditContent] = useState(JSON.stringify(detail.level.content, null, 2));
   const [editFeedback, setEditFeedback] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const handleAction = async (action: string, payload?: Record<string, unknown>) => {
     setActionLoading(action);
@@ -288,8 +289,8 @@ function ReviewDetailView({
   const latestLog = detail.validationLogs[detail.validationLogs.length - 1];
   let agentA: { answer?: number; confidence?: number; reasoning?: string } = {};
   let agentB: { answer?: number; confidence?: number; reference?: string } = {};
-  try { agentA = JSON.parse(latestLog?.agentAAnswer ?? '{}'); } catch { /* fallback */ }
-  try { agentB = JSON.parse(latestLog?.agentBAnswer ?? '{}'); } catch { /* fallback */ }
+  try { agentA = JSON.parse(latestLog?.agentAAnswer ?? '{}'); } catch { console.warn('Agent A answer parse failed'); }
+  try { agentB = JSON.parse(latestLog?.agentBAnswer ?? '{}'); } catch { console.warn('Agent B answer parse failed'); }
   const isMatch = agentA.answer === agentB.answer;
 
   return (
@@ -566,14 +567,18 @@ function ReviewDetailView({
               rows={2}
               className="w-full rounded-lg border border-base-600/40 bg-base-800/60 px-3 py-2 text-sm text-base-100 placeholder-base-500 outline-none focus:border-accent/50"
             />
+            {editError && (
+              <p className="mt-2 text-xs text-red-400">{editError}</p>
+            )}
             <div className="mt-2 flex gap-2">
               <button
                 onClick={() => {
                   try {
                     const parsed = JSON.parse(editContent);
+                    setEditError(null);
                     void handleAction('edit', { content: parsed, feedback: editFeedback || undefined });
                   } catch {
-                    /* invalid JSON, do nothing */
+                    setEditError('JSON 格式错误，请检查语法');
                   }
                 }}
                 disabled={actionLoading !== null}
@@ -583,7 +588,7 @@ function ReviewDetailView({
                 保存修改
               </button>
               <button
-                onClick={() => { setShowEditForm(false); setEditContent(JSON.stringify(detail.level.content, null, 2)); setEditFeedback(''); }}
+                onClick={() => { setShowEditForm(false); setEditContent(JSON.stringify(detail.level.content, null, 2)); setEditFeedback(''); setEditError(null); }}
                 className="rounded-lg border border-base-600/40 px-3 py-1.5 text-xs text-base-300 transition hover:border-base-500"
               >
                 取消

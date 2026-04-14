@@ -191,7 +191,8 @@ function UploadSection({ tenantId }: { tenantId: string }) {
   }, []);
 
   const validateFile = (f: File): boolean => {
-    const ext = '.' + f.name.split('.').pop()?.toLowerCase();
+    const parts = f.name.split('.');
+    const ext = parts.length > 1 ? '.' + parts.pop()?.toLowerCase() : '';
     if (!ACCEPTED_EXTENSIONS.includes(ext) && !ACCEPTED_TYPES.includes(f.type)) {
       setError('不支持的文件格式，请上传 PDF/DOCX/TXT 文件');
       return false;

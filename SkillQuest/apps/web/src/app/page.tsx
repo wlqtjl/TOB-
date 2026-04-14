@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   FolderUp,
   LogIn,
+  UsersRound,
 } from 'lucide-react';
 import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
@@ -115,6 +116,7 @@ export default function Home() {
           { href: '/admin/dashboard', label: '数据看板', desc: '统计分析 · 数据导出', Icon: BarChart3 },
           { href: '/admin/review', label: '审核中心', desc: 'AI题目审核 · 双Agent对比', Icon: ClipboardCheck },
           { href: '/admin/courses', label: '课程管理', desc: '文档上传 · AI生成', Icon: FolderUp },
+          { href: '/admin/partners', label: '团队管理', desc: '员工进度 · 课程分配', Icon: UsersRound },
           { href: '/login', label: '登录', desc: '用户认证 · 权限管理', Icon: LogIn },
           { href: '/showcase', label: '产品介绍', desc: '动态展示 · 平台亮点', Icon: Presentation },
           { href: '/data-gravity', label: '数据引力场', desc: '物理可视化 · 数据流动', Icon: Orbit },

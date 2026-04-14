@@ -3,20 +3,24 @@
  */
 
 import {
-  Controller, Get, Post, Param, Query, Body,
-  UseInterceptors, UploadedFile, BadRequestException,
+  Controller, Get, Post, Param, Query, Body, Req,
+  UseInterceptors, UploadedFile, BadRequestException, UseGuards,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CourseService } from './course.service';
+import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard, Roles } from '../auth/roles.guard';
+import { TenantGuard } from '../auth/tenant.guard';
 
 @Controller('courses')
+@UseGuards(AuthGuard, TenantGuard, RolesGuard)
 export class CourseController {
   constructor(private readonly courses: CourseService) {}
 
   /** 获取课程列表 */
   @Get()
-  findAll(@Query('tenantId') tenantId?: string) {
-    return this.courses.findAll(tenantId);
+  findAll(@Req() req: { tenantId: string }) {
+    return this.courses.findAll(req.tenantId);
   }
 
   /** 获取课程详情 */
@@ -27,6 +31,7 @@ export class CourseController {
 
   /** 创建课程 */
   @Post()
+  @Roles('ADMIN', 'TRAINER')
   create(
     @Body()
     body: {
@@ -171,6 +176,7 @@ export class CourseController {
    * 返回: 标题层级、候选关卡类型分布、GPT-4o 提示词增强文本
    */
   @Post('import/analyze')
+  @Roles('ADMIN', 'TRAINER')
   @UseInterceptors(FileInterceptor('file', {
     limits: { fileSize: 30 * 1024 * 1024 }, // 30 MB
   }))
@@ -199,6 +205,7 @@ export class CourseController {
    * 返回: { jobId }
    */
   @Post('import')
+  @Roles('ADMIN', 'TRAINER')
   @UseInterceptors(FileInterceptor('file', {
     limits: { fileSize: 30 * 1024 * 1024 }, // 30 MB
   }))

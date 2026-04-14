@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { GameEngineService } from './game-engine.service';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('game')
+@UseGuards(AuthGuard)
 export class GameEngineController {
   constructor(private readonly gameEngine: GameEngineService) {}
 

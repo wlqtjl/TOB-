@@ -2,10 +2,12 @@
  * Leaderboard Controller — REST API
  */
 
-import { Controller, Get, Post, Param, Query, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Query, Body, UseGuards } from '@nestjs/common';
 import { LeaderboardService } from './leaderboard.service';
+import { AuthGuard } from '../auth/auth.guard';
 
 @Controller('leaderboard')
+@UseGuards(AuthGuard)
 export class LeaderboardController {
   constructor(private readonly leaderboard: LeaderboardService) {}
 

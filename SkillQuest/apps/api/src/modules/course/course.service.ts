@@ -2,7 +2,7 @@
  * Course Service — 课程、关卡、题目、进度、地图数据
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
 import type { LevelMapData, LevelMapNode, LevelMapEdge } from '@skillquest/types';
 import { DocumentParserService } from './document-parser.service';
@@ -44,10 +44,12 @@ export class CourseService {
 
   // ─── 课程 CRUD ─────────────────────────────────────────────────
 
-  async findAll(tenantId?: string) {
-    const where = tenantId ? { tenantId } : {};
+  async findAll(tenantId: string) {
+    if (!tenantId) {
+      throw new BadRequestException('tenantId 为必填参数，不允许跨租户查询');
+    }
     const courses = await this.prisma.course.findMany({
-      where,
+      where: { tenantId },
       include: {
         levels: { orderBy: { sortOrder: 'asc' }, select: { id: true, title: true, type: true, sortOrder: true } },
         _count: { select: { levels: true } },

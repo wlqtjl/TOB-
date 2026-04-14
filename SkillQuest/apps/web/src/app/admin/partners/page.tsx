@@ -98,7 +98,7 @@ function PartnerContent() {
   };
 
   return (
-    <ProtectedRoute requiredRole={['ADMIN', 'TRAINER']}>
+    <ProtectedRoute allowedRoles={['ADMIN', 'TRAINER']}>
       <div className="min-h-screen bg-base-900 px-6 py-10">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">

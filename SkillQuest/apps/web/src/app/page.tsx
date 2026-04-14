@@ -18,6 +18,9 @@ import {
   User,
   LineChart,
   GitBranch,
+  ClipboardCheck,
+  FolderUp,
+  LogIn,
 } from 'lucide-react';
 import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
@@ -108,8 +111,11 @@ export default function Home() {
         {[
           { href: '/map', label: '闯关地图', desc: 'Canvas 粒子流 · 知识DAG图', Icon: Map },
           { href: '/leaderboard', label: '实时排行榜', desc: '员工 · 团队排名', Icon: Trophy },
-          { href: '/courses', label: '课程管理', desc: '内容管理 · AI题目生成', Icon: Settings },
+          { href: '/courses', label: '课程列表', desc: '内容管理 · AI题目生成', Icon: Settings },
           { href: '/admin/dashboard', label: '数据看板', desc: '统计分析 · 数据导出', Icon: BarChart3 },
+          { href: '/admin/review', label: '审核中心', desc: 'AI题目审核 · 双Agent对比', Icon: ClipboardCheck },
+          { href: '/admin/courses', label: '课程管理', desc: '文档上传 · AI生成', Icon: FolderUp },
+          { href: '/login', label: '登录', desc: '用户认证 · 权限管理', Icon: LogIn },
           { href: '/showcase', label: '产品介绍', desc: '动态展示 · 平台亮点', Icon: Presentation },
           { href: '/data-gravity', label: '数据引力场', desc: '物理可视化 · 数据流动', Icon: Orbit },
           { href: '/achievements', label: 'Achievements', desc: 'Badges / Level / Milestones', Icon: Award },

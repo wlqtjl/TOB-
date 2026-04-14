@@ -4,6 +4,19 @@
 
 ---
 
+## 在线演示（GitHub Pages）
+
+| 地址 | 说明 |
+|------|------|
+| [https://wlqtjl.github.io/TOB-/](https://wlqtjl.github.io/TOB-/) | SkillQuest 展示页（showcase.html）自动部署 |
+| [https://wlqtjl.github.io/TOB-/skillquest/brochure.html](https://wlqtjl.github.io/TOB-/skillquest/brochure.html) | 介绍手册页 |
+
+> 每次向 `main` 分支推送时，GitHub Actions 自动将 showcase 与截图部署到  
+> **GitHub Pages 远程分支**（即本仓库的 `github-pages` 环境，地址如上）。  
+> 工作流文件：[`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml)
+
+---
+
 ## 子项目
 
 | 子项目 | 说明 | 详细文档 |
@@ -138,6 +151,12 @@ cargo test --workspace       # 运行全部测试
 | [#20](https://github.com/wlqtjl/TOB-/pull/20) | 2026-04-13 | feat: add pre-game level briefing system (关卡前知识普及) | 关卡前知识普及模态框（LevelBriefingModal）：知识点展开、通关目标、小贴士；修复 levelId 格式不匹配（URL 用 '1'，数据用 'l1'） |
 | [#21](https://github.com/wlqtjl/TOB-/pull/21) | 2026-04-13 | feat: add DataGravity physics visualization page | 7 大功能模块完整性验证（43+ 文件）；268 个游戏引擎测试通过；DataGravity Canvas 2D 可视化前端页面（/data-gravity）；首页导航 + Showcase 更新为「七大核心能力」；遗漏模式分析 |
 | [#22](https://github.com/wlqtjl/TOB-/pull/22) | 2026-04-13 | fix: 修复截图不可点击问题 — 第一性原理根治 | 根因：`user-attachments/assets/` URL 重定向到 5 分钟过期 S3 签名 URL；修复：截图存入 `docs/screenshots/` 永久资产 + `[![alt](path)](path)` 可点击语法；更新 README 缩略图网格 |
+
+### Phase 6：持续部署（PR #23 — ）
+
+| PR | 日期 | 标题 | 关键变更 |
+|----|------|------|----------|
+| 当前 | 2026-04-14 | feat: GitHub Pages 自动部署（回答"远程分支在哪里"） | 新增 `.github/workflows/deploy-pages.yml`：每次推送到 `main` 分支自动将 showcase + docs/screenshots 部署到 **GitHub Pages**（[https://wlqtjl.github.io/TOB-/](https://wlqtjl.github.io/TOB-/)），这就是"远程分支"的公开访问地址 |
 
 ---
 

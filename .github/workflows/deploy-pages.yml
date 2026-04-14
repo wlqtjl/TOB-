@@ -1,0 +1,63 @@
+# .github/workflows/deploy-pages.yml
+# 将 showcase + docs 发布到 GitHub Pages（即"远程分支"的部署目标）
+# 访问地址：https://wlqtjl.github.io/TOB-/
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Pages bundle
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build site directory
+        run: |
+          mkdir -p _site
+          # 根目录入口：重定向到 showcase
+          cp SkillQuest/showcase.html _site/index.html
+          # SkillQuest 展示页（备用访问路径）
+          mkdir -p _site/skillquest
+          cp SkillQuest/showcase.html _site/skillquest/index.html
+          # showcase-brochure.html 是可选文件（部分分支可能不含），跳过不视为错误
+          cp SkillQuest/showcase-brochure.html _site/skillquest/brochure.html 2>/dev/null || true
+          # 截图资产
+          mkdir -p _site/docs/screenshots
+          cp -r docs/screenshots/. _site/docs/screenshots/
+          # screenshots.md 是可选文件，不存在时跳过
+          cp docs/screenshots.md _site/docs/screenshots.md 2>/dev/null || true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

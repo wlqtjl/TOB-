@@ -1,0 +1,134 @@
+name: SkillQuest CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'SkillQuest/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'SkillQuest/**'
+
+defaults:
+  run:
+    working-directory: SkillQuest
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20]
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: skillquest_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+          cache-dependency-path: SkillQuest/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: pnpm --filter @skillquest/api exec prisma generate
+
+      - name: Type check (API)
+        run: pnpm --filter @skillquest/api run lint
+
+      - name: Type check (Web)
+        run: pnpm --filter @skillquest/web run lint
+        continue-on-error: true
+
+      - name: Unit & Integration tests
+        run: pnpm --filter @skillquest/api test -- --ci --coverage
+        env:
+          DATABASE_URL: postgresql://test:testpass@localhost:5432/skillquest_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-test-secret-must-be-at-least-32-characters-long
+          NODE_ENV: test
+
+      - name: Game engine tests
+        run: pnpm --filter @skillquest/game-engine test -- --ci
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: SkillQuest/apps/api/coverage/
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: SkillQuest/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm run build
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker images
+        run: |
+          cd infra
+          docker compose build --no-cache
+        env:
+          POSTGRES_PASSWORD: ci-test
+          REDIS_PASSWORD: ci-test
+          JWT_SECRET: ci-test-secret-must-be-at-least-32-characters-long
+          DATABASE_URL: postgresql://skillquest:ci-test@postgres:5432/skillquest
+          REDIS_URL: redis://:ci-test@redis:6379
+          ALLOWED_ORIGINS: http://localhost:3000

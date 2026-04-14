@@ -1,0 +1,36 @@
+[project]
+name = "skillquest-ai-engine"
+version = "0.3.0"
+description = "SkillQuest AI Engine — MinerU 2.5 文档解析 + 结构分析 + LLM题目生成 + GPT-4o Vision拓扑图识别"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "openai>=1.14.0",
+    "python-multipart>=0.0.9",
+    "pydantic>=2.6.0",
+    # MinerU 2.5 — 高精度文档解析 (PDF/图片 → 结构化 Markdown/JSON)
+    # 注意: mineru 会自动安装 magic-pdf 核心库 + 模型依赖
+    # GPU 环境: pip install mineru[full]  (含 PyTorch CUDA)
+    # CPU 环境: pip install mineru        (仅 CPU 推理)
+    "mineru>=2.0.0",
+    # Fallback 解析器 (MinerU 不可用时)
+    "pymupdf>=1.24.0",
+    "python-docx>=1.1.0",
+    "python-pptx>=0.6.23",
+]
+
+[project.optional-dependencies]
+full = [
+    # GPU 加速 (NVIDIA CUDA)
+    "torch>=2.1.0",
+    "torchvision>=0.16.0",
+]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

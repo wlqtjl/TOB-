@@ -1,0 +1,530 @@
+// SkillQuest — Prisma Schema
+// 对标 Data Center 游戏的数据模型
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── 租户 (多企业隔离) ──────────────────────────────────────────────
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  logoUrl   String   @default("")
+  domain    String   @default("")
+  plan      Plan     @default(FREE)
+  maxUsers  Int      @default(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users   User[]
+  courses Course[]
+}
+
+enum Plan {
+  FREE
+  PRO
+  ENTERPRISE
+}
+
+// ─── 用户 ───────────────────────────────────────────────────────────
+
+model User {
+  id          String   @id @default(uuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id])
+  email       String   @unique
+  password    String
+  displayName String
+  avatarUrl   String   @default("")
+  role        UserRole @default(LEARNER)
+  xp          Int      @default(0)
+  totalStars  Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  progress        UserProgress[]
+  scores          Score[]
+  achievements    UserAchievement[]
+  events          AnalyticsEvent[]
+  incidentReports IncidentReport[]
+  badges          UserBadge[]
+  profile         UserProfile?
+  learningPaths   LearningPath[]
+  levelFeedbacks  LevelFeedback[]
+}
+
+enum UserRole {
+  ADMIN
+  TRAINER
+  LEARNER
+}
+
+// ─── 课程 ───────────────────────────────────────────────────────────
+
+model Course {
+  id          String         @id @default(uuid())
+  tenantId    String
+  tenant      Tenant         @relation(fields: [tenantId], references: [id])
+  title       String
+  description String
+  vendor      String
+  category    CourseCategory
+  coverImage  String         @default("")
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  levels         Level[]
+  documentChunks DocumentChunk[]
+  versions      CourseVersion[]
+  translations  CourseTranslation[]
+}
+
+enum CourseCategory {
+  NETWORK
+  VIRTUALIZATION
+  STORAGE
+  SECURITY
+  CLOUD
+}
+
+// ─── 关卡 ───────────────────────────────────────────────────────────
+
+model Level {
+  id            String    @id @default(uuid())
+  courseId       String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sortOrder     Int
+  title         String
+  type          LevelType
+  description   String    @default("")
+  timeLimitSec  Int       @default(300)
+  prerequisites String[]  @default([])
+  positionX     Float     @default(0)
+  positionY     Float     @default(0)
+
+  /// 游戏内容 (JSON) — 题目数据、拓扑图、终端命令等
+  content Json @default("{}")
+
+  /// AI 审核状态: PENDING=待审核, APPROVED=已通过, REJECTED=已打回, NEEDS_REVISION=需修改
+  reviewStatus LevelReviewStatus @default(APPROVED)
+
+  /// 专家审核反馈历史 (JSON array of { reviewer, action, feedback, timestamp })
+  feedbackLog Json @default("[]")
+
+  /// RAG 引用的原文片段 (JSON array of { chunkId, quote, chapterTitle, relevanceScore })
+  sourceQuotes Json @default("[]")
+
+  /// 前置剧情配置 (JSON: NarrativeConfig)
+  preStory Json?
+
+  /// 沙盒 WorldState 初始配置 (JSON: WorldStateConfig)
+  worldStateConfig Json?
+
+  /// 因果分支配置 (JSON: ConsequencesConfig)
+  consequencesConfig Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  progress        UserProgress[]
+  scores          Score[]
+  incidentReports IncidentReport[]
+  feedbacks       LevelFeedback[]
+
+  @@unique([courseId, sortOrder])
+}
+
+enum LevelReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
+}
+
+enum LevelType {
+  QUIZ
+  ORDERING
+  MATCHING
+  TOPOLOGY
+  TERMINAL
+  SCENARIO
+  VM_PLACEMENT
+  FLOW_SIM
+}
+
+// ─── 用户进度 ───────────────────────────────────────────────────────
+
+model UserProgress {
+  id        String      @id @default(uuid())
+  userId    String
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId   String
+  level     Level       @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  status    LevelStatus @default(LOCKED)
+  stars     Int         @default(0)
+  bestScore Int         @default(0)
+  attempts  Int         @default(0)
+  updatedAt DateTime    @updatedAt
+
+  @@unique([userId, levelId])
+}
+
+enum LevelStatus {
+  LOCKED
+  UNLOCKED
+  IN_PROGRESS
+  PASSED
+  FAILED
+}
+
+// ─── 分数记录 ───────────────────────────────────────────────────────
+
+model Score {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId    String
+  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  baseScore  Int
+  timeBonus  Int
+  comboBonus Int
+  totalScore Int
+  stars      Int
+  createdAt  DateTime @default(now())
+}
+
+// ─── 成就 ───────────────────────────────────────────────────────────
+
+model UserAchievement {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  icon        String   @default("🏆")
+  unlockedAt  DateTime @default(now())
+
+  @@unique([userId, name])
+}
+
+// ─── 分析事件 ───────────────────────────────────────────────────────
+
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     String
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([userId, event])
+  @@index([createdAt])
+}
+
+// ─── RAG 文档向量分片 ─────────────────────────────────────────────────
+
+model DocumentChunk {
+  id           String   @id @default(uuid())
+  courseId      String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  chapterTitle String   @default("")
+  content      String   // Markdown 原文片段
+  /// pgvector embedding — 1536 维 (text-embedding-3-small)
+  /// Prisma 暂不原生支持 vector 类型，使用 Float[] 存储
+  /// 查询时用 raw SQL: ORDER BY embedding <=> $1 LIMIT K
+  embedding    Float[]  @default([])
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([courseId])
+}
+
+// ─── 题目验证日志 (多 Agent 校验审计追踪) ───────────────────────────
+
+model QuestionValidationLog {
+  id          String   @id @default(uuid())
+  levelId     String
+  round       Int      @default(1)
+  /// Agent A 输出 (生成者): 题目 JSON + reasoning_chain
+  generatorOutput Json @default("{}")
+  /// Agent B 输出 (解题者): selected_answer + confidence + ambiguity_flags
+  solverOutput    Json @default("{}")
+  /// 比对结果: match/mismatch/ambiguous
+  verdict     String   @default("pending")
+  /// 如有分歧，发给 Agent A 的 Refining_Order
+  refiningOrder String @default("")
+  createdAt   DateTime @default(now())
+
+  @@index([levelId])
+}
+
+// ─── 事故复盘报告 ─────────────────────────────────────────────────────
+
+model IncidentReport {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId         String
+  level           Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  /// 用户操作序列 (JSON: { actionType, timestamp, targetNodeId }[])
+  actionSequence  Json     @default("[]")
+  /// 状态变化快照 (JSON: WorldState diff)
+  worldStateDiff  Json     @default("{}")
+  /// 损害报告 (JSON: { downtimeMs, slaLoss, dataLossPercent, businessImpact })
+  damageReport    Json     @default("{}")
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([levelId])
+}
+
+// ─── 徽章定义 ──────────────────────────────────────────────────────
+
+model BadgeDefinition {
+  id          String       @id @default(uuid())
+  key         String       @unique
+  name        String
+  description String
+  icon        String       @default("shield")
+  category    BadgeCategory
+  rarity      BadgeRarity  @default(COMMON)
+  condition   Json         @default("{}")
+  xpReward    Int          @default(0)
+  createdAt   DateTime     @default(now())
+
+  userBadges  UserBadge[]
+}
+
+enum BadgeCategory {
+  PROGRESS
+  MASTERY
+  STREAK
+  SOCIAL
+  SPECIAL
+}
+
+enum BadgeRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+model UserBadge {
+  id          String          @id @default(uuid())
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badgeId     String
+  badge       BadgeDefinition @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+  unlockedAt  DateTime        @default(now())
+
+  @@unique([userId, badgeId])
+}
+
+// ─── 玩家等级 ──────────────────────────────────────────────────────
+
+model PlayerLevel {
+  id          String   @id @default(uuid())
+  level       Int      @unique
+  xpRequired  Int
+  title       String
+  perks       String   @default("")
+  createdAt   DateTime @default(now())
+}
+
+// ─── 学习路径 ──────────────────────────────────────────────────────
+
+model CourseGroup {
+  id            String   @id @default(uuid())
+  tenantId      String
+  name          String
+  description   String   @default("")
+  targetRole    String   @default("all")
+  courseDag     Json     @default("[]")
+  difficulty    String   @default("normal")
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  learningPaths LearningPath[]
+}
+
+model LearningPath {
+  id              String      @id @default(uuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseGroupId   String
+  courseGroup     CourseGroup  @relation(fields: [courseGroupId], references: [id], onDelete: Cascade)
+  recommendedSeq  Json        @default("[]")
+  currentCourseId String      @default("")
+  progress        Float       @default(0)
+  adaptiveDiff    String      @default("normal")
+  startedAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([userId, courseGroupId])
+}
+
+// ─── 用户档案扩展 ──────────────────────────────────────────────────
+
+model UserProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  jobRole         String   @default("engineer")
+  department      String   @default("")
+  experienceLevel String   @default("junior")
+  company         String   @default("")
+  bio             String   @default("")
+  skillMap        Json     @default("{}")
+  totalStudyTime  Int      @default(0)
+  loginStreak     Int      @default(0)
+  lastActiveAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ─── 课程版本控制 ──────────────────────────────────────────────────
+
+model CourseVersion {
+  id           String   @id @default(uuid())
+  courseId     String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  version      String
+  changelog    String   @default("")
+  creatorId    String   @default("")
+  reviewerId   String   @default("")
+  approverId   String   @default("")
+  snapshot     Json     @default("{}")
+  publishedAt  DateTime?
+  deprecatedAt DateTime?
+  createdAt    DateTime @default(now())
+
+  @@unique([courseId, version])
+}
+
+// ─── 课程翻译 ──────────────────────────────────────────────────────
+
+model CourseTranslation {
+  id                String   @id @default(uuid())
+  courseId           String
+  course             Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  languageCode       String
+  translatedTitle    String
+  translatedDesc     String   @default("")
+  translatedLevels   Json     @default("{}")
+  translationStatus  String   @default("pending")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@unique([courseId, languageCode])
+}
+
+// ─── 学员反馈 ──────────────────────────────────────────────────────
+
+model LevelFeedback {
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  levelId          String
+  level            Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  difficultyRating Int      @default(3)
+  clarityRating    Int      @default(3)
+  relevanceRating  Int      @default(3)
+  feedbackText     String   @default("")
+  tag              String   @default("")
+  createdAt        DateTime @default(now())
+
+  @@unique([userId, levelId])
+  @@index([levelId])
+}
+
+// ─── AI 预算 ──────────────────────────────────────────────────────
+
+model AIBudget {
+  id                String   @id @default(uuid())
+  tenantId          String   @unique
+  monthlyBudgetUsd  Float    @default(100.0)
+  currentSpendUsd   Float    @default(0)
+  alertThreshold    Float    @default(0.8)
+  resetDate         DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model AIUsageLog {
+  id           String   @id @default(uuid())
+  tenantId     String
+  userId       String
+  api          String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Float    @default(0)
+  modelVersion String   @default("")
+  createdAt    DateTime @default(now())
+
+  @@index([tenantId])
+  @@index([createdAt])
+}
+
+// ─── 审计日志 ──────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String
+  tenantId   String
+  action     String
+  resource   String   @default("")
+  resourceId String   @default("")
+  details    Json     @default("{}")
+  ipAddress  String   @default("")
+  userAgent  String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([createdAt])
+  @@index([action])
+}
+
+// ─── 组织架构 ──────────────────────────────────────────────────────
+
+model Organization {
+  id          String   @id @default(uuid())
+  tenantId    String
+  name        String
+  parentOrgId String?
+  orgType     String   @default("vendor")
+  ssoConfig   Json     @default("{}")
+  maxUsers    Int      @default(100)
+  maxCourses  Int      @default(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([tenantId])
+  @@index([parentOrgId])
+}
+
+// ─── 细粒度权限 ──────────────────────────────────────────────────
+
+model Permission {
+  id         String   @id @default(uuid())
+  userId     String
+  tenantId   String
+  orgId      String   @default("")
+  resourceId String   @default("")
+  action     String
+  scope      String   @default("personal")
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, action, resourceId])
+  @@index([userId])
+  @@index([tenantId])
+}

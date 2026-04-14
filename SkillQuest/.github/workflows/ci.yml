@@ -1,0 +1,64 @@
+name: SkillQuest CI
+
+on:
+  push:
+    paths:
+      - 'SkillQuest/**'
+  pull_request:
+    paths:
+      - 'SkillQuest/**'
+
+defaults:
+  run:
+    working-directory: SkillQuest
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v3
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: 'SkillQuest/pnpm-lock.yaml'
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Lint shared types
+        run: pnpm --filter @skillquest/types lint
+
+      - name: Lint game engine
+        run: pnpm --filter @skillquest/game-engine lint
+
+      - name: Test game engine
+        run: pnpm --filter @skillquest/game-engine test
+
+      - name: Lint API
+        run: pnpm --filter @skillquest/api lint
+
+      - name: Lint Web
+        run: pnpm --filter @skillquest/web lint
+
+  python-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Lint AI Engine
+        working-directory: SkillQuest/services/ai-engine
+        run: |
+          python -m py_compile main.py
+          python -m py_compile generators/question_generator.py
+          python -m py_compile generators/topology_extractor.py
+          python -m py_compile parsers/material_parser.py

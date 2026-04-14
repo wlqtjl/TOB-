@@ -1,0 +1,22 @@
+[package]
+name        = "omni-sim-core"
+version     = "0.1.0"
+edition     = "2021"
+description = "Omni-Sim ECS simulation core — hecs world, components, system scheduler"
+
+[dependencies]
+hecs       = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+blake3     = { workspace = true }
+thiserror  = { workspace = true }
+anyhow     = { workspace = true }
+
+omni-sim-opdl = { path = "../omni-sim-opdl" }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name    = "bench_ecs"
+harness = false

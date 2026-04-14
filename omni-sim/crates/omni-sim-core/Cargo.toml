@@ -1,0 +1,31 @@
+[package]
+name        = "omni-sim-core"
+version     = "0.1.0"
+edition     = "2021"
+description = "Omni-Sim ECS simulation core — hecs world, components, system scheduler"
+
+[dependencies]
+hecs       = { workspace = true }
+serde      = { workspace = true }
+serde_json = { workspace = true }
+blake3     = { workspace = true }
+thiserror  = { workspace = true }
+anyhow     = { workspace = true }
+
+omni-sim-opdl = { path = "../omni-sim-opdl" }
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name    = "bench_ecs"
+harness = false
+
+# Integration tests (moved from workspace root — workspace Cargo.toml cannot have [[test]])
+[[test]]
+name = "test_world_load"
+path = "tests/integration/test_world_load.rs"
+
+[[test]]
+name = "test_state_hash"
+path = "tests/integration/test_state_hash.rs"

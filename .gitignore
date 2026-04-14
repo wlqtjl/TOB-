@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+target/
+*.wasm
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+prisma/*.db
+
+# Coverage
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Rust
+omni-sim/target/
+game20_extracted/omni-sim/target/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/

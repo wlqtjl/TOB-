@@ -1,0 +1,13 @@
+{
+  "name": "@skillquest/ai-engine",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "uvicorn main:app --reload --host 127.0.0.1 --port 8000",
+    "start": "python3 main.py",
+    "lint": "python3 -m py_compile main.py && python3 -m py_compile config.py && python3 -m py_compile generators/question_generator.py && python3 -m py_compile parsers/material_parser.py",
+    "test": "python3 -m pytest -v",
+    "install:cpu": "pip install -e '.'",
+    "install:gpu": "pip install -e '.[full]'"
+  }
+}

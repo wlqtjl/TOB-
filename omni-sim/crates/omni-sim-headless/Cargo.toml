@@ -1,0 +1,16 @@
+[package]
+name        = "omni-sim-headless"
+version     = "0.1.0"
+edition     = "2021"
+description = "Omni-Sim headless CLI — batch simulation without Unity UI"
+
+[[bin]]
+name = "omni-sim-headless"
+path = "src/main.rs"
+
+[dependencies]
+omni-sim-core      = { path = "../omni-sim-core" }
+omni-sim-telemetry = { path = "../omni-sim-telemetry" }
+anyhow             = { workspace = true }
+serde_json         = { workspace = true }
+ctrlc              = { version = "3", features = ["termination"] }

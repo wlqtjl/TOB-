@@ -1,0 +1,90 @@
+# .github/workflows/ci.yml — Omni-Sim CI pipeline (§9.3)
+# Triggers: every push and PR to any branch.
+# All jobs are blocking — merge is gated on full-green.
+
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+
+jobs:
+  # ── Job 1: Rust quality gates ───────────────────────────────────────────────
+  rust:
+    name: Rust (fmt · clippy · test · wasm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable + Wasm target
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Format check
+        run: cargo fmt --all -- --check
+
+      - name: Clippy (deny warnings)
+        run: cargo clippy --workspace --deny warnings
+
+      - name: Unit + integration tests
+        run: cargo test --workspace
+
+      - name: Build Wasm (release)
+        run: ./build/build_wasm.sh --release
+
+      - name: Upload Wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: omni-sim-ffi-wasm
+          path: unity/Assets/Plugins/Wasm/omni_sim_ffi.wasm
+
+      - name: Bench smoke-test (compile only)
+        run: cargo bench -p omni-sim-core -- --test
+
+  # ── Job 2: Cross-platform Wasm compatibility (§10 R-04) ────────────────────
+  wasm-compat:
+    name: Wasm compat (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build Wasm
+        run: cargo build -p omni-sim-ffi --target wasm32-unknown-unknown --release
+
+  # ── Job 3: Headless CLI smoke-test ─────────────────────────────────────────
+  headless:
+    name: Headless CLI smoke-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build headless
+        run: cargo build -p omni-sim-headless --release
+      - name: Run 100-tick smoke test
+        run: |
+          ./target/release/omni-sim-headless \
+            --opdl vendor/smartx/smartx.opdl.json \
+            --ticks 100

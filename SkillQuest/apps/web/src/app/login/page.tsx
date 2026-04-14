@@ -153,9 +153,9 @@ export default function LoginPage() {
           </p>
           {(
             [
-              { role: 'ADMIN' as UserRole, label: '管理员', desc: '数据看板 / 课程管理' },
-              { role: 'TRAINER' as UserRole, label: '培训师', desc: '课程编辑 / 学员管理' },
-              { role: 'LEARNER' as UserRole, label: '学员', desc: '闯关学习 / 排行榜' },
+              { role: 'ADMIN', label: '管理员', desc: '数据看板 / 课程管理' },
+              { role: 'TRAINER', label: '培训师', desc: '课程编辑 / 学员管理' },
+              { role: 'LEARNER', label: '学员', desc: '闯关学习 / 排行榜' },
             ] as const
           ).map((item) => (
             <button

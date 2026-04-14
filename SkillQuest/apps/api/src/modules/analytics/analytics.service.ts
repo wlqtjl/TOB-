@@ -142,3 +142,4 @@ export class AnalyticsService {
 
     return report;
   }
+}

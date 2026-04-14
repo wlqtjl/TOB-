@@ -59,13 +59,13 @@ export class LearningPathService {
       select: { level: { select: { courseId: true } } },
     });
 
-    const completedCourseIds = new Set(completedCourses.map((p) => p.level.courseId));
+    const completedCourseIds = new Set(completedCourses.map((p: { level: { courseId: string } }) => p.level.courseId));
     const courses = await this.prisma.course.findMany({ take: 20 });
 
     return courses
-      .filter((c) => !completedCourseIds.has(c.id))
+      .filter((c: { id: string }) => !completedCourseIds.has(c.id))
       .slice(0, 5)
-      .map((c, i) => ({
+      .map((c: { id: string; title: string }, i: number) => ({
         courseId: c.id,
         courseTitle: c.title,
         reason: profile?.jobRole === 'sales' ? 'Recommended for sales role' : 'Based on your learning history',

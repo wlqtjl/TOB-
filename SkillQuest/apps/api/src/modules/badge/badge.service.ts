@@ -53,7 +53,7 @@ export class BadgeService {
 
     if (!user) return [];
 
-    const earnedIds = new Set(existingBadges.map((b) => b.badgeId));
+    const earnedIds = new Set(existingBadges.map((b: { badgeId: string }) => b.badgeId));
     const newBadges = [];
 
     for (const badge of allBadges) {

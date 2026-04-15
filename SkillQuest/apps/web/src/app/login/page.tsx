@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Login Page — minimalist dark design
+ * Login Page — light minimalist design (Linear/Stripe style)
  *
  * Supports real API login and a demo mode for development.
  */
@@ -61,18 +61,18 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-surface">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-accent border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center bg-surface px-4">
       <div className="w-full max-w-sm">
         {/* ── Brand ── */}
         <div className="mb-10 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-base-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-base-900">
             {tenant.platformName}
           </h1>
           <p className="mt-2 text-sm text-base-400">{tenant.tagline}</p>
@@ -94,7 +94,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              className="w-full rounded-lg border border-base-600/50 bg-base-800/60 py-2.5 pl-10 pr-4 text-sm text-base-100 placeholder:text-base-500 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+              className="w-full rounded-lg border border-base-200 bg-white py-2.5 pl-10 pr-4 text-sm text-base-900 placeholder:text-base-400 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
             />
           </div>
 
@@ -112,13 +112,13 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="w-full rounded-lg border border-base-600/50 bg-base-800/60 py-2.5 pl-10 pr-4 text-sm text-base-100 placeholder:text-base-500 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/30"
+              className="w-full rounded-lg border border-base-200 bg-white py-2.5 pl-10 pr-4 text-sm text-base-900 placeholder:text-base-400 outline-none transition focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div className="flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-950/20 px-3 py-2.5 text-sm text-red-400">
+            <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
               <AlertCircle size={16} strokeWidth={1.5} className="mt-0.5 shrink-0" />
               <span>{error}</span>
             </div>
@@ -128,7 +128,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition hover:bg-accent-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-white transition hover:bg-accent-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {submitting ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -141,9 +141,9 @@ export default function LoginPage() {
 
         {/* ── Divider ── */}
         <div className="my-8 flex items-center gap-3">
-          <div className="h-px flex-1 bg-base-600/40" />
-          <span className="text-xs text-base-500">演示模式</span>
-          <div className="h-px flex-1 bg-base-600/40" />
+          <div className="h-px flex-1 bg-base-200" />
+          <span className="text-xs text-base-400">演示模式</span>
+          <div className="h-px flex-1 bg-base-200" />
         </div>
 
         {/* ── Demo Login ── */}
@@ -162,19 +162,19 @@ export default function LoginPage() {
               key={item.role}
               type="button"
               onClick={() => handleDemoLogin(item.role)}
-              className="flex w-full items-center gap-3 rounded-lg border border-base-600/30 bg-base-800/30 px-4 py-2.5 text-left transition hover:border-accent/30 hover:bg-base-700/30"
+              className="flex w-full items-center gap-3 rounded-lg border border-base-200 bg-white px-4 py-2.5 text-left transition hover:border-accent/40"
             >
               <Zap size={14} strokeWidth={1.5} className="shrink-0 text-accent/60" />
               <div className="flex-1">
-                <span className="text-sm font-medium text-base-200">{item.label}</span>
-                <span className="ml-2 text-xs text-base-500">{item.desc}</span>
+                <span className="text-sm font-medium text-base-700">{item.label}</span>
+                <span className="ml-2 text-xs text-base-400">{item.desc}</span>
               </div>
             </button>
           ))}
         </div>
 
         {/* ── Footer ── */}
-        <p className="mt-10 text-center text-xs text-base-500">
+        <p className="mt-10 text-center text-xs text-base-400">
           {tenant.copyright}
         </p>
       </div>

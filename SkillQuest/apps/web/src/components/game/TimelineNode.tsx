@@ -57,7 +57,7 @@ const STATUS_CONFIG: Record<TimelineStepStatus, {
   },
   error: {
     border: 'border-red-500/40',
-    bg: 'bg-red-500/5',
+    bg: 'bg-red-50',
     glow: 'shadow-[0_0_16px_rgba(239,68,68,0.4)]',
     icon: <XCircle size={16} strokeWidth={1.5} className="text-red-600" />,
     textColor: 'text-red-600',
@@ -139,7 +139,7 @@ export default function TimelineNode({
       {/* Deviation notice (inline preview) */}
       {deviationNotice && (
         <div className="mt-2 rounded-lg bg-red-900/20 border border-red-500/10 px-2.5 py-1.5">
-          <p className="text-[11px] text-red-300/80 leading-relaxed line-clamp-2">
+          <p className="text-[11px] text-red-600 leading-relaxed line-clamp-2">
             {deviationNotice}
           </p>
         </div>

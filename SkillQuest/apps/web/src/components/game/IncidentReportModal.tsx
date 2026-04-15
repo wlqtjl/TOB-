@@ -76,20 +76,20 @@ export default function IncidentReportModal({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
       <div className="w-full max-w-2xl mx-4 rounded-xl border border-red-500/40 bg-[#0d1117] shadow-2xl overflow-hidden">
         {/* 头部 — 事故告警 */}
-        <div className="bg-red-900/40 px-6 py-4 border-b border-red-500/20">
+        <div className="bg-red-900/40 px-6 py-4 border-b border-red-200">
           <div className="flex items-center gap-3">
             <AlertTriangle size={24} strokeWidth={1.5} className="text-red-600" />
             <div>
               <h2 className="text-lg font-bold text-red-600">事故复盘报告</h2>
-              <p className="text-sm text-red-300/70">{report.disasterName}</p>
+              <p className="text-sm text-red-600">{report.disasterName}</p>
             </div>
           </div>
         </div>
 
         <div className="px-6 py-4 space-y-5 max-h-[500px] overflow-y-auto">
           {/* 灾难描述 */}
-          <div className="bg-red-900/10 border border-red-500/20 rounded-lg p-3">
-            <p className="text-sm text-red-300 leading-relaxed">{report.disasterDescription}</p>
+          <div className="bg-red-900/10 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-600 leading-relaxed">{report.disasterDescription}</p>
           </div>
 
           {/* 损失仪表盘 */}
@@ -128,7 +128,7 @@ export default function IncidentReportModal({
                   className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm ${
                     action.isOptimal
                       ? 'bg-green-900/20 border border-green-500/20'
-                      : 'bg-red-900/20 border border-red-500/20'
+                      : 'bg-red-900/20 border border-red-200'
                   }`}
                 >
                   <span className="text-xs font-mono text-gray-500 w-6">{i + 1}</span>

@@ -242,7 +242,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                 <div className="h-[3px] w-full overflow-hidden rounded-full bg-base-100">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
-                      isError ? 'bg-red-500' : isDone ? 'bg-green-500' : 'bg-accent'
+                      isError ? 'bg-red-600' : isDone ? 'bg-emerald-500' : 'bg-accent'
                     }`}
                     style={{ width: `${job.progress}%` }}
                   />

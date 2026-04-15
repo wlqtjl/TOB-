@@ -34,7 +34,7 @@ interface LevelBriefingModalProps {
 const DIFFICULTY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   beginner: { label: '入门', color: 'text-emerald-600', bg: 'bg-emerald-50 border-green-500/20' },
   intermediate: { label: '进阶', color: 'text-amber-600', bg: 'bg-yellow-500/10 border-amber-200' },
-  advanced: { label: '高级', color: 'text-red-600', bg: 'bg-red-50 border-red-500/20' },
+  advanced: { label: '高级', color: 'text-red-600', bg: 'bg-red-50 border-red-200' },
 };
 
 export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelBriefingModalProps) {

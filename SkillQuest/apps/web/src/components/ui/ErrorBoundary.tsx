@@ -38,7 +38,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             </p>
             <button
               onClick={() => this.setState({ hasError: false, error: null })}
-              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-500 transition"
+              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-600 transition"
             >
               重试
             </button>

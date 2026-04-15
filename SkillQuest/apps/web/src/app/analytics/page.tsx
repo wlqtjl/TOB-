@@ -42,10 +42,10 @@ const MOCK_TOP_LEARNERS = [
 ];
 
 function heatColor(value: number) {
-  if (value >= 80) return 'bg-emerald-500/30 text-green-300';
+  if (value >= 80) return 'bg-emerald-500/30 text-emerald-600';
   if (value >= 60) return 'bg-blue-400/20 text-blue-300';
   if (value >= 40) return 'bg-yellow-400/15 text-yellow-300';
-  return 'bg-red-400/10 text-red-300';
+  return 'bg-red-400/10 text-red-600';
 }
 
 function AnalyticsContent() {

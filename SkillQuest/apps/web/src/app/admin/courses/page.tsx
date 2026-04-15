@@ -318,7 +318,7 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           isDragOver
             ? 'border-accent/50 bg-accent/5'
             : file
-              ? 'border-emerald-200 bg-green-500/5'
+              ? 'border-emerald-200 bg-emerald-50'
               : 'border-base-200 bg-white hover:border-accent/40/40'
         }`}
       >
@@ -363,7 +363,7 @@ function UploadSection({ tenantId }: { tenantId: string }) {
 
       {/* Error */}
       {error && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-300">
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
           <AlertCircle size={14} strokeWidth={1.5} />
           {error}
         </div>
@@ -435,7 +435,7 @@ function UploadSection({ tenantId }: { tenantId: string }) {
                 <React.Fragment key={phase}>
                   <div className="flex flex-col items-center gap-1">
                     <div className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs ${
-                      isDone ? 'border-green-500/50 bg-green-500/20 text-emerald-600'
+                      isDone ? 'border-emerald-300 bg-emerald-100 text-emerald-600'
                         : isCurrent ? 'border-accent/50 bg-accent/20 text-accent'
                         : 'border-base-200 bg-white text-base-400'
                     }`}>
@@ -446,7 +446,7 @@ function UploadSection({ tenantId }: { tenantId: string }) {
                     </span>
                   </div>
                   {i < PHASE_ORDER.length - 1 && (
-                    <div className={`h-px flex-1 mx-1 ${i < currentIdx || importStatus.phase === 'done' ? 'bg-green-500/30' : 'bg-base-100'}`} />
+                    <div className={`h-px flex-1 mx-1 ${i < currentIdx || importStatus.phase === 'done' ? 'bg-emerald-200' : 'bg-base-100'}`} />
                   )}
                 </React.Fragment>
               );
@@ -457,7 +457,7 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           <div className="h-2 w-full overflow-hidden rounded-full bg-base-100">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                importStatus.phase === 'done' ? 'bg-emerald-500' : importStatus.phase === 'error' ? 'bg-red-500/70' : 'bg-accent/60'
+                importStatus.phase === 'done' ? 'bg-emerald-500' : importStatus.phase === 'error' ? 'bg-red-600/70' : 'bg-accent/60'
               }`}
               style={{ width: `${importStatus.progress}%` }}
             />

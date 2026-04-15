@@ -141,7 +141,7 @@ function StatCard({
 }) {
   const variantStyles = {
     success: 'border-emerald-500/20 bg-emerald-500/5',
-    danger: 'border-red-500/20 bg-red-500/5',
+    danger: 'border-red-200 bg-red-50',
     neutral: 'border-base-200 bg-white',
   };
   const valueColor = {

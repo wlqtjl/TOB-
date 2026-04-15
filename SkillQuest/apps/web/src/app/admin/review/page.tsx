@@ -180,7 +180,7 @@ function StatusBadge({ status }: { status: string }) {
 
 function ConfidenceBar({ score }: { score: number }) {
   const pct = Math.round(score * 100);
-  const color = score >= 0.85 ? 'bg-emerald-500' : score >= 0.6 ? 'bg-yellow-500/70' : 'bg-red-500/70';
+  const color = score >= 0.85 ? 'bg-emerald-500' : score >= 0.6 ? 'bg-yellow-500/70' : 'bg-red-600/70';
   return (
     <div className="flex items-center gap-2">
       <div className="h-2 w-24 overflow-hidden rounded-full bg-base-100">
@@ -329,7 +329,7 @@ function ReviewDetailView({
               key={i}
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
                 i === detail.level.content.answer
-                  ? 'border border-emerald-200 bg-emerald-50 text-green-300'
+                  ? 'border border-emerald-200 bg-emerald-50 text-emerald-600'
                   : 'border border-base-100 bg-white text-base-600'
               }`}
             >
@@ -470,8 +470,8 @@ function ReviewDetailView({
             {detail.feedbackLog.map((fb) => (
               <div key={fb.id} className="flex items-start gap-3 rounded-xl border border-base-100 bg-white p-4">
                 <div className={`mt-0.5 rounded-full p-1 ${
-                  fb.action === 'APPROVED' ? 'bg-green-500/20 text-emerald-600'
-                    : fb.action === 'REJECTED' ? 'bg-red-500/20 text-red-600'
+                  fb.action === 'APPROVED' ? 'bg-emerald-100 text-emerald-600'
+                    : fb.action === 'REJECTED' ? 'bg-red-600/20 text-red-600'
                     : 'bg-blue-500/20 text-blue-600'
                 }`}>
                   {fb.action === 'APPROVED' ? <Check size={12} /> : fb.action === 'REJECTED' ? <X size={12} /> : <Edit3 size={12} />}
@@ -495,7 +495,7 @@ function ReviewDetailView({
         <button
           onClick={() => void handleAction('approve')}
           disabled={actionLoading !== null}
-          className="flex items-center gap-1.5 rounded-lg bg-green-600/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-green-600 disabled:opacity-50"
+          className="flex items-center gap-1.5 rounded-lg bg-emerald-600/80 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-600 disabled:opacity-50"
         >
           {actionLoading === 'approve' ? <RefreshCw size={14} className="animate-spin" /> : <Check size={14} strokeWidth={2} />}
           通过
@@ -512,8 +512,8 @@ function ReviewDetailView({
             拒绝
           </button>
         ) : (
-          <div className="w-full rounded-xl border border-red-200 bg-red-500/5 p-4">
-            <label className="mb-2 block text-xs font-medium text-red-300">拒绝原因</label>
+          <div className="w-full rounded-xl border border-red-200 bg-red-50 p-4">
+            <label className="mb-2 block text-xs font-medium text-red-600">拒绝原因</label>
             <textarea
               value={rejectFeedback}
               onChange={(e) => setRejectFeedback(e.target.value)}
@@ -722,8 +722,8 @@ function ReviewContent() {
       {actionMessage && (
         <div className={`mb-6 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
           actionMessage.type === 'success'
-            ? 'border-emerald-200 bg-emerald-50 text-green-300'
-            : 'border-red-200 bg-red-50 text-red-300'
+            ? 'border-emerald-200 bg-emerald-50 text-emerald-600'
+            : 'border-red-200 bg-red-50 text-red-600'
         }`}>
           {actionMessage.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
           {actionMessage.text}

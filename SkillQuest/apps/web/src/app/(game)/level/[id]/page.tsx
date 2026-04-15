@@ -190,7 +190,7 @@ function LevelContent({ levelId }: { levelId: string }) {
           {answered && currentIdx === questions.length - 1 && (
             <a
               href={buildResultsUrl()}
-              className="rounded-lg bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-500 transition"
+              className="rounded-lg bg-emerald-600 px-6 py-2 text-sm font-medium text-white hover:bg-emerald-500 transition"
             >
               View Results
             </a>

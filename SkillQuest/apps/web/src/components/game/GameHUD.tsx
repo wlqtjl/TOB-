@@ -20,7 +20,7 @@ interface Props {
 const COMBO_TIER_STYLES: Record<string, string> = {
   good: 'text-amber-600 border-yellow-500/30 bg-amber-50',
   great: 'text-orange-600 border-orange-500/30 bg-orange-500/5',
-  amazing: 'text-red-600 border-red-200 bg-red-500/5',
+  amazing: 'text-red-600 border-red-200 bg-red-50',
   legendary: 'text-purple-600 border-purple-500/30 bg-purple-500/5 animate-pulse',
 };
 

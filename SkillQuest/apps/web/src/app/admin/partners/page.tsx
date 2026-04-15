@@ -62,7 +62,7 @@ const MOCK_TEAM_COURSES: TeamCourse[] = [
 function progressColor(p: number): string {
   if (p >= 80) return 'bg-emerald-500';
   if (p >= 40) return 'bg-yellow-500/70';
-  return 'bg-red-500/70';
+  return 'bg-red-600/70';
 }
 
 function progressTextColor(p: number): string {

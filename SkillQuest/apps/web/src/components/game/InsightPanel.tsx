@@ -139,7 +139,7 @@ export default function InsightPanel({
                   {step.description}
                 </p>
                 {step.impactScore < 0 && (
-                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-red-900/20 border border-red-500/20 px-3 py-1">
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-red-900/20 border border-red-200 px-3 py-1">
                     <AlertTriangle size={12} className="text-red-600" />
                     <span className="text-xs font-mono text-red-600">
                       风险影响: {step.impactScore} 分
@@ -184,14 +184,14 @@ export default function InsightPanel({
 
               {/* Deviation Notice — Full View */}
               {step.deviationNotice && (
-                <div className="rounded-xl border border-red-500/20 bg-red-900/10 p-4">
+                <div className="rounded-xl border border-red-200 bg-red-900/10 p-4">
                   <div className="flex items-center gap-2 mb-2.5">
                     <AlertTriangle size={14} className="text-red-600" />
                     <span className="text-xs font-semibold text-red-600">
                       偏离分析
                     </span>
                   </div>
-                  <p className="text-sm text-red-300/90 leading-relaxed font-medium">
+                  <p className="text-sm text-red-600 leading-relaxed font-medium">
                     {step.deviationNotice}
                   </p>
                 </div>

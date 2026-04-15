@@ -30,9 +30,9 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       if (this.props.fallback) return this.props.fallback;
       return (
-        <div className="min-h-[300px] flex items-center justify-center rounded-xl border border-red-500/30 bg-red-950/10 p-8">
+        <div className="min-h-[300px] flex items-center justify-center rounded-xl border border-red-200 bg-red-950/10 p-8">
           <div className="text-center">
-            <p className="text-xl text-red-400">渲染出错了</p>
+            <p className="text-xl text-red-600">渲染出错了</p>
             <p className="mt-2 text-sm text-gray-500 max-w-md">
               {this.state.error?.message ?? '未知错误'}
             </p>

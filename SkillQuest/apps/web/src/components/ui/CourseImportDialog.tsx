@@ -138,15 +138,15 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="glass-heavy w-full max-w-lg rounded-2xl shadow-2xl">
         {/* ── Header ── */}
-        <div className="flex items-center justify-between border-b border-base-600/40 px-6 py-5">
+        <div className="flex items-center justify-between border-b border-base-200 px-6 py-5">
           <div>
-            <h2 className="text-base font-semibold text-base-100">上传文档生成课程</h2>
+            <h2 className="text-base font-semibold text-base-900">上传文档生成课程</h2>
             <p className="mt-0.5 text-xs text-base-400">AI 自动提取知识点并生成 7 种题型关卡</p>
           </div>
           <button
             onClick={handleClose}
             disabled={!!isRunning}
-            className="rounded-lg p-2 text-base-400 transition hover:bg-base-700/60 hover:text-base-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-lg p-2 text-base-400 transition hover:bg-base-100 hover:text-base-900 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <X size={16} strokeWidth={1.5} />
           </button>
@@ -165,8 +165,8 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                   dragOver
                     ? 'border-accent/60 bg-accent/5'
                     : file
-                    ? 'border-green-500/30 bg-green-950/10'
-                    : 'border-base-600/60 hover:border-base-500'
+                    ? 'border-emerald-200 bg-green-950/10'
+                    : 'border-base-200/60 hover:border-accent/40'
                 }`}
               >
                 <input
@@ -178,21 +178,21 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                 />
                 {file ? (
                   <>
-                    <FileCheck size={28} strokeWidth={1.5} className="mx-auto text-green-400" />
-                    <p className="mt-3 text-sm font-medium text-base-100">{file.name}</p>
+                    <FileCheck size={28} strokeWidth={1.5} className="mx-auto text-emerald-600" />
+                    <p className="mt-3 text-sm font-medium text-base-900">{file.name}</p>
                     <p className="mt-1 text-xs text-base-400">{(file.size / 1024 / 1024).toFixed(2)} MB · 点击更换</p>
                   </>
                 ) : (
                   <>
                     <Folder size={28} strokeWidth={1.5} className="mx-auto text-base-400" />
-                    <p className="mt-3 text-sm text-base-300">拖拽文件或点击选择</p>
-                    <p className="mt-1 text-xs text-base-500">PDF · DOCX · TXT（最大 {MAX_SIZE_MB} MB）</p>
+                    <p className="mt-3 text-sm text-base-600">拖拽文件或点击选择</p>
+                    <p className="mt-1 text-xs text-base-400">PDF · DOCX · TXT（最大 {MAX_SIZE_MB} MB）</p>
                   </>
                 )}
               </div>
 
               {fileError && (
-                <p className="flex items-center gap-1.5 text-sm text-red-400">
+                <p className="flex items-center gap-1.5 text-sm text-red-600">
                   <AlertCircle size={14} strokeWidth={1.5} />
                   {fileError}
                 </p>
@@ -206,7 +206,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                   onChange={(e) => setHint(e.target.value)}
                   placeholder="例如：这是 SmartX 超融合替换 VMware 的迁移最佳实践文档"
                   rows={3}
-                  className="w-full rounded-lg border border-base-600/60 bg-base-800/50 px-3 py-2.5 text-sm text-base-100 placeholder-base-500 transition focus:border-accent/50 focus:outline-none"
+                  className="w-full rounded-lg border border-base-200/60 bg-white/50 px-3 py-2.5 text-sm text-base-900 placeholder-base-500 transition focus:border-accent/50 focus:outline-none"
                 />
               </div>
 
@@ -214,7 +214,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
               <div className="flex gap-3">
                 <button
                   onClick={handleClose}
-                  className="flex-1 rounded-lg border border-base-600/60 py-2.5 text-sm text-base-300 transition hover:border-base-500 hover:text-base-100"
+                  className="flex-1 rounded-lg border border-base-200/60 py-2.5 text-sm text-base-600 transition hover:border-accent/40 hover:text-base-900"
                 >
                   取消
                 </button>
@@ -236,10 +236,10 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
               {/* Progress bar */}
               <div>
                 <div className="mb-2 flex items-center justify-between text-xs">
-                  <span className="text-base-300">{job.message}</span>
+                  <span className="text-base-600">{job.message}</span>
                   <span className="font-mono text-base-400">{job.progress}%</span>
                 </div>
-                <div className="h-[3px] w-full overflow-hidden rounded-full bg-base-700">
+                <div className="h-[3px] w-full overflow-hidden rounded-full bg-base-100">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       isError ? 'bg-red-500' : isDone ? 'bg-green-500' : 'bg-accent'
@@ -263,8 +263,8 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                           isActive
                             ? 'border-accent/40 bg-accent/5 text-accent'
                             : isPast
-                            ? 'border-green-700/30 text-green-400'
-                            : 'border-base-600/30 text-base-500'
+                            ? 'border-green-700/30 text-emerald-600'
+                            : 'border-base-200 text-base-400'
                         }`}
                       >
                         {isPast ? '✓ ' : ''}{label}
@@ -277,7 +277,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
               {/* Error */}
               {isError && job.error && (
                 <div className="rounded-lg border border-red-800/40 bg-red-950/10 px-4 py-3">
-                  <p className="flex items-center gap-1.5 text-xs text-red-400">
+                  <p className="flex items-center gap-1.5 text-xs text-red-600">
                     <AlertCircle size={14} strokeWidth={1.5} />
                     {job.error}
                   </p>
@@ -287,7 +287,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
               {/* Success */}
               {isDone && (
                 <div className="rounded-lg border border-green-700/30 bg-green-950/10 px-4 py-3 text-center">
-                  <p className="flex items-center justify-center gap-1.5 text-sm font-medium text-green-400">
+                  <p className="flex items-center justify-center gap-1.5 text-sm font-medium text-emerald-600">
                     <CheckCircle2 size={16} strokeWidth={1.5} />
                     课程已生成！正在跳转…
                   </p>
@@ -300,14 +300,14 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                   <>
                     <button
                       onClick={() => { setJob(null); setUploading(false); }}
-                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-base-600/60 py-2.5 text-sm text-base-300 transition hover:border-base-500"
+                      className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-base-200/60 py-2.5 text-sm text-base-600 transition hover:border-accent/40"
                     >
                       <RotateCcw size={14} strokeWidth={1.5} />
                       重新上传
                     </button>
                     <button
                       onClick={handleClose}
-                      className="flex-1 rounded-lg border border-base-600/60 py-2.5 text-sm text-base-300 transition hover:border-base-500"
+                      className="flex-1 rounded-lg border border-base-200/60 py-2.5 text-sm text-base-600 transition hover:border-accent/40"
                     >
                       关闭
                     </button>

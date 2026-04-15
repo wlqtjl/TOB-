@@ -96,7 +96,7 @@ function LevelContent({ levelId }: { levelId: string }) {
         <div className="text-center">
           <p className="text-2xl text-gray-400">未找到关卡题目</p>
           <p className="mt-2 text-sm text-gray-600">课程: {course?.title ?? courseId} · 关卡: {levelId}</p>
-          <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-400 hover:underline text-sm">← 返回地图</a>
+          <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-600 hover:underline text-sm">← 返回地图</a>
         </div>
       </div>
     );
@@ -159,11 +159,11 @@ function LevelContent({ levelId }: { levelId: string }) {
         {answered && (
           <div className={`rounded-xl border p-4 ${
             gameState.answers[gameState.answers.length - 1]?.correct
-              ? 'border-green-500/30 bg-green-500/10'
-              : 'border-red-500/30 bg-red-500/10'
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-red-200 bg-red-50'
           }`}>
             <p className={`font-bold ${
-              gameState.answers[gameState.answers.length - 1]?.correct ? 'text-green-400' : 'text-red-400'
+              gameState.answers[gameState.answers.length - 1]?.correct ? 'text-emerald-600' : 'text-red-600'
             }`}>
               {gameState.answers[gameState.answers.length - 1]?.correct ? '回答正确！' : '回答错误'}
             </p>

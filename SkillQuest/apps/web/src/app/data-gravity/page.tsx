@@ -358,12 +358,12 @@ export default function DataGravityPage() {
     const pct = Math.min((Math.abs(value) / max) * 100, 100);
     return (
       <div className="mb-3">
-        <div className="flex items-center gap-1.5 text-xs text-base-300 mb-1">
+        <div className="flex items-center gap-1.5 text-xs text-base-600 mb-1">
           <Ic size={12} strokeWidth={1.5} className="text-accent" />
           <span>{label}</span>
           <span className="ml-auto text-base-400">{value.toFixed(2)}</span>
         </div>
-        <div className="h-1.5 w-full rounded-full bg-base-700/60 overflow-hidden">
+        <div className="h-1.5 w-full rounded-full bg-base-100 overflow-hidden">
           <div className="h-full rounded-full bg-accent/50 transition-all" style={{ width: `${pct}%` }} />
         </div>
       </div>
@@ -371,9 +371,9 @@ export default function DataGravityPage() {
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#0D1117] text-base-100 font-[Inter,sans-serif]">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#0D1117] text-base-900 font-[Inter,sans-serif]">
       {/* ── Left Panel ── */}
-      <aside className="flex w-56 shrink-0 flex-col gap-6 border-r border-base-600/30 bg-base-800/40 backdrop-blur p-4 overflow-y-auto">
+      <aside className="flex w-56 shrink-0 flex-col gap-6 border-r border-base-200 bg-white backdrop-blur p-4 overflow-y-auto">
         <Link href="/" className="flex items-center gap-2 text-xs text-base-400 hover:text-accent transition-colors">
           <ArrowLeft size={14} strokeWidth={1.5} /> 返回首页
         </Link>
@@ -389,7 +389,7 @@ export default function DataGravityPage() {
                 className={`flex flex-col items-center gap-1 rounded-lg p-2 text-[10px] transition-all border ${
                   activeTool === t.id
                     ? 'border-accent/40 bg-accent/10 text-accent'
-                    : 'border-base-600/30 bg-base-800/30 text-base-400 hover:border-accent/20'
+                    : 'border-base-200 bg-white text-base-400 hover:border-accent/20'
                 }`}
               >
                 <t.Icon size={16} strokeWidth={1.5} />
@@ -407,13 +407,13 @@ export default function DataGravityPage() {
               <button
                 key={n.id}
                 onClick={() => toggleNode(n.id)}
-                className="flex w-full items-center gap-2 rounded-lg border border-base-600/30 bg-base-800/30 px-3 py-2 text-xs hover:border-accent/20 transition-all"
+                className="flex w-full items-center gap-2 rounded-lg border border-base-200 bg-white px-3 py-2 text-xs hover:border-accent/20 transition-all"
               >
                 <span
                   className="h-2 w-2 rounded-full shrink-0"
                   style={{ backgroundColor: NODE_COLORS[n.status] || '#3fb950' }}
                 />
-                <span className="truncate text-base-300">{n.label}</span>
+                <span className="truncate text-base-600">{n.label}</span>
                 <span className="ml-auto text-[10px] text-base-400">{n.status}</span>
               </button>
             ))}
@@ -442,12 +442,12 @@ export default function DataGravityPage() {
         </div>
 
         <div className="text-xs text-base-400">
-          粒子: <span className="text-base-100 font-semibold">{particleCount}</span>
+          粒子: <span className="text-base-900 font-semibold">{particleCount}</span>
         </div>
 
         <button
           onClick={handleReset}
-          className="flex items-center justify-center gap-1.5 rounded-lg border border-base-600/30 bg-base-800/30 py-2 text-xs text-base-300 hover:border-accent/30 hover:text-accent transition-all"
+          className="flex items-center justify-center gap-1.5 rounded-lg border border-base-200 bg-white py-2 text-xs text-base-600 hover:border-accent/30 hover:text-accent transition-all"
         >
           <RotateCcw size={12} strokeWidth={1.5} /> 重置
         </button>
@@ -466,7 +466,7 @@ export default function DataGravityPage() {
         />
         {/* lens tooltip */}
         {lensInfo.length > 0 && (
-          <div className="pointer-events-none absolute bottom-4 left-4 max-w-xs rounded-xl border border-base-600/30 bg-base-800/80 backdrop-blur p-3 text-xs text-base-300 space-y-1">
+          <div className="pointer-events-none absolute bottom-4 left-4 max-w-xs rounded-xl border border-base-200 bg-white/80 backdrop-blur p-3 text-xs text-base-600 space-y-1">
             <p className="text-accent font-semibold">Lens: {lensInfo.length} particles</p>
             {lensInfo.slice(0, 5).map((p) => (
               <p key={p.id} className="text-base-400 truncate">
@@ -479,7 +479,7 @@ export default function DataGravityPage() {
       </main>
 
       {/* ── Right Panel ── */}
-      <aside className="flex w-56 shrink-0 flex-col gap-4 border-l border-base-600/30 bg-base-800/40 backdrop-blur p-4 overflow-y-auto">
+      <aside className="flex w-56 shrink-0 flex-col gap-4 border-l border-base-200 bg-white backdrop-blur p-4 overflow-y-auto">
         <h3 className="text-xs font-semibold text-base-400">能量指标</h3>
         {metrics && (
           <>
@@ -490,7 +490,7 @@ export default function DataGravityPage() {
 
             <div className="mt-1">
               <span className="text-[10px] text-base-400">总位移量</span>
-              <p className="text-sm font-semibold text-base-100">{metrics.displacement.toFixed(1)}</p>
+              <p className="text-sm font-semibold text-base-900">{metrics.displacement.toFixed(1)}</p>
             </div>
           </>
         )}

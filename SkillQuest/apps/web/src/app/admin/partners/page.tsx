@@ -60,15 +60,15 @@ const MOCK_TEAM_COURSES: TeamCourse[] = [
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 function progressColor(p: number): string {
-  if (p >= 80) return 'bg-green-500/70';
+  if (p >= 80) return 'bg-emerald-500';
   if (p >= 40) return 'bg-yellow-500/70';
   return 'bg-red-500/70';
 }
 
 function progressTextColor(p: number): string {
-  if (p >= 80) return 'text-green-400';
-  if (p >= 40) return 'text-yellow-400';
-  return 'text-red-400';
+  if (p >= 80) return 'text-emerald-600';
+  if (p >= 40) return 'text-amber-600';
+  return 'text-red-600';
 }
 
 function formatDate(iso: string): string {
@@ -99,20 +99,20 @@ function PartnerContent() {
 
   return (
     <ProtectedRoute allowedRoles={['ADMIN', 'TRAINER']}>
-      <div className="min-h-screen bg-base-900 px-6 py-10">
+      <div className="min-h-screen bg-surface px-6 py-10">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-base-100">
+            <h1 className="text-2xl font-semibold tracking-tight text-base-900">
               \u56E2\u961F\u7BA1\u7406
             </h1>
-            <p className="mt-1 text-sm text-base-300">
+            <p className="mt-1 text-sm text-base-600">
               \u5458\u5DE5\u8FDB\u5EA6\u8DDF\u8E2A \u00B7 \u8BFE\u7A0B\u5206\u914D\u7BA1\u7406
             </p>
           </div>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 transition hover:text-base-100 hover:bg-base-700/50"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-600 transition hover:text-base-900 hover:bg-base-100"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             \u8FD4\u56DE\u9996\u9875
@@ -122,34 +122,34 @@ function PartnerContent() {
         {/* ── Team Stats ── */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
           {[
-            { label: '\u5458\u5DE5\u603B\u6570', value: totalEmployees, icon: Users, color: 'text-blue-400' },
-            { label: '\u5E73\u5747\u8FDB\u5EA6', value: `${avgProgress}%`, icon: TrendingUp, color: 'text-green-400' },
-            { label: '\u603B\u661F\u6570', value: totalStars, icon: Star, color: 'text-yellow-400' },
-            { label: '\u6700\u4F73\u5458\u5DE5', value: topPerformer.name, icon: Trophy, color: 'text-purple-400' },
+            { label: '\u5458\u5DE5\u603B\u6570', value: totalEmployees, icon: Users, color: 'text-blue-600' },
+            { label: '\u5E73\u5747\u8FDB\u5EA6', value: `${avgProgress}%`, icon: TrendingUp, color: 'text-emerald-600' },
+            { label: '\u603B\u661F\u6570', value: totalStars, icon: Star, color: 'text-amber-600' },
+            { label: '\u6700\u4F73\u5458\u5DE5', value: topPerformer.name, icon: Trophy, color: 'text-purple-600' },
           ].map((s) => (
             <div
               key={s.label}
-              className="rounded-xl border border-base-600/30 bg-base-800/40 p-5"
+              className="rounded-xl border border-base-200 bg-white p-5"
             >
               <div className="flex items-center gap-2 mb-2">
                 <s.icon size={16} strokeWidth={1.5} className={s.color} />
                 <span className="text-xs text-base-400">{s.label}</span>
               </div>
-              <p className="text-2xl font-semibold text-base-100">{s.value}</p>
+              <p className="text-2xl font-semibold text-base-900">{s.value}</p>
             </div>
           ))}
         </div>
 
         {/* ── Employee Overview ── */}
-        <div className="rounded-2xl border border-base-600/30 bg-base-800/30 p-6 mb-6">
-          <h2 className="text-sm font-medium text-base-300 mb-4 flex items-center gap-1.5">
+        <div className="rounded-2xl border border-base-200 bg-white p-6 mb-6">
+          <h2 className="text-sm font-medium text-base-600 mb-4 flex items-center gap-1.5">
             <Users size={14} strokeWidth={1.5} />
             \u5458\u5DE5\u6982\u89C8
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-base-700/50 text-left text-xs text-base-400">
+                <tr className="border-b border-base-200 text-left text-xs text-base-400">
                   <th className="pb-2 pr-3">\u59D3\u540D</th>
                   <th className="pb-2 pr-3">\u90AE\u7BB1</th>
                   <th className="pb-2 pr-3">\u89D2\u8272</th>
@@ -161,18 +161,18 @@ function PartnerContent() {
               </thead>
               <tbody>
                 {employees.map((emp) => (
-                  <tr key={emp.id} className="border-b border-base-700/20">
-                    <td className="py-2.5 pr-3 text-base-100 font-medium">{emp.name}</td>
-                    <td className="py-2.5 pr-3 text-base-300">{emp.email}</td>
+                  <tr key={emp.id} className="border-b border-base-100">
+                    <td className="py-2.5 pr-3 text-base-900 font-medium">{emp.name}</td>
+                    <td className="py-2.5 pr-3 text-base-600">{emp.email}</td>
                     <td className="py-2.5 pr-3">
-                      <span className="rounded-md bg-base-700/50 px-2 py-0.5 text-xs text-base-300">
+                      <span className="rounded-md bg-base-100 px-2 py-0.5 text-xs text-base-600">
                         {emp.role}
                       </span>
                     </td>
-                    <td className="py-2.5 pr-3 text-base-300">{emp.coursesAssigned}</td>
+                    <td className="py-2.5 pr-3 text-base-600">{emp.coursesAssigned}</td>
                     <td className="py-2.5 pr-3">
                       <div className="flex items-center gap-2">
-                        <div className="h-2 w-20 overflow-hidden rounded-full bg-base-700/40">
+                        <div className="h-2 w-20 overflow-hidden rounded-full bg-base-100">
                           <div
                             className={`h-full rounded-full transition-all ${progressColor(emp.progress)}`}
                             style={{ width: `${emp.progress}%` }}
@@ -184,7 +184,7 @@ function PartnerContent() {
                       </div>
                     </td>
                     <td className="py-2.5 pr-3">
-                      <span className="flex items-center gap-1 text-yellow-400 text-xs">
+                      <span className="flex items-center gap-1 text-amber-600 text-xs">
                         <Star size={12} strokeWidth={1.5} />
                         {emp.stars}
                       </span>
@@ -198,8 +198,8 @@ function PartnerContent() {
         </div>
 
         {/* ── Course Assignment ── */}
-        <div className="rounded-2xl border border-base-600/30 bg-base-800/30 p-6">
-          <h2 className="text-sm font-medium text-base-300 mb-4 flex items-center gap-1.5">
+        <div className="rounded-2xl border border-base-200 bg-white p-6">
+          <h2 className="text-sm font-medium text-base-600 mb-4 flex items-center gap-1.5">
             <BookOpen size={14} strokeWidth={1.5} />
             \u8BFE\u7A0B\u5206\u914D
           </h2>
@@ -207,15 +207,15 @@ function PartnerContent() {
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="rounded-xl border border-base-600/40 bg-base-800/40 p-5"
+                className="rounded-xl border border-base-200 bg-white p-5"
               >
-                <h3 className="text-sm font-semibold text-base-100 mb-3">
+                <h3 className="text-sm font-semibold text-base-900 mb-3">
                   {course.title}
                 </h3>
-                <div className="space-y-2 text-xs text-base-300">
+                <div className="space-y-2 text-xs text-base-600">
                   <div className="flex items-center justify-between">
                     <span>\u5DF2\u5206\u914D\u5458\u5DE5</span>
-                    <span className="text-base-100">{course.assigned} \u4EBA</span>
+                    <span className="text-base-900">{course.assigned} \u4EBA</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>\u5E73\u5747\u8FDB\u5EA6</span>
@@ -225,11 +225,11 @@ function PartnerContent() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span>\u5B8C\u6210\u4EBA\u6570</span>
-                    <span className="text-green-400">{course.completions} \u4EBA</span>
+                    <span className="text-emerald-600">{course.completions} \u4EBA</span>
                   </div>
                 </div>
                 {/* Progress bar */}
-                <div className="mt-3 h-[3px] w-full overflow-hidden rounded-full bg-base-700/60">
+                <div className="mt-3 h-[3px] w-full overflow-hidden rounded-full bg-base-100">
                   <div
                     className={`h-full rounded-full transition-all ${progressColor(course.avgProgress)}`}
                     style={{ width: `${course.avgProgress}%` }}
@@ -239,7 +239,7 @@ function PartnerContent() {
                   onClick={() => handleToggleAssign(course.id)}
                   className={`mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs transition ${
                     course.assigned > 0
-                      ? 'border-red-500/30 text-red-400 hover:bg-red-500/10'
+                      ? 'border-red-200 text-red-600 hover:bg-red-50'
                       : 'border-accent/30 text-accent hover:bg-accent/10'
                   }`}
                 >
@@ -270,7 +270,7 @@ export default function PartnersPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-base-900 flex items-center justify-center">
+        <div className="min-h-screen bg-surface flex items-center justify-center">
           <RefreshCw size={24} className="text-base-400 animate-spin" />
         </div>
       }

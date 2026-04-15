@@ -132,10 +132,10 @@ async function pollImportStatus(jobId: string): Promise<ImportStatus | null> {
 // ─── Status Config ───────────────────────────────────────────────────
 
 const COURSE_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  draft: { label: '草稿', color: 'text-base-400', bg: 'bg-base-600/20 border-base-600/30' },
-  pending_review: { label: '待审核', color: 'text-yellow-400', bg: 'bg-yellow-400/10 border-yellow-400/30' },
-  published: { label: '已发布', color: 'text-green-400', bg: 'bg-green-400/10 border-green-400/30' },
-  archived: { label: '已归档', color: 'text-base-500', bg: 'bg-base-700/20 border-base-700/30' },
+  draft: { label: '草稿', color: 'text-base-400', bg: 'bg-base-600/20 border-base-200' },
+  pending_review: { label: '待审核', color: 'text-amber-600', bg: 'bg-yellow-400/10 border-yellow-400/30' },
+  published: { label: '已发布', color: 'text-emerald-600', bg: 'bg-emerald-500/10 border-green-400/30' },
+  archived: { label: '已归档', color: 'text-base-400', bg: 'bg-base-50 border-base-100' },
 };
 
 function CourseStatusBadge({ status }: { status: string }) {
@@ -296,14 +296,14 @@ function UploadSection({ tenantId }: { tenantId: string }) {
   const getFileIcon = () => {
     if (!file) return <Upload size={28} strokeWidth={1.5} className="text-base-400" />;
     const ext = file.name.split('.').pop()?.toLowerCase();
-    if (ext === 'pdf') return <FileText size={28} strokeWidth={1.5} className="text-red-400" />;
-    if (ext === 'docx' || ext === 'doc') return <File size={28} strokeWidth={1.5} className="text-blue-400" />;
-    return <FileText size={28} strokeWidth={1.5} className="text-base-300" />;
+    if (ext === 'pdf') return <FileText size={28} strokeWidth={1.5} className="text-red-600" />;
+    if (ext === 'docx' || ext === 'doc') return <File size={28} strokeWidth={1.5} className="text-blue-600" />;
+    return <FileText size={28} strokeWidth={1.5} className="text-base-600" />;
   };
 
   return (
-    <div className="rounded-2xl border border-base-600/30 bg-base-800/30 p-6">
-      <h2 className="mb-4 flex items-center gap-1.5 text-sm font-medium text-base-300">
+    <div className="rounded-2xl border border-base-200 bg-white p-6">
+      <h2 className="mb-4 flex items-center gap-1.5 text-sm font-medium text-base-600">
         <Upload size={14} strokeWidth={1.5} />
         文档上传
       </h2>
@@ -318,8 +318,8 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           isDragOver
             ? 'border-accent/50 bg-accent/5'
             : file
-              ? 'border-green-500/30 bg-green-500/5'
-              : 'border-base-600/40 bg-base-800/20 hover:border-base-500/40'
+              ? 'border-emerald-200 bg-green-500/5'
+              : 'border-base-200 bg-white hover:border-accent/40/40'
         }`}
       >
         <input
@@ -333,14 +333,14 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           {getFileIcon()}
           {file ? (
             <>
-              <p className="text-sm font-medium text-base-100">{file.name}</p>
+              <p className="text-sm font-medium text-base-900">{file.name}</p>
               <p className="text-xs text-base-400">
                 {(file.size / 1024 / 1024).toFixed(1)} MB
               </p>
             </>
           ) : (
             <>
-              <p className="text-sm text-base-300">拖拽文件到此处，或点击选择</p>
+              <p className="text-sm text-base-600">拖拽文件到此处，或点击选择</p>
               <p className="text-xs text-base-400">支持 PDF / DOCX / TXT，最大 30MB</p>
             </>
           )}
@@ -356,14 +356,14 @@ function UploadSection({ tenantId }: { tenantId: string }) {
             onChange={(e) => setHint(e.target.value)}
             placeholder="提供额外上下文帮助AI更好理解文档内容..."
             rows={2}
-            className="w-full rounded-lg border border-base-600/40 bg-base-800/60 px-3 py-2 text-sm text-base-100 placeholder-base-500 outline-none focus:border-accent/50"
+            className="w-full rounded-lg border border-base-200 bg-white px-3 py-2 text-sm text-base-900 placeholder-base-500 outline-none focus:border-accent/50"
           />
         </div>
       )}
 
       {/* Error */}
       {error && (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-300">
           <AlertCircle size={14} strokeWidth={1.5} />
           {error}
         </div>
@@ -375,7 +375,7 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           <button
             onClick={() => void handleAnalyze()}
             disabled={analyzing}
-            className="flex items-center gap-1.5 rounded-lg border border-base-600/40 px-4 py-2 text-sm text-base-300 transition hover:border-accent/30 hover:text-base-100 disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-lg border border-base-200 px-4 py-2 text-sm text-base-600 transition hover:border-accent/30 hover:text-base-900 disabled:opacity-50"
           >
             {analyzing ? <RefreshCw size={14} className="animate-spin" /> : <Search size={14} strokeWidth={1.5} />}
             分析文档
@@ -397,22 +397,22 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           <h3 className="mb-3 text-xs font-medium text-accent">文档结构预览</h3>
           <div className="mb-3 grid grid-cols-3 gap-3 text-center">
             <div>
-              <p className="text-lg font-semibold text-base-100">{insights.pageCount}</p>
+              <p className="text-lg font-semibold text-base-900">{insights.pageCount}</p>
               <p className="text-xs text-base-400">页面</p>
             </div>
             <div>
-              <p className="text-lg font-semibold text-base-100">{insights.chapterCount}</p>
+              <p className="text-lg font-semibold text-base-900">{insights.chapterCount}</p>
               <p className="text-xs text-base-400">章节</p>
             </div>
             <div>
-              <p className="text-lg font-semibold text-base-100">{insights.estimatedLevels}</p>
+              <p className="text-lg font-semibold text-base-900">{insights.estimatedLevels}</p>
               <p className="text-xs text-base-400">预估关卡</p>
             </div>
           </div>
           <div className="space-y-1.5">
             {insights.chapters.map((ch, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg bg-base-800/40 px-3 py-1.5 text-xs">
-                <span className="text-base-300">{ch.title}</span>
+              <div key={i} className="flex items-center justify-between rounded-lg bg-white px-3 py-1.5 text-xs">
+                <span className="text-base-600">{ch.title}</span>
                 <span className="text-base-400">{ch.pages} 页</span>
               </div>
             ))}
@@ -422,8 +422,8 @@ function UploadSection({ tenantId }: { tenantId: string }) {
 
       {/* Import Progress */}
       {importStatus && (
-        <div className="mt-4 rounded-xl border border-base-600/30 bg-base-800/40 p-4">
-          <h3 className="mb-3 text-xs font-medium text-base-300">导入进度</h3>
+        <div className="mt-4 rounded-xl border border-base-200 bg-white p-4">
+          <h3 className="mb-3 text-xs font-medium text-base-600">导入进度</h3>
 
           {/* Phase steps */}
           <div className="mb-4 flex items-center justify-between">
@@ -435,18 +435,18 @@ function UploadSection({ tenantId }: { tenantId: string }) {
                 <React.Fragment key={phase}>
                   <div className="flex flex-col items-center gap-1">
                     <div className={`flex h-7 w-7 items-center justify-center rounded-full border text-xs ${
-                      isDone ? 'border-green-500/50 bg-green-500/20 text-green-400'
+                      isDone ? 'border-green-500/50 bg-green-500/20 text-emerald-600'
                         : isCurrent ? 'border-accent/50 bg-accent/20 text-accent'
-                        : 'border-base-600/40 bg-base-800/40 text-base-500'
+                        : 'border-base-200 bg-white text-base-400'
                     }`}>
                       {isDone ? <CheckCircle2 size={12} /> : i + 1}
                     </div>
-                    <span className={`text-[10px] ${isCurrent ? 'text-accent' : isDone ? 'text-green-400' : 'text-base-500'}`}>
+                    <span className={`text-[10px] ${isCurrent ? 'text-accent' : isDone ? 'text-emerald-600' : 'text-base-400'}`}>
                       {PHASE_LABELS[phase]}
                     </span>
                   </div>
                   {i < PHASE_ORDER.length - 1 && (
-                    <div className={`h-px flex-1 mx-1 ${i < currentIdx || importStatus.phase === 'done' ? 'bg-green-500/30' : 'bg-base-700/40'}`} />
+                    <div className={`h-px flex-1 mx-1 ${i < currentIdx || importStatus.phase === 'done' ? 'bg-green-500/30' : 'bg-base-100'}`} />
                   )}
                 </React.Fragment>
               );
@@ -454,10 +454,10 @@ function UploadSection({ tenantId }: { tenantId: string }) {
           </div>
 
           {/* Progress bar */}
-          <div className="h-2 w-full overflow-hidden rounded-full bg-base-700/40">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-base-100">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                importStatus.phase === 'done' ? 'bg-green-500/70' : importStatus.phase === 'error' ? 'bg-red-500/70' : 'bg-accent/60'
+                importStatus.phase === 'done' ? 'bg-emerald-500' : importStatus.phase === 'error' ? 'bg-red-500/70' : 'bg-accent/60'
               }`}
               style={{ width: `${importStatus.progress}%` }}
             />
@@ -465,13 +465,13 @@ function UploadSection({ tenantId }: { tenantId: string }) {
 
           {/* Status message */}
           {importStatus.message && (
-            <p className={`mt-2 text-xs ${importStatus.phase === 'error' ? 'text-red-400' : importStatus.phase === 'done' ? 'text-green-400' : 'text-base-400'}`}>
+            <p className={`mt-2 text-xs ${importStatus.phase === 'error' ? 'text-red-600' : importStatus.phase === 'done' ? 'text-emerald-600' : 'text-base-400'}`}>
               {importStatus.message}
             </p>
           )}
 
           {importStatus.phase === 'done' && (
-            <div className="mt-3 flex items-center gap-2 text-sm text-green-400">
+            <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600">
               <CheckCircle2 size={14} strokeWidth={1.5} />
               导入完成
             </div>
@@ -511,35 +511,35 @@ function CoursesAdminContent() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-base-900">
+      <div className="flex min-h-screen items-center justify-center bg-surface">
         <RefreshCw size={24} className="animate-spin text-base-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-base-900 px-6 py-10">
+    <div className="min-h-screen bg-surface px-6 py-10">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-base-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-base-900">
             课程管理
           </h1>
-          <p className="mt-1 text-sm text-base-300">
+          <p className="mt-1 text-sm text-base-600">
             文档上传 / AI 题目生成 / 课程管理
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={() => void loadCourses()}
-            className="flex items-center gap-1.5 rounded-lg border border-base-600/40 px-3 py-1.5 text-xs text-base-300 transition hover:border-base-500 hover:text-base-100"
+            className="flex items-center gap-1.5 rounded-lg border border-base-200 px-3 py-1.5 text-xs text-base-600 transition hover:border-accent/40 hover:text-base-900"
           >
             <RefreshCw size={14} strokeWidth={1.5} />
             刷新
           </button>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 transition hover:text-base-100 hover:bg-base-700/50"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-600 transition hover:text-base-900 hover:bg-base-100"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             首页
@@ -550,20 +550,20 @@ function CoursesAdminContent() {
       {/* Quick Stats */}
       <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
         {[
-          { label: '课程总数', value: totalCourses, icon: BookOpen, color: 'text-blue-400' },
-          { label: '关卡总数', value: totalLevels, icon: BarChart3, color: 'text-green-400' },
-          { label: '待审核', value: pendingCount, icon: Clock, color: 'text-yellow-400' },
+          { label: '课程总数', value: totalCourses, icon: BookOpen, color: 'text-blue-600' },
+          { label: '关卡总数', value: totalLevels, icon: BarChart3, color: 'text-emerald-600' },
+          { label: '待审核', value: pendingCount, icon: Clock, color: 'text-amber-600' },
           { label: '已发布', value: publishedCount, icon: CheckCircle2, color: 'text-emerald-400' },
         ].map((s) => (
           <div
             key={s.label}
-            className="rounded-xl border border-base-600/30 bg-base-800/40 p-5"
+            className="rounded-xl border border-base-200 bg-white p-5"
           >
             <div className="mb-2 flex items-center gap-2">
               <s.icon size={16} strokeWidth={1.5} className={s.color} />
               <span className="text-xs text-base-400">{s.label}</span>
             </div>
-            <p className="text-2xl font-semibold text-base-100">{s.value}</p>
+            <p className="text-2xl font-semibold text-base-900">{s.value}</p>
           </div>
         ))}
       </div>
@@ -573,8 +573,8 @@ function CoursesAdminContent() {
         <UploadSection tenantId={user?.tenantId ?? 'demo-tenant'} />
 
         {/* Course List */}
-        <div className="rounded-2xl border border-base-600/30 bg-base-800/30 p-6">
-          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-medium text-base-300">
+        <div className="rounded-2xl border border-base-200 bg-white p-6">
+          <h2 className="mb-4 flex items-center gap-1.5 text-sm font-medium text-base-600">
             <FolderOpen size={14} strokeWidth={1.5} />
             课程列表
           </h2>
@@ -582,11 +582,11 @@ function CoursesAdminContent() {
             {courses.map((course) => (
               <div
                 key={course.id}
-                className="rounded-xl border border-base-700/30 bg-base-800/20 p-4 transition-colors hover:bg-base-700/20"
+                className="rounded-xl border border-base-100 bg-white p-4 transition-colors hover:bg-base-100"
               >
                 <div className="flex items-start justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-base-100">{course.title}</h3>
+                    <h3 className="text-sm font-medium text-base-900">{course.title}</h3>
                     <p className="mt-0.5 text-xs text-base-400">
                       {course.vendor} / {course.category}
                     </p>
@@ -601,7 +601,7 @@ function CoursesAdminContent() {
                   {course.pendingCount > 0 && (
                     <Link
                       href={`/admin/review?courseId=${course.id}`}
-                      className="flex items-center gap-1 text-yellow-400 transition hover:text-yellow-300"
+                      className="flex items-center gap-1 text-amber-600 transition hover:text-yellow-300"
                     >
                       <AlertCircle size={12} strokeWidth={1.5} />
                       {course.pendingCount} 待审核
@@ -629,7 +629,7 @@ export default function AdminCoursesPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-base-900">
+        <div className="flex min-h-screen items-center justify-center bg-surface">
           <RefreshCw size={24} className="animate-spin text-base-400" />
         </div>
       }

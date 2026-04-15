@@ -60,9 +60,9 @@ function formatDuration(ms: number): string {
 
 function getSeverityColor(slaLoss: number): string {
   if (slaLoss >= 50) return 'text-red-500';
-  if (slaLoss >= 20) return 'text-orange-400';
-  if (slaLoss >= 5) return 'text-yellow-400';
-  return 'text-green-400';
+  if (slaLoss >= 20) return 'text-orange-600';
+  if (slaLoss >= 5) return 'text-amber-600';
+  return 'text-emerald-600';
 }
 
 // ─── 组件 ──────────────────────────────────────────────────────────
@@ -78,9 +78,9 @@ export default function IncidentReportModal({
         {/* 头部 — 事故告警 */}
         <div className="bg-red-900/40 px-6 py-4 border-b border-red-500/20">
           <div className="flex items-center gap-3">
-            <AlertTriangle size={24} strokeWidth={1.5} className="text-red-400" />
+            <AlertTriangle size={24} strokeWidth={1.5} className="text-red-600" />
             <div>
-              <h2 className="text-lg font-bold text-red-400">事故复盘报告</h2>
+              <h2 className="text-lg font-bold text-red-600">事故复盘报告</h2>
               <p className="text-sm text-red-300/70">{report.disasterName}</p>
             </div>
           </div>
@@ -98,7 +98,7 @@ export default function IncidentReportModal({
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-gray-800/50 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-400 mb-1">业务停摆</div>
-                <div className="text-lg font-bold text-orange-400">
+                <div className="text-lg font-bold text-orange-600">
                   {formatDuration(report.damage.downtimeMs)}
                 </div>
               </div>
@@ -110,7 +110,7 @@ export default function IncidentReportModal({
               </div>
               <div className="bg-gray-800/50 rounded-lg p-3 text-center">
                 <div className="text-xs text-gray-400 mb-1">数据丢失</div>
-                <div className={`text-lg font-bold ${report.damage.dataLossPercent > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                <div className={`text-lg font-bold ${report.damage.dataLossPercent > 0 ? 'text-red-600' : 'text-emerald-600'}`}>
                   {(report.damage.dataLossPercent * 100).toFixed(1)}%
                 </div>
               </div>
@@ -132,7 +132,7 @@ export default function IncidentReportModal({
                   }`}
                 >
                   <span className="text-xs font-mono text-gray-500 w-6">{i + 1}</span>
-                  <span className={action.isOptimal ? 'text-green-400' : 'text-red-400'}>
+                  <span className={action.isOptimal ? 'text-emerald-600' : 'text-red-600'}>
                     {action.isOptimal ? '✓' : '✗'}
                   </span>
                   <span className="text-gray-300">{action.actionType}</span>
@@ -150,7 +150,7 @@ export default function IncidentReportModal({
             <div className="flex flex-wrap gap-2">
               {report.optimalActions.map((action, i) => (
                 <React.Fragment key={i}>
-                  <span className="px-2 py-1 bg-green-900/30 border border-green-500/20 rounded text-xs text-green-400">
+                  <span className="px-2 py-1 bg-green-900/30 border border-green-500/20 rounded text-xs text-emerald-600">
                     {action}
                   </span>
                   {i < report.optimalActions.length - 1 && (
@@ -167,7 +167,7 @@ export default function IncidentReportModal({
               <h3 className="text-sm font-semibold text-white/70 mb-2 flex items-center gap-1.5"><BookOpen size={14} strokeWidth={1.5} className="text-white/50" /> 关联知识点</h3>
               <div className="flex flex-wrap gap-2">
                 {report.knowledgePoints.map((kp, i) => (
-                  <span key={i} className="px-2 py-1 bg-blue-900/30 border border-blue-500/20 rounded text-xs text-blue-400">
+                  <span key={i} className="px-2 py-1 bg-blue-900/30 border border-blue-500/20 rounded text-xs text-blue-600">
                     {kp}
                   </span>
                 ))}

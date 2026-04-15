@@ -169,7 +169,7 @@ function DashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-base-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <RefreshCw size={24} className="text-base-400 animate-spin" />
       </div>
     );
@@ -177,8 +177,8 @@ function DashboardContent() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-base-900 flex items-center justify-center">
-        <p className="text-red-400">{error ?? 'No data available'}</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <p className="text-red-600">{error ?? 'No data available'}</p>
       </div>
     );
   }
@@ -199,35 +199,35 @@ function DashboardContent() {
   const maxActivityCount = Math.max(...activityEntries.map(([, v]) => v), 1);
 
   return (
-    <div className="min-h-screen bg-base-900 px-6 py-10">
+    <div className="min-h-screen bg-surface px-6 py-10">
       {/* Header */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-base-100">
+          <h1 className="text-2xl font-semibold tracking-tight text-base-900">
             {tenant.adminTitle}
           </h1>
-          <p className="mt-1 text-sm text-base-300">
+          <p className="mt-1 text-sm text-base-600">
             {tenant.companyName} Dashboard
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 rounded-lg border border-base-600/40 px-3 py-1.5 text-xs text-base-300 transition hover:border-base-500 hover:text-base-100"
+            className="flex items-center gap-1.5 rounded-lg border border-base-200 px-3 py-1.5 text-xs text-base-600 transition hover:border-accent/40 hover:text-base-900"
           >
             <Download size={14} strokeWidth={1.5} />
             Export CSV
           </button>
           <button
             onClick={() => void loadData()}
-            className="flex items-center gap-1.5 rounded-lg border border-base-600/40 px-3 py-1.5 text-xs text-base-300 transition hover:border-base-500 hover:text-base-100"
+            className="flex items-center gap-1.5 rounded-lg border border-base-200 px-3 py-1.5 text-xs text-base-600 transition hover:border-accent/40 hover:text-base-900"
           >
             <RefreshCw size={14} strokeWidth={1.5} />
             Refresh
           </button>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 transition hover:text-base-100 hover:bg-base-700/50"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-600 transition hover:text-base-900 hover:bg-base-100"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             Home
@@ -238,20 +238,20 @@ function DashboardContent() {
       {/* Stats Overview */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-8">
         {[
-          { label: 'Courses', value: data.courses.length, icon: BookOpen, color: 'text-blue-400' },
-          { label: 'Total Levels', value: totalLevels, icon: BarChart3, color: 'text-green-400' },
-          { label: 'Total Attempts', value: totalAttempts, icon: Users, color: 'text-purple-400' },
-          { label: 'Avg Score', value: avgScore, icon: Trophy, color: 'text-yellow-400' },
+          { label: 'Courses', value: data.courses.length, icon: BookOpen, color: 'text-blue-600' },
+          { label: 'Total Levels', value: totalLevels, icon: BarChart3, color: 'text-emerald-600' },
+          { label: 'Total Attempts', value: totalAttempts, icon: Users, color: 'text-purple-600' },
+          { label: 'Avg Score', value: avgScore, icon: Trophy, color: 'text-amber-600' },
         ].map((s) => (
           <div
             key={s.label}
-            className="rounded-xl border border-base-600/30 bg-base-800/40 p-5"
+            className="rounded-xl border border-base-200 bg-white p-5"
           >
             <div className="flex items-center gap-2 mb-2">
               <s.icon size={16} strokeWidth={1.5} className={s.color} />
               <span className="text-xs text-base-400">{s.label}</span>
             </div>
-            <p className="text-2xl font-semibold text-base-100">{s.value.toLocaleString()}</p>
+            <p className="text-2xl font-semibold text-base-900">{s.value.toLocaleString()}</p>
           </div>
         ))}
       </div>
@@ -259,15 +259,15 @@ function DashboardContent() {
       {/* Two column layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Course Table */}
-        <div className="rounded-2xl border border-base-600/30 bg-base-800/30 p-6">
-          <h2 className="text-sm font-medium text-base-300 mb-4 flex items-center gap-1.5">
+        <div className="rounded-2xl border border-base-200 bg-white p-6">
+          <h2 className="text-sm font-medium text-base-600 mb-4 flex items-center gap-1.5">
             <BookOpen size={14} strokeWidth={1.5} />
             Course Overview
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-base-700/50 text-left text-xs text-base-400">
+                <tr className="border-b border-base-200 text-left text-xs text-base-400">
                   <th className="pb-2 pr-3">Course</th>
                   <th className="pb-2 pr-3">Levels</th>
                   <th className="pb-2 pr-3">Attempts</th>
@@ -279,15 +279,15 @@ function DashboardContent() {
                 {data.courses.map((c) => {
                   const s = data.courseSummaries.get(c.id);
                   return (
-                    <tr key={c.id} className="border-b border-base-700/20">
+                    <tr key={c.id} className="border-b border-base-100">
                       <td className="py-2.5 pr-3">
-                        <p className="text-base-100 font-medium">{c.title}</p>
+                        <p className="text-base-900 font-medium">{c.title}</p>
                         <p className="text-xs text-base-400">{c.vendor} / {c.category}</p>
                       </td>
-                      <td className="py-2.5 pr-3 text-base-300">{c.levelCount}</td>
-                      <td className="py-2.5 pr-3 text-base-300">{s?.totalAttempts ?? '-'}</td>
-                      <td className="py-2.5 pr-3 text-base-300">{s?.averageScore ?? '-'}</td>
-                      <td className="py-2.5 text-green-400">{s?.completionByStatus?.PASSED ?? 0}</td>
+                      <td className="py-2.5 pr-3 text-base-600">{c.levelCount}</td>
+                      <td className="py-2.5 pr-3 text-base-600">{s?.totalAttempts ?? '-'}</td>
+                      <td className="py-2.5 pr-3 text-base-600">{s?.averageScore ?? '-'}</td>
+                      <td className="py-2.5 text-emerald-600">{s?.completionByStatus?.PASSED ?? 0}</td>
                     </tr>
                   );
                 })}
@@ -297,8 +297,8 @@ function DashboardContent() {
         </div>
 
         {/* Activity Chart */}
-        <div className="rounded-2xl border border-base-600/30 bg-base-800/30 p-6">
-          <h2 className="text-sm font-medium text-base-300 mb-4 flex items-center gap-1.5">
+        <div className="rounded-2xl border border-base-200 bg-white p-6">
+          <h2 className="text-sm font-medium text-base-600 mb-4 flex items-center gap-1.5">
             <Activity size={14} strokeWidth={1.5} />
             Activity Summary (Last 30 Days)
           </h2>
@@ -307,10 +307,10 @@ function DashboardContent() {
               {activityEntries.map(([event, count]) => (
                 <div key={event}>
                   <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs text-base-300">{event}</span>
+                    <span className="text-xs text-base-600">{event}</span>
                     <span className="text-xs text-base-400">{count}</span>
                   </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-base-700/40">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-base-100">
                     <div
                       className="h-full rounded-full bg-accent/60 transition-all"
                       style={{ width: `${(count / maxActivityCount) * 100}%` }}
@@ -324,22 +324,22 @@ function DashboardContent() {
           )}
 
           {/* Completion Summary */}
-          <div className="mt-6 pt-4 border-t border-base-700/30">
+          <div className="mt-6 pt-4 border-t border-base-100">
             <h3 className="text-xs font-medium text-base-400 mb-3">Completion Rate</h3>
             <div className="flex items-center gap-4">
-              <div className="flex-1 h-3 overflow-hidden rounded-full bg-base-700/40 flex">
+              <div className="flex-1 h-3 overflow-hidden rounded-full bg-base-100 flex">
                 <div
-                  className="h-full bg-green-500/70"
+                  className="h-full bg-emerald-500"
                   style={{ width: `${totalLevels > 0 ? (totalPassed / totalLevels) * 100 : 0}%` }}
                   title={`Passed: ${totalPassed}`}
                 />
                 <div
-                  className="h-full bg-blue-500/50"
+                  className="h-full bg-blue-400"
                   style={{ width: `${totalLevels > 0 ? ((totalLevels - totalPassed) / totalLevels) * 50 : 0}%` }}
                   title="Remaining"
                 />
               </div>
-              <span className="text-xs text-base-300 whitespace-nowrap">
+              <span className="text-xs text-base-600 whitespace-nowrap">
                 {totalPassed}/{totalLevels} levels
               </span>
             </div>
@@ -354,7 +354,7 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-base-900 flex items-center justify-center">
+        <div className="min-h-screen bg-surface flex items-center justify-center">
           <RefreshCw size={24} className="text-base-400 animate-spin" />
         </div>
       }

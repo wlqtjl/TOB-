@@ -111,18 +111,18 @@ export default function InsightPanel({
         {step && (
           <>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-base-600/40">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-base-200">
               <div className="flex items-center gap-2">
-                {isError && <AlertTriangle size={16} className="text-red-400" />}
+                {isError && <AlertTriangle size={16} className="text-red-600" />}
                 {isWarning && <AlertTriangle size={16} className="text-amber-400" />}
                 {isCorrect && <CheckCircle size={16} className="text-emerald-400" />}
-                <h3 className="text-sm font-semibold text-base-100">
+                <h3 className="text-sm font-semibold text-base-900">
                   操作详情
                 </h3>
               </div>
               <button
                 onClick={onClose}
-                className="p-1.5 rounded-lg hover:bg-base-700/60 transition-colors text-base-400 hover:text-base-200"
+                className="p-1.5 rounded-lg hover:bg-base-100 transition-colors text-base-400 hover:text-base-800"
               >
                 <X size={16} strokeWidth={1.5} />
               </button>
@@ -132,16 +132,16 @@ export default function InsightPanel({
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
               {/* Action summary */}
               <div>
-                <h4 className="text-base font-medium text-base-100 mb-1">
+                <h4 className="text-base font-medium text-base-900 mb-1">
                   {step.actionName}
                 </h4>
-                <p className="text-sm text-base-300 leading-relaxed">
+                <p className="text-sm text-base-600 leading-relaxed">
                   {step.description}
                 </p>
                 {step.impactScore < 0 && (
                   <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-red-900/20 border border-red-500/20 px-3 py-1">
-                    <AlertTriangle size={12} className="text-red-400" />
-                    <span className="text-xs font-mono text-red-400">
+                    <AlertTriangle size={12} className="text-red-600" />
+                    <span className="text-xs font-mono text-red-600">
                       风险影响: {step.impactScore} 分
                     </span>
                   </div>
@@ -156,7 +156,7 @@ export default function InsightPanel({
                     专家点评
                   </span>
                 </div>
-                <p className="text-sm text-base-200 leading-relaxed whitespace-pre-line">
+                <p className="text-sm text-base-800 leading-relaxed whitespace-pre-line">
                   {typedCommentary}
                   {typedCommentary.length < commentary.length && (
                     <span className="animate-pulse text-accent">▌</span>
@@ -166,17 +166,17 @@ export default function InsightPanel({
 
               {/* Source Quote — Knowledge Tracing */}
               {step.sourceQuote && (
-                <div className="rounded-xl border border-base-600/40 bg-base-800/60 p-4">
+                <div className="rounded-xl border border-base-200 bg-white p-4">
                   <div className="flex items-center gap-2 mb-2.5">
-                    <FileText size={14} className="text-base-300" />
-                    <span className="text-xs font-semibold text-base-300">
+                    <FileText size={14} className="text-base-600" />
+                    <span className="text-xs font-semibold text-base-600">
                       知识点溯源
                     </span>
                   </div>
-                  <blockquote className="text-sm text-base-200 leading-relaxed border-l-2 border-accent/40 pl-3 italic">
+                  <blockquote className="text-sm text-base-800 leading-relaxed border-l-2 border-accent/40 pl-3 italic">
                     &ldquo;{step.sourceQuote}&rdquo;
                   </blockquote>
-                  <p className="text-[11px] text-base-500 mt-2">
+                  <p className="text-[11px] text-base-400 mt-2">
                     — SMTX OS 运维手册
                   </p>
                 </div>
@@ -186,8 +186,8 @@ export default function InsightPanel({
               {step.deviationNotice && (
                 <div className="rounded-xl border border-red-500/20 bg-red-900/10 p-4">
                   <div className="flex items-center gap-2 mb-2.5">
-                    <AlertTriangle size={14} className="text-red-400" />
-                    <span className="text-xs font-semibold text-red-400">
+                    <AlertTriangle size={14} className="text-red-600" />
+                    <span className="text-xs font-semibold text-red-600">
                       偏离分析
                     </span>
                   </div>
@@ -199,7 +199,7 @@ export default function InsightPanel({
             </div>
 
             {/* Footer — Rollback button */}
-            <div className="px-5 py-4 border-t border-base-600/40">
+            <div className="px-5 py-4 border-t border-base-200">
               <button
                 onClick={handleRollback}
                 className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-accent/10 border border-accent/20 text-accent text-sm font-medium hover:bg-accent/20 transition-colors"

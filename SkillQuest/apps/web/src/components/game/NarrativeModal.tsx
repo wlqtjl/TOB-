@@ -52,7 +52,7 @@ const CHANNEL_STYLES: Record<NarrativeChannel, { bg: string; border: string; hea
   },
   wechat_work: {
     bg: 'bg-[#0d1117]',
-    border: 'border-green-500/30',
+    border: 'border-emerald-200',
     headerBg: 'bg-green-900/40',
     icon: '企微',
     name: '企业微信',
@@ -82,9 +82,9 @@ const CHANNEL_STYLES: Record<NarrativeChannel, { bg: string; border: string; hea
 
 const MESSAGE_STYLES: Record<string, string> = {
   normal: 'text-gray-200',
-  danger: 'text-red-400 font-bold animate-pulse',
-  success: 'text-green-400',
-  info: 'text-blue-400',
+  danger: 'text-red-600 font-bold animate-pulse',
+  success: 'text-emerald-600',
+  info: 'text-blue-600',
 };
 
 // ─── 组件 ─────────────────────────────────────────────────────────

@@ -32,9 +32,9 @@ interface LevelBriefingModalProps {
 }
 
 const DIFFICULTY_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  beginner: { label: '入门', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' },
-  intermediate: { label: '进阶', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' },
-  advanced: { label: '高级', color: 'text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
+  beginner: { label: '入门', color: 'text-emerald-600', bg: 'bg-emerald-50 border-green-500/20' },
+  intermediate: { label: '进阶', color: 'text-amber-600', bg: 'bg-yellow-500/10 border-amber-200' },
+  advanced: { label: '高级', color: 'text-red-600', bg: 'bg-red-50 border-red-500/20' },
 };
 
 export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelBriefingModalProps) {
@@ -49,13 +49,13 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
       <div className="w-full max-w-2xl mx-4 rounded-2xl glass-heavy shadow-2xl overflow-hidden">
         {/* ── Header ── */}
-        <div className="px-6 py-4 border-b border-base-600/30 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-base-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 border border-accent/20">
               <BookOpen size={20} strokeWidth={1.5} className="text-accent" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-base-100 tracking-tight">
+              <h2 className="text-lg font-semibold text-base-900 tracking-tight">
                 {briefing.title}
               </h2>
               <p className="text-xs text-base-400 mt-0.5">{briefing.summary}</p>
@@ -64,7 +64,7 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
           {onSkip && (
             <button
               onClick={onSkip}
-              className="p-1.5 rounded-lg text-base-400 hover:text-base-200 hover:bg-base-700/50 transition"
+              className="p-1.5 rounded-lg text-base-400 hover:text-base-800 hover:bg-base-100 transition"
               title="跳过知识普及"
             >
               <X size={18} strokeWidth={1.5} />
@@ -73,7 +73,7 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
         </div>
 
         {/* ── Meta bar ── */}
-        <div className="px-6 py-3 flex items-center gap-4 text-xs text-base-300 border-b border-base-600/20">
+        <div className="px-6 py-3 flex items-center gap-4 text-xs text-base-600 border-b border-base-100">
           <span className="flex items-center gap-1.5">
             <Gamepad2 size={14} strokeWidth={1.5} className="text-accent/70" />
             {briefing.gameTypeHint}
@@ -92,7 +92,7 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
         <div className="px-6 py-4 max-h-[420px] overflow-y-auto space-y-5">
           {/* Knowledge Points */}
           <section>
-            <h3 className="flex items-center gap-2 text-sm font-medium text-base-200 mb-3">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-base-800 mb-3">
               <BookOpen size={15} strokeWidth={1.5} className="text-accent" />
               本关知识点
             </h3>
@@ -101,7 +101,7 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
                 <button
                   key={kp.term}
                   onClick={() => toggleKnowledgePoint(kp.term)}
-                  className="w-full text-left rounded-lg border border-base-600/30 bg-base-800/50 hover:bg-base-700/50 transition"
+                  className="w-full text-left rounded-lg border border-base-200 bg-white/50 hover:bg-base-100 transition"
                 >
                   <div className="px-3 py-2 flex items-center justify-between">
                     <span className="text-sm text-accent font-medium">{kp.term}</span>
@@ -112,7 +112,7 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
                     />
                   </div>
                   {expanded === kp.term && (
-                    <div className="px-3 pb-2.5 text-xs text-base-300 leading-relaxed border-t border-base-600/20 pt-2">
+                    <div className="px-3 pb-2.5 text-xs text-base-600 leading-relaxed border-t border-base-100 pt-2">
                       {kp.definition}
                     </div>
                   )}
@@ -123,7 +123,7 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
 
           {/* Objectives */}
           <section>
-            <h3 className="flex items-center gap-2 text-sm font-medium text-base-200 mb-3">
+            <h3 className="flex items-center gap-2 text-sm font-medium text-base-800 mb-3">
               <Target size={15} strokeWidth={1.5} className="text-accent" />
               本关目标
             </h3>
@@ -133,9 +133,9 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
                   <span className={`mt-1 w-1.5 h-1.5 rounded-full flex-shrink-0 ${
                     obj.primary ? 'bg-accent' : 'bg-base-500'
                   }`} />
-                  <span className={obj.primary ? 'text-base-200' : 'text-base-400'}>
+                  <span className={obj.primary ? 'text-base-800' : 'text-base-400'}>
                     {obj.text}
-                    {!obj.primary && <span className="ml-1.5 text-xs text-base-500">(可选)</span>}
+                    {!obj.primary && <span className="ml-1.5 text-xs text-base-400">(可选)</span>}
                   </span>
                 </li>
               ))}
@@ -145,14 +145,14 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
           {/* Tips */}
           {briefing.tips && briefing.tips.length > 0 && (
             <section>
-              <h3 className="flex items-center gap-2 text-sm font-medium text-base-200 mb-3">
-                <Lightbulb size={15} strokeWidth={1.5} className="text-yellow-400/80" />
+              <h3 className="flex items-center gap-2 text-sm font-medium text-base-800 mb-3">
+                <Lightbulb size={15} strokeWidth={1.5} className="text-amber-600/80" />
                 小贴士
               </h3>
-              <div className="rounded-lg border border-yellow-500/10 bg-yellow-500/5 px-3 py-2.5 space-y-1.5">
+              <div className="rounded-lg border border-yellow-500/10 bg-amber-50 px-3 py-2.5 space-y-1.5">
                 {briefing.tips.map((tip, i) => (
-                  <p key={i} className="text-xs text-base-300 leading-relaxed flex items-start gap-2">
-                    <span className="text-yellow-400/60 mt-0.5 flex-shrink-0">•</span>
+                  <p key={i} className="text-xs text-base-600 leading-relaxed flex items-start gap-2">
+                    <span className="text-amber-600/60 mt-0.5 flex-shrink-0">•</span>
                     {tip}
                   </p>
                 ))}
@@ -162,11 +162,11 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
         </div>
 
         {/* ── Footer ── */}
-        <div className="px-6 py-4 border-t border-base-600/30 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-base-200 flex items-center justify-between">
           {onSkip ? (
             <button
               onClick={onSkip}
-              className="text-xs text-base-400 hover:text-base-200 transition"
+              className="text-xs text-base-400 hover:text-base-800 transition"
             >
               跳过
             </button>

@@ -29,6 +29,9 @@ export interface VectorFieldProps {
   alert?: boolean;
 }
 
+const FLOW_PHASE_FACTOR = 0.3;
+const FLOW_VARIATION_AMPLITUDE = 0.3;
+
 export default function VectorField({
   fieldStrength,
   fieldType = 'gravity',
@@ -97,7 +100,7 @@ export default function VectorField({
             break;
           case 'flow':
           default:
-            angle = Math.atan2(dy, dx) + Math.sin(timeRef.current + i * 0.3) * 0.3;
+            angle = Math.atan2(dy, dx) + Math.sin(timeRef.current + i * FLOW_PHASE_FACTOR) * FLOW_VARIATION_AMPLITUDE;
             magnitude = fieldStrength * 8;
             break;
         }

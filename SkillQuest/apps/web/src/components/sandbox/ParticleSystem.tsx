@@ -34,6 +34,8 @@ interface Particle {
   vy: number;
 }
 
+const BOUNDARY_OFFSET = 10;
+
 export default function ParticleSystem({
   count,
   temperature = 300,
@@ -59,8 +61,8 @@ export default function ParticleSystem({
         particles.push(existing[i]);
       } else {
         particles.push({
-          x: Math.random() * (width - 20) + 10,
-          y: Math.random() * (height - 20) + 10,
+          x: Math.random() * (width - 2 * BOUNDARY_OFFSET) + BOUNDARY_OFFSET,
+          y: Math.random() * (height - 2 * BOUNDARY_OFFSET) + BOUNDARY_OFFSET,
           vx: (Math.random() - 0.5) * 3 * speedFactor,
           vy: (Math.random() - 0.5) * 3 * speedFactor,
         });
@@ -104,10 +106,10 @@ export default function ParticleSystem({
       p.y += p.vy;
 
       // Boundary bounce with pressure
-      if (p.x < 10) { p.x = 10; p.vx = Math.abs(p.vx) * bounceForce; }
-      if (p.x > width - 10) { p.x = width - 10; p.vx = -Math.abs(p.vx) * bounceForce; }
-      if (p.y < 10) { p.y = 10; p.vy = Math.abs(p.vy) * bounceForce; }
-      if (p.y > height - 10) { p.y = height - 10; p.vy = -Math.abs(p.vy) * bounceForce; }
+      if (p.x < BOUNDARY_OFFSET) { p.x = BOUNDARY_OFFSET; p.vx = Math.abs(p.vx) * bounceForce; }
+      if (p.x > width - BOUNDARY_OFFSET) { p.x = width - BOUNDARY_OFFSET; p.vx = -Math.abs(p.vx) * bounceForce; }
+      if (p.y < BOUNDARY_OFFSET) { p.y = BOUNDARY_OFFSET; p.vy = Math.abs(p.vy) * bounceForce; }
+      if (p.y > height - BOUNDARY_OFFSET) { p.y = height - BOUNDARY_OFFSET; p.vy = -Math.abs(p.vy) * bounceForce; }
 
       // Draw particle
       ctx.beginPath();

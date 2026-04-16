@@ -129,6 +129,12 @@ model Level {
   /// 因果分支配置 (JSON: ConsequencesConfig)
   consequencesConfig Json?
 
+  /// GPSL v1.1: 是否为交互式模拟关卡
+  isInteractive Boolean @default(false)
+
+  /// GPSL v1.1: 沙盒模拟配置 (JSON: SandboxSimConfig)
+  simConfig Json?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -156,6 +162,7 @@ enum LevelType {
   SCENARIO
   VM_PLACEMENT
   FLOW_SIM
+  SANDBOX
 }
 
 // ─── 用户进度 ───────────────────────────────────────────────────────

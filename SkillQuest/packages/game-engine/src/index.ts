@@ -143,6 +143,8 @@ export {
   highlightOptimalPath,
   vmPlacementAdapter,
   mapAdapter,
+  sandboxAdapter,
+  updateSandboxVariables,
 } from './adapters';
 
 // Data Gravity — "数据引力" 物理交互系统

@@ -26,6 +26,8 @@ import {
   MessageSquare,
   ShieldCheck,
   ShieldAlert,
+  Beaker,
+  SlidersHorizontal,
 } from 'lucide-react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
 import { useAuth } from '../../../lib/auth-context';
@@ -108,6 +110,15 @@ const MOCK_PENDING_LEVELS: PendingLevel[] = [
     confidenceScore: 0.87,
     createdAt: '2026-04-08T10:15:00Z',
   },
+  {
+    id: 'review-4',
+    title: '硬盘故障重构模拟实验',
+    type: 'SANDBOX',
+    reviewStatus: 'PENDING',
+    course: { title: 'SmartX 超融合认证', vendor: 'SmartX' },
+    confidenceScore: 0.85,
+    createdAt: '2026-04-11T09:00:00Z',
+  },
 ];
 
 const MOCK_REVIEW_DETAIL: ReviewDetail = {
@@ -135,6 +146,36 @@ const MOCK_REVIEW_DETAIL: ReviewDetail = {
       agentBAnswer: JSON.stringify({ answer: 2, confidence: 0.95, reference: '第3章明确说明默认3副本' }),
       finalVerdict: 'CONFIRMED',
       confidenceScore: 0.93,
+    },
+  ],
+  feedbackLog: [],
+};
+
+const MOCK_SANDBOX_REVIEW_DETAIL: ReviewDetail = {
+  level: {
+    id: 'review-4',
+    title: '硬盘故障重构模拟实验',
+    type: 'SANDBOX',
+    reviewStatus: 'PENDING',
+    content: {
+      question: '通过调节硬盘条带深度和并发修复流数，观察存储集群故障重构时间的变化',
+      options: ['条带深度增大 → 修复加速', '并发流过多 → 网络拥塞', '数据总量不影响修复时间', '修复流数与时间成正比'],
+      answer: 1,
+      explanation: '并发修复流超过网络带宽承载能力后，拥塞导致有效吞吐下降，修复时间反而增加',
+    },
+  },
+  sourceQuotes: [
+    { chunkId: 'c3', quote: 'RAID 重建期间并发修复流数应根据网络带宽合理配置...', chapterTitle: '第5章: 故障恢复策略', relevanceScore: 0.92 },
+    { chunkId: 'c4', quote: '条带深度影响单次 IO 的数据量，进而影响重建效率...', chapterTitle: '第3章: RAID配置参数', relevanceScore: 0.87 },
+  ],
+  validationLogs: [
+    {
+      id: 'vl2',
+      round: 1,
+      agentAAnswer: JSON.stringify({ answer: 1, confidence: 0.88, reasoning: '文档明确指出网络带宽是瓶颈' }),
+      agentBAnswer: JSON.stringify({ answer: 1, confidence: 0.91, reference: '第5章故障恢复策略一节' }),
+      finalVerdict: 'CONFIRMED',
+      confidenceScore: 0.85,
     },
   ],
   feedbackLog: [],
@@ -255,6 +296,108 @@ function ReviewListView({ items, onSelect }: { items: PendingLevel[]; onSelect: 
             )}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+// ─── GPSL v1.1 — Simulation Preview Panel ───────────────────────────
+
+function SimulationPreviewPanel() {
+  const [simValues, setSimValues] = useState<Record<string, number>>({
+    stripeDepth: 16,
+    repairStreams: 4,
+    dataTotal: 2000,
+  });
+  const [editFormula, setEditFormula] = useState('T_{repair} = \\frac{Data_{total}}{A \\times B}');
+
+  const handleSimChange = (name: string, value: number) => {
+    setSimValues((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const hasAlert = (simValues.repairStreams ?? 0) > 24;
+
+  return (
+    <div className="rounded-2xl border border-accent-200 bg-white p-6">
+      <h3 className="mb-4 flex items-center gap-1.5 text-sm font-medium text-accent-700">
+        <Beaker size={14} strokeWidth={1.5} />
+        模型推演预览 (GPSL v1.1)
+      </h3>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {/* Left: Source mapping */}
+        <div className="rounded-xl border border-base-100 bg-base-50 p-4">
+          <h4 className="mb-2 text-xs font-semibold text-base-500">原文对比</h4>
+          <div className="space-y-2 text-xs text-base-600">
+            <div className="rounded-lg border border-base-200 bg-white p-2">
+              <span className="text-accent font-medium">条带深度</span>: 来源于文档第3章 &ldquo;RAID配置参数&rdquo; 一节
+            </div>
+            <div className="rounded-lg border border-base-200 bg-white p-2">
+              <span className="text-accent font-medium">并发修复流</span>: 来源于文档第5章 &ldquo;故障恢复策略&rdquo; 一节
+            </div>
+            <div className="rounded-lg border border-base-200 bg-white p-2">
+              <span className="text-accent font-medium">修复时间公式</span>: 来源于文档附录B &ldquo;性能计算模型&rdquo;
+            </div>
+          </div>
+        </div>
+
+        {/* Middle: Interactive sandbox preview */}
+        <div className="rounded-xl border border-base-100 bg-base-50 p-4">
+          <h4 className="mb-2 flex items-center gap-1 text-xs font-semibold text-base-500">
+            <SlidersHorizontal size={11} />
+            沙盒预览
+          </h4>
+          <div className="space-y-3">
+            {[
+              { name: 'stripeDepth', label: '条带深度', min: 1, max: 64, unit: 'KB' },
+              { name: 'repairStreams', label: '并发修复流', min: 1, max: 32, unit: '' },
+              { name: 'dataTotal', label: '总数据量', min: 100, max: 10000, unit: 'GB' },
+            ].map((v) => (
+              <div key={v.name}>
+                <div className="flex justify-between text-[11px]">
+                  <span className="text-base-600">{v.label}</span>
+                  <span className="font-mono text-base-400">
+                    {simValues[v.name]}{v.unit ? ` ${v.unit}` : ''}
+                  </span>
+                </div>
+                <input
+                  type="range"
+                  min={v.min}
+                  max={v.max}
+                  value={simValues[v.name]}
+                  onChange={(e) => handleSimChange(v.name, parseInt(e.target.value))}
+                  className={`mt-1 h-1 w-full cursor-pointer appearance-none rounded-full ${
+                    v.name === 'repairStreams' && hasAlert ? 'bg-red-200 accent-red-600' : 'bg-base-200 accent-accent'
+                  }`}
+                />
+              </div>
+            ))}
+            {hasAlert && (
+              <p className="text-[11px] text-red-600">⚠️ 网络拥塞告警已触发</p>
+            )}
+            <div className="rounded-lg border border-base-200 bg-white p-2 text-center">
+              <span className="text-[11px] text-base-400">计算结果: </span>
+              <span className={`font-mono text-sm font-bold ${hasAlert ? 'text-red-600' : 'text-accent'}`}>
+                T = {(simValues.dataTotal / (simValues.stripeDepth * (hasAlert ? simValues.repairStreams * 0.7 : simValues.repairStreams))).toFixed(2)} s
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Formula correction area */}
+        <div className="rounded-xl border border-base-100 bg-base-50 p-4">
+          <h4 className="mb-2 text-xs font-semibold text-base-500">公式修正区</h4>
+          <label className="text-[11px] text-base-400">LaTeX 表达式</label>
+          <textarea
+            value={editFormula}
+            onChange={(e) => setEditFormula(e.target.value)}
+            rows={4}
+            className="mt-1 w-full rounded-lg border border-base-200 bg-white px-2 py-1.5 font-mono text-xs text-base-900 outline-none focus:border-accent/50"
+          />
+          <p className="mt-2 text-[10px] text-base-400">
+            如 AI 生成的公式中物理常数有误，可在此直接修改 LaTeX 表达式
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -489,6 +632,11 @@ function ReviewDetailView({
         </div>
       )}
 
+      {/* GPSL v1.1 — Model Simulation Preview (for SANDBOX type levels) */}
+      {detail.level.type === 'SANDBOX' && (
+        <SimulationPreviewPanel />
+      )}
+
       {/* Action Buttons */}
       <div className="flex flex-wrap items-start gap-3">
         {/* Approve */}
@@ -629,13 +777,22 @@ function ReviewContent() {
     setActionMessage(null);
     try {
       const apiData = await fetchWithAuth<ReviewDetail>(`/review/${levelId}`);
-      setDetail(apiData ?? { ...MOCK_REVIEW_DETAIL, level: { ...MOCK_REVIEW_DETAIL.level, id: levelId } });
+      if (apiData) {
+        setDetail(apiData);
+      } else {
+        // Mock mode: pick correct mock detail based on the selected item
+        const mockItem = items.find((i) => i.id === levelId);
+        const baseMock = mockItem?.type === 'SANDBOX' ? MOCK_SANDBOX_REVIEW_DETAIL : MOCK_REVIEW_DETAIL;
+        setDetail({ ...baseMock, level: { ...baseMock.level, id: levelId } });
+      }
     } catch {
-      setDetail({ ...MOCK_REVIEW_DETAIL, level: { ...MOCK_REVIEW_DETAIL.level, id: levelId } });
+      const mockItem = items.find((i) => i.id === levelId);
+      const baseMock = mockItem?.type === 'SANDBOX' ? MOCK_SANDBOX_REVIEW_DETAIL : MOCK_REVIEW_DETAIL;
+      setDetail({ ...baseMock, level: { ...baseMock.level, id: levelId } });
     } finally {
       setDetailLoading(false);
     }
-  }, []);
+  }, [items]);
 
   useEffect(() => { void loadList(); }, [loadList]);
 

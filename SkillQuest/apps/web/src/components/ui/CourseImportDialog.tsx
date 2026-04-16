@@ -4,6 +4,10 @@
  * CourseImportDialog — Minimalist frosted glass redesign
  *
  * Design: glass backdrop, Lucide icons, clean typography
+ *
+ * GPSL v1.1: Added Gemini simulation mode toggle.
+ * When enabled, documents are processed through Gemini 3 Flash to generate
+ * interactive sandbox simulations alongside traditional quiz levels.
  */
 
 import React, { useCallback, useRef, useState } from 'react';
@@ -17,6 +21,8 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
+  Beaker,
+  FlaskConical,
 } from 'lucide-react';
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -47,6 +53,23 @@ const MAX_SIZE_MB = 30;
 const STATUS_ORDER: JobStatus[] = ['parsing', 'generating', 'saving', 'done'];
 const STEP_LABELS = ['解析文档', 'AI 生成', '保存数据库', '完成'];
 
+// GPSL v1.1 — Gemini 模型描述协议 (MDP) Prompt 模板
+const GEMINI_SIM_PROMPT = `## Role: SkillQuest Physics & Engineering Architect
+## Task: Convert the following technical text into an Interactive Simulation Schema.
+
+## Text Input: [文档片段将自动注入]
+
+## Output Format (Strict JSON):
+{
+  "model_type": "physical_law | logic_flow | mechanical_cycle",
+  "math_formula": "LaTeX format string",
+  "variables": [
+    {"name": "variable_name", "label": "显示名称", "min": 0, "max": 100, "default": 50, "unit": "单位"}
+  ],
+  "visual_logic": "Describe the animation behavior of the SVG/Canvas elements based on variables.",
+  "learning_check": "What happens when variable X is changed to Y?"
+}`;
+
 // ─── Component ───────────────────────────────────────────────────
 
 export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http://localhost:3001/api', tenantId = 'default-tenant' }: Props) {
@@ -56,6 +79,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
   const [job, setJob] = useState<ImportJob | null>(null);
   const [uploading, setUploading] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [enableSimulation, setEnableSimulation] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -87,6 +111,10 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
     form.append('file', file);
     form.append('tenantId', tenantId);
     if (hint) form.append('hint', hint);
+    if (enableSimulation) {
+      form.append('enableSimulation', 'true');
+      form.append('simulationPrompt', GEMINI_SIM_PROMPT);
+    }
 
     try {
       const res = await fetch(`${apiBase}/courses/import`, { method: 'POST', body: form });
@@ -141,7 +169,9 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
         <div className="flex items-center justify-between border-b border-base-200 px-6 py-5">
           <div>
             <h2 className="text-base font-semibold text-base-900">上传文档生成课程</h2>
-            <p className="mt-0.5 text-xs text-base-400">AI 自动提取知识点并生成 7 种题型关卡</p>
+            <p className="mt-0.5 text-xs text-base-400">
+              AI 自动提取知识点并生成{enableSimulation ? '交互模拟实验 + ' : ''} 7 种题型关卡
+            </p>
           </div>
           <button
             onClick={handleClose}
@@ -210,6 +240,42 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                 />
               </div>
 
+              {/* GPSL v1.1 — Gemini Simulation Toggle */}
+              <div
+                onClick={() => setEnableSimulation(!enableSimulation)}
+                className={`cursor-pointer rounded-xl border p-4 transition ${
+                  enableSimulation
+                    ? 'border-accent/40 bg-accent-50/40'
+                    : 'border-base-200/60 hover:border-accent/30'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`rounded-lg p-2 ${enableSimulation ? 'bg-accent/10' : 'bg-base-100'}`}>
+                      <FlaskConical size={16} strokeWidth={1.5} className={enableSimulation ? 'text-accent' : 'text-base-400'} />
+                    </div>
+                    <div>
+                      <p className={`text-sm font-medium ${enableSimulation ? 'text-accent-700' : 'text-base-700'}`}>
+                        Gemini 交互模拟
+                      </p>
+                      <p className="text-[11px] text-base-400">
+                        生成可调参的动态实验关卡 (GPSL v1.1)
+                      </p>
+                    </div>
+                  </div>
+                  <div className={`h-5 w-9 rounded-full transition-colors ${enableSimulation ? 'bg-accent' : 'bg-base-300'}`}>
+                    <div className={`h-4 w-4 translate-y-0.5 rounded-full bg-white shadow-sm transition-transform ${enableSimulation ? 'translate-x-[18px]' : 'translate-x-0.5'}`} />
+                  </div>
+                </div>
+                {enableSimulation && (
+                  <div className="mt-3 rounded-lg bg-accent-50/60 px-3 py-2 text-[11px] leading-relaxed text-accent-600">
+                    <Beaker size={11} strokeWidth={1.5} className="mr-1 inline" />
+                    Gemini 将从文档中提取物理量/逻辑流程，自动生成交互式沙盒模拟关卡。
+                    学员可通过滑块调节参数，实时观察模型变化。
+                  </div>
+                )}
+              </div>
+
               {/* Actions */}
               <div className="flex gap-3">
                 <button
@@ -224,7 +290,7 @@ export default function CourseImportDialog({ onClose, onSuccess, apiBase = 'http
                   className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-accent py-2.5 text-sm font-medium text-base-900 transition hover:bg-accent-300 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Rocket size={14} strokeWidth={1.5} />
-                  开始生成
+                  {enableSimulation ? '生成课程 + 实验' : '开始生成'}
                 </button>
               </div>
             </>

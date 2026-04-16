@@ -11,6 +11,20 @@
   --color-text-secondary: #4B5563;
   --color-text-muted: #9CA3AF;
 
+  /* PRD §2.1 — Primary */
+  --color-primary-500: #6366F1;
+  --color-primary-600: #4F46E5;
+
+  /* PRD §2.1 — Semantic */
+  --color-success: #059669;
+  --color-danger: #DC2626;
+  --color-warning: #D97706;
+
+  /* PRD §2.1 — Role accent colors */
+  --role-admin: #0EA5E9;   /* sky-500 */
+  --role-trainer: #10B981;  /* emerald-500 */
+  --role-learner: #6366F1;  /* indigo-500 */
+
   /* Game compat */
   --game-gold: #B45309;
   --game-correct: #059669;

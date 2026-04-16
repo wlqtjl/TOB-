@@ -15,9 +15,9 @@ import { tenantConfig } from '../../lib/tenant-config';
 const tenant = tenantConfig();
 
 const ROLE_REDIRECT: Record<UserRole, string> = {
-  ADMIN: '/admin/dashboard',
-  TRAINER: '/courses',
-  LEARNER: '/',
+  ADMIN: '/courses',
+  TRAINER: '/courses/agency',
+  LEARNER: '/dashboard',
 };
 
 export default function LoginPage() {

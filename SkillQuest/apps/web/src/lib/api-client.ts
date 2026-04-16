@@ -24,10 +24,21 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T | nul
 
   try {
     const url = `${API_URL}${path}`;
+
+    // Attach JWT auth header on client side
+    const authHeaders: Record<string, string> = {};
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('sq_token');
+      if (token) {
+        authHeaders['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
     const res = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...authHeaders,
         ...options?.headers,
       },
     });

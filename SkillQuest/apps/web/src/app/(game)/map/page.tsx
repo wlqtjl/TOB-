@@ -33,9 +33,9 @@ function MapContent() {
 
   if (!mapData || !course) {
     return (
-      <div className="min-h-screen bg-base-900 flex items-center justify-center">
+      <div className="min-h-screen bg-surface flex items-center justify-center">
         <div className="text-center">
-          <p className="text-lg text-base-300">未找到课程数据</p>
+          <p className="text-lg text-base-600">未找到课程数据</p>
           <p className="mt-2 text-sm text-base-400">课程ID: {courseId}</p>
           <Link href="/" className="mt-4 inline-block text-accent hover:underline text-sm">
             ← 返回首页
@@ -49,12 +49,12 @@ function MapContent() {
   const passedNodes = mapData.nodes.filter((n) => n.status === 'passed').length;
 
   return (
-    <div className="min-h-screen bg-base-900 px-6 py-10">
+    <div className="min-h-screen bg-surface px-6 py-10">
       {/* ── Header ── */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-base-100">闯关地图</h1>
-          <p className="mt-1 text-sm font-light text-base-300">
+          <h1 className="text-2xl font-semibold tracking-tight text-base-900">闯关地图</h1>
+          <p className="mt-1 text-sm font-light text-base-600">
             {course.title} · {mapData.nodes.length} 关卡 · {passedNodes} 已通关
           </p>
         </div>
@@ -71,7 +71,7 @@ function MapContent() {
           </div>
           <Link
             href="/"
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 transition hover:text-base-100 hover:bg-base-700/50"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-600 transition hover:text-base-900 hover:bg-base-100"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             返回首页
@@ -82,7 +82,7 @@ function MapContent() {
       {/* ── Course switcher ── */}
       {COURSES.length > 1 && (
         <div className="mb-6">
-          <p className="text-xs text-base-500 mb-2">切换课程</p>
+          <p className="text-xs text-base-400 mb-2">切换课程</p>
           <div className="flex flex-wrap gap-2">
             {COURSES.map((c) => (
               <Link
@@ -91,7 +91,7 @@ function MapContent() {
                 className={`rounded-lg px-3 py-1.5 text-xs transition ${
                   c.id === courseId
                     ? 'bg-accent/10 text-accent border border-accent/30'
-                    : 'text-base-400 border border-base-600/30 hover:border-base-500 hover:text-base-200'
+                    : 'text-base-400 border border-base-200 hover:border-accent/40 hover:text-base-800'
                 }`}
               >
                 {c.title}
@@ -106,7 +106,7 @@ function MapContent() {
         <ErrorBoundary>
           <UniversalGameRenderer
             scene={mapScene}
-            className="border border-base-600/30 rounded-2xl overflow-hidden"
+            className="border border-base-200 rounded-2xl overflow-hidden"
             debug={false}
           />
         </ErrorBoundary>
@@ -116,7 +116,7 @@ function MapContent() {
       <div className="mx-auto mt-6 max-w-[900px] flex items-center justify-between">
         <div className="flex gap-6 text-xs text-base-400">
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500/30 border border-yellow-500/50" />
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-amber-200 border border-amber-300" />
             已通关
           </span>
           <span className="flex items-center gap-1.5">
@@ -124,11 +124,11 @@ function MapContent() {
             可挑战
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block w-2.5 h-2.5 rounded-full bg-base-700 border border-base-600/50" />
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-base-100 border border-base-200" />
             锁定
           </span>
         </div>
-        <p className="text-xs text-base-500">
+        <p className="text-xs text-base-400">
           {tenant.companyName}
         </p>
       </div>
@@ -138,7 +138,7 @@ function MapContent() {
 
 export default function MapPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-base-900 flex items-center justify-center"><p className="text-base-400 animate-pulse">加载闯关地图...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center"><p className="text-base-400 animate-pulse">加载闯关地图...</p></div>}>
       <MapContent />
     </Suspense>
   );

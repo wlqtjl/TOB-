@@ -13,10 +13,12 @@ import { DocumentParserService } from './document-parser.service';
 import { AiGeneratorService } from './ai-generator.service';
 import { MineruBridgeService } from './mineru-bridge.service';
 import { QuestionValidatorService } from './question-validator.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     MulterModule.register({ storage: memoryStorage() }),
+    AuthModule,
   ],
   providers: [
     CourseService,

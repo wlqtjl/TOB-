@@ -57,15 +57,15 @@ const STATUS_CONFIG: Record<TimelineStepStatus, {
   },
   error: {
     border: 'border-red-500/40',
-    bg: 'bg-red-500/5',
+    bg: 'bg-red-50',
     glow: 'shadow-[0_0_16px_rgba(239,68,68,0.4)]',
-    icon: <XCircle size={16} strokeWidth={1.5} className="text-red-400" />,
-    textColor: 'text-red-400',
+    icon: <XCircle size={16} strokeWidth={1.5} className="text-red-600" />,
+    textColor: 'text-red-600',
     label: '错误',
   },
   'expert-only': {
-    border: 'border-base-600/60',
-    bg: 'bg-base-800/40',
+    border: 'border-base-200/60',
+    bg: 'bg-white',
     glow: '',
     icon: <Lightbulb size={16} strokeWidth={1.5} className="text-base-400" />,
     textColor: 'text-base-400',
@@ -120,26 +120,26 @@ export default function TimelineNode({
           {formatTimestamp(timestamp)}
         </span>
         {impactScore < 0 && (
-          <span className="ml-auto text-xs font-mono text-red-400/80">
+          <span className="ml-auto text-xs font-mono text-red-600/80">
             {impactScore} SLA
           </span>
         )}
       </div>
 
       {/* Action name */}
-      <h4 className="text-sm font-medium text-base-100 leading-snug mb-1">
+      <h4 className="text-sm font-medium text-base-900 leading-snug mb-1">
         {actionName}
       </h4>
 
       {/* Description */}
-      <p className="text-xs text-base-300 leading-relaxed line-clamp-2">
+      <p className="text-xs text-base-600 leading-relaxed line-clamp-2">
         {description}
       </p>
 
       {/* Deviation notice (inline preview) */}
       {deviationNotice && (
         <div className="mt-2 rounded-lg bg-red-900/20 border border-red-500/10 px-2.5 py-1.5">
-          <p className="text-[11px] text-red-300/80 leading-relaxed line-clamp-2">
+          <p className="text-[11px] text-red-600 leading-relaxed line-clamp-2">
             {deviationNotice}
           </p>
         </div>

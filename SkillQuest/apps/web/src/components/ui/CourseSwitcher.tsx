@@ -27,7 +27,7 @@ export default function CourseSwitcher() {
           className={`rounded-lg px-3 py-1.5 text-xs transition ${
             c.id === currentCourseId
               ? 'bg-accent/10 text-accent border border-accent/30'
-              : 'text-base-400 border border-base-600/30 hover:border-base-500 hover:text-base-200'
+              : 'text-base-400 border border-base-200 hover:border-accent/40 hover:text-base-800'
           }`}
         >
           {c.title}

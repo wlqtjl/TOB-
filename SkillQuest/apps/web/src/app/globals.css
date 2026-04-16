@@ -3,43 +3,42 @@
 @tailwind utilities;
 
 :root {
-  --color-base: #0D1117;
-  --color-accent: #58A6FF;
-  --color-surface: #161b22;
-  --color-border: #30363d;
-  --color-text-primary: #e6edf3;
-  --color-text-secondary: #8b949e;
-  --color-text-muted: #484f58;
+  --color-base: #F9FAFB;
+  --color-accent: #4F46E5;
+  --color-surface: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-muted: #9CA3AF;
 
-  /* Legacy compat */
-  --brand-primary: #58A6FF;
-  --game-gold: #FFD700;
-  --game-correct: #22c55e;
-  --game-wrong: #ef4444;
-  --game-particle: #00BFFF;
+  /* Game compat */
+  --game-gold: #B45309;
+  --game-correct: #059669;
+  --game-wrong: #DC2626;
+  --game-particle: #6366F1;
 }
 
 body {
   background-color: var(--color-base);
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   font-family: 'Inter', 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'SF Pro Display', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ─── Frosted Glass Utility ─── */
+/* ─── Utility classes for light minimalist style ─── */
 @layer utilities {
   .glass {
-    background: rgba(22, 27, 34, 0.72);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border: 1px solid rgba(48, 54, 61, 0.6);
+    border: 1px solid rgba(229, 231, 235, 0.6);
   }
 
   .glass-heavy {
-    background: rgba(13, 17, 23, 0.85);
+    background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(32px) saturate(200%);
     -webkit-backdrop-filter: blur(32px) saturate(200%);
-    border: 1px solid rgba(48, 54, 61, 0.4);
+    border: 1px solid rgba(229, 231, 235, 0.4);
   }
 }

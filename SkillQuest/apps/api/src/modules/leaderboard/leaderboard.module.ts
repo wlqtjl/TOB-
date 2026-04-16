@@ -9,8 +9,10 @@ import { LeaderboardService } from './leaderboard.service';
 import { LeaderboardController } from './leaderboard.controller';
 import { LeaderboardGateway } from './leaderboard.gateway';
 import { PrismaService } from '../../prisma.service';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
+  imports: [AuthModule],
   providers: [LeaderboardService, LeaderboardGateway, PrismaService],
   controllers: [LeaderboardController],
   exports: [LeaderboardService],

@@ -48,7 +48,7 @@ const RARITY_COLORS: Record<string, string> = {
 
 const RARITY_BG: Record<string, string> = {
   common: 'bg-base-400/10',
-  uncommon: 'bg-green-400/10',
+  uncommon: 'bg-emerald-500/10',
   rare: 'bg-blue-400/10',
   epic: 'bg-purple-400/10',
   legendary: 'bg-yellow-400/10',
@@ -65,38 +65,38 @@ function AchievementsContent() {
   const xpProgress = Math.round((MOCK_PLAYER.xp / MOCK_PLAYER.nextLevelXp) * 100);
 
   return (
-    <div className="min-h-screen bg-base-900 px-6 py-10">
+    <div className="min-h-screen bg-surface px-6 py-10">
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-base-100">Achievements</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-base-900">Achievements</h1>
             <p className="mt-1 text-sm text-base-400">{earnedCount}/{MOCK_BADGES.length} badges earned</p>
           </div>
-          <Link href="/" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 hover:text-base-100 hover:bg-base-700/50 transition">
+          <Link href="/" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-600 hover:text-base-900 hover:bg-base-100 transition">
             <ArrowLeft size={14} strokeWidth={1.5} />
             Home
           </Link>
         </div>
 
         {/* Player Level */}
-        <div className="mb-8 rounded-2xl border border-base-600/30 bg-base-800/40 p-6">
+        <div className="mb-8 rounded-2xl border border-base-200 bg-white p-6">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent font-bold text-lg">
                 {MOCK_PLAYER.level}
               </div>
               <div>
-                <p className="text-base font-semibold text-base-100">Level {MOCK_PLAYER.level}</p>
+                <p className="text-base font-semibold text-base-900">Level {MOCK_PLAYER.level}</p>
                 <p className="text-xs text-base-400">{MOCK_PLAYER.title}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-medium text-base-100">{MOCK_PLAYER.xp} / {MOCK_PLAYER.nextLevelXp} XP</p>
+              <p className="text-sm font-medium text-base-900">{MOCK_PLAYER.xp} / {MOCK_PLAYER.nextLevelXp} XP</p>
               <p className="text-xs text-base-400">{xpProgress}% to next level</p>
             </div>
           </div>
-          <div className="h-2 w-full rounded-full bg-base-700/60 overflow-hidden">
+          <div className="h-2 w-full rounded-full bg-base-100 overflow-hidden">
             <div className="h-full rounded-full bg-accent/60 transition-all" style={{ width: `${xpProgress}%` }} />
           </div>
         </div>
@@ -108,8 +108,8 @@ function AchievementsContent() {
             { label: 'Total XP', value: MOCK_PLAYER.xp },
             { label: 'Current Streak', value: `${MOCK_PLAYER.streak} days` },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-base-600/30 bg-base-800/40 px-4 py-4 text-center">
-              <p className="text-lg font-semibold text-base-100">{s.value}</p>
+            <div key={s.label} className="rounded-xl border border-base-200 bg-white px-4 py-4 text-center">
+              <p className="text-lg font-semibold text-base-900">{s.value}</p>
               <p className="text-xs text-base-400 mt-0.5">{s.label}</p>
             </div>
           ))}
@@ -122,7 +122,7 @@ function AchievementsContent() {
               key={cat}
               onClick={() => setFilter(cat)}
               className={`rounded-lg px-3 py-1.5 text-xs capitalize transition ${
-                filter === cat ? 'bg-accent/10 text-accent' : 'text-base-400 hover:text-base-200 hover:bg-base-700/50'
+                filter === cat ? 'bg-accent/10 text-accent' : 'text-base-400 hover:text-base-800 hover:bg-base-100'
               }`}
             >
               {cat}
@@ -140,24 +140,24 @@ function AchievementsContent() {
                 className={`rounded-2xl border-2 p-5 transition-all ${
                   badge.earned
                     ? `${RARITY_COLORS[badge.rarity]} ${RARITY_BG[badge.rarity]}`
-                    : 'border-base-700/40 bg-base-800/20 opacity-50'
+                    : 'border-base-200/40 bg-white opacity-50'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${badge.earned ? RARITY_BG[badge.rarity] : 'bg-base-700/40'}`}>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${badge.earned ? RARITY_BG[badge.rarity] : 'bg-base-100'}`}>
                     {badge.earned ? (
-                      <IconComp size={20} strokeWidth={1.5} className="text-base-100" />
+                      <IconComp size={20} strokeWidth={1.5} className="text-base-900" />
                     ) : (
-                      <Lock size={20} strokeWidth={1.5} className="text-base-500" />
+                      <Lock size={20} strokeWidth={1.5} className="text-base-400" />
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-base-100">{badge.name}</p>
+                    <p className="text-sm font-semibold text-base-900">{badge.name}</p>
                     <p className="text-xs text-base-400 mt-0.5">{badge.description}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className={`text-xs capitalize ${badge.earned ? 'text-base-300' : 'text-base-500'}`}>{badge.rarity}</span>
+                      <span className={`text-xs capitalize ${badge.earned ? 'text-base-600' : 'text-base-400'}`}>{badge.rarity}</span>
                       {badge.earned && badge.unlockedAt && (
-                        <span className="text-xs text-base-500">{badge.unlockedAt}</span>
+                        <span className="text-xs text-base-400">{badge.unlockedAt}</span>
                       )}
                     </div>
                   </div>
@@ -173,7 +173,7 @@ function AchievementsContent() {
 
 export default function AchievementsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-base-900 flex items-center justify-center"><p className="text-base-400 animate-pulse">Loading achievements...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center"><p className="text-base-400 animate-pulse">Loading achievements...</p></div>}>
       <AchievementsContent />
     </Suspense>
   );

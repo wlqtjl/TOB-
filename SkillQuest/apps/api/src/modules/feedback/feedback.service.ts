@@ -58,16 +58,16 @@ export class FeedbackService {
       return { levelId, avgDifficulty: 0, avgClarity: 0, avgRelevance: 0, passRate: 0, avgAttempts: 0, feedbackCount: 0, needsRevision: false };
     }
 
-    const avgDiff = feedbacks.reduce((s, f) => s + f.difficultyRating, 0) / count;
-    const avgClarity = feedbacks.reduce((s, f) => s + f.clarityRating, 0) / count;
-    const avgRelevance = feedbacks.reduce((s, f) => s + f.relevanceRating, 0) / count;
+    const avgDiff = feedbacks.reduce((s: number, f: { difficultyRating: number }) => s + f.difficultyRating, 0) / count;
+    const avgClarity = feedbacks.reduce((s: number, f: { clarityRating: number }) => s + f.clarityRating, 0) / count;
+    const avgRelevance = feedbacks.reduce((s: number, f: { relevanceRating: number }) => s + f.relevanceRating, 0) / count;
 
     const total = progressData.length;
-    const passed = progressData.filter((p) => p.status === 'PASSED').length;
+    const passed = progressData.filter((p: { status: string }) => p.status === 'PASSED').length;
     const passRate = total > 0 ? Math.round((passed / total) * 100) : 0;
-    const avgAttempts = total > 0 ? Math.round(progressData.reduce((s, p) => s + p.attempts, 0) / total) : 0;
+    const avgAttempts = total > 0 ? Math.round(progressData.reduce((s: number, p: { attempts: number }) => s + p.attempts, 0) / total) : 0;
 
-    const negativeCount = feedbacks.filter((f) => f.tag === 'too_hard' || f.tag === 'unclear' || f.tag === 'bug').length;
+    const negativeCount = feedbacks.filter((f: { tag: string }) => f.tag === 'too_hard' || f.tag === 'unclear' || f.tag === 'bug').length;
     const needsRevision = count >= 5 && negativeCount / count >= 0.2;
 
     return { levelId, avgDifficulty: Math.round(avgDiff * 10) / 10, avgClarity: Math.round(avgClarity * 10) / 10, avgRelevance: Math.round(avgRelevance * 10) / 10, passRate, avgAttempts, feedbackCount: count, needsRevision };
@@ -81,19 +81,22 @@ export class FeedbackService {
       include: { feedbacks: true, course: { select: { title: true, tenantId: true } } },
     });
 
+    type LevelWithFeedbacks = (typeof levels)[number];
+    type FeedbackEntry = LevelWithFeedbacks['feedbacks'][number];
+
     return levels
-      .filter((l) => {
+      .filter((l: LevelWithFeedbacks) => {
         const count = l.feedbacks.length;
         if (count < 5) return false;
-        const negative = l.feedbacks.filter((f) => f.tag === 'too_hard' || f.tag === 'unclear' || f.tag === 'bug').length;
+        const negative = l.feedbacks.filter((f: FeedbackEntry) => f.tag === 'too_hard' || f.tag === 'unclear' || f.tag === 'bug').length;
         return negative / count >= 0.2;
       })
-      .map((l) => ({
+      .map((l: LevelWithFeedbacks) => ({
         levelId: l.id,
         levelTitle: l.title,
         courseTitle: l.course.title,
         feedbackCount: l.feedbacks.length,
-        negativePercent: Math.round((l.feedbacks.filter((f) => f.tag === 'too_hard' || f.tag === 'unclear' || f.tag === 'bug').length / l.feedbacks.length) * 100),
+        negativePercent: Math.round((l.feedbacks.filter((f: FeedbackEntry) => f.tag === 'too_hard' || f.tag === 'unclear' || f.tag === 'bug').length / l.feedbacks.length) * 100),
       }));
   }
 }

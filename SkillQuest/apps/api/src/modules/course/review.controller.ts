@@ -18,8 +18,13 @@ import {
   Param,
   Body,
   Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma.service';
+import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard, Roles } from '../auth/roles.guard';
+import { TenantGuard } from '../auth/tenant.guard';
 
 // ─── DTO ──────────────────────────────────────────────────────────
 
@@ -40,6 +45,8 @@ class PaginationQuery {
 // ─── Controller ───────────────────────────────────────────────────
 
 @Controller('review')
+@UseGuards(AuthGuard, TenantGuard, RolesGuard)
+@Roles('ADMIN', 'TRAINER')
 export class ReviewController {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -48,6 +55,7 @@ export class ReviewController {
    */
   @Get('pending')
   async getPendingLevels(
+    @Req() req: { tenantId: string },
     @Query('courseId') courseId?: string,
     @Query('page') page = '1',
     @Query('pageSize') pageSize = '20',
@@ -59,6 +67,7 @@ export class ReviewController {
 
     const where: Record<string, unknown> = {
       reviewStatus: { in: ['PENDING', 'NEEDS_REVISION'] },
+      course: { tenantId: req.tenantId },
     };
     if (courseId) {
       where['courseId'] = courseId;

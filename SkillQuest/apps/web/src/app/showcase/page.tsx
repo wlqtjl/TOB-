@@ -241,10 +241,10 @@ function WorkflowStep({ item }: { item: typeof WORKFLOW_STEPS[number] }) {
             <item.Icon size={24} strokeWidth={1.5} className="text-accent shrink-0" />
             <div>
               <span className="text-xs font-mono text-base-400">STEP {item.step}</span>
-              <h3 className="text-base font-semibold text-base-100">{item.title}</h3>
+              <h3 className="text-base font-semibold text-base-900">{item.title}</h3>
             </div>
           </div>
-          <p className="text-sm font-light text-base-300">{item.desc}</p>
+          <p className="text-sm font-light text-base-600">{item.desc}</p>
         </div>
       </div>
     </div>
@@ -255,7 +255,7 @@ function WorkflowSection() {
   return (
     <section className="py-28 px-6">
       <div className="max-w-5xl mx-auto">
-        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-16 text-base-100">
+        <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-16 text-base-900">
           工作流程
         </h2>
 
@@ -280,7 +280,7 @@ export default function ShowcasePage() {
   const cta = useInView();
 
   return (
-    <div className="relative bg-base-900 text-base-100 overflow-x-hidden">
+    <div className="relative bg-surface text-base-900 overflow-x-hidden">
 
       {/* ━━━━━━━━━━━━ HERO ━━━━━━━━━━━━ */}
       <section className="relative flex flex-col items-center justify-center min-h-screen overflow-hidden">
@@ -289,7 +289,7 @@ export default function ShowcasePage() {
 
         <div className="relative z-10 text-center px-6 max-w-4xl">
           {/* badge */}
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-accent/[.08] border border-accent/20 px-5 py-2 text-sm text-base-300">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-accent/[.08] border border-accent/20 px-5 py-2 text-sm text-base-600">
             <Gamepad2 size={16} strokeWidth={1.5} className="text-accent" />
             游戏化企业培训引擎
           </div>
@@ -298,7 +298,7 @@ export default function ShowcasePage() {
             SkillQuest
           </h1>
 
-          <p className="mt-4 text-xl sm:text-2xl text-base-300 font-medium h-8">
+          <p className="mt-4 text-xl sm:text-2xl text-base-600 font-medium h-8">
             <Typewriter text="游戏化企业培训引擎 — 让技术学习像打游戏一样上瘾" speed={60} />
           </p>
 
@@ -308,13 +308,13 @@ export default function ShowcasePage() {
           </p>
 
           <div className="mt-16 animate-bounce">
-            <ChevronDown size={24} strokeWidth={1.5} className="mx-auto text-base-500" />
+            <ChevronDown size={24} strokeWidth={1.5} className="mx-auto text-base-400" />
           </div>
         </div>
       </section>
 
       {/* ━━━━━━━━━━━━ STATS BANNER ━━━━━━━━━━━━ */}
-      <section ref={stats.ref} className="relative py-20 border-y border-base-600/30">
+      <section ref={stats.ref} className="relative py-20 border-y border-base-200">
         <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-8 text-center px-6">
           {[
             { val: 8, suffix: '种', label: '关卡类型' },
@@ -353,8 +353,8 @@ export default function ShowcasePage() {
                 style={{ transitionDelay: `${i * 100 + 300}ms` }}
               >
                 <f.Icon size={28} strokeWidth={1.5} className="text-accent mb-5 group-hover:scale-110 transition-transform" />
-                <h3 className="text-lg font-semibold text-base-100 mb-2">{f.title}</h3>
-                <p className="text-sm font-light text-base-300 leading-relaxed">{f.desc}</p>
+                <h3 className="text-lg font-semibold text-base-900 mb-2">{f.title}</h3>
+                <p className="text-sm font-light text-base-600 leading-relaxed">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -383,7 +383,7 @@ export default function ShowcasePage() {
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-accent/[.08] mb-4 group-hover:scale-110 transition-transform">
                   <g.Icon size={24} strokeWidth={1.5} className="text-accent" />
                 </div>
-                <h3 className="text-base font-semibold text-base-100">{g.name}</h3>
+                <h3 className="text-base font-semibold text-base-900">{g.name}</h3>
                 <p className="mt-1 text-xs text-base-400">{g.desc}</p>
               </div>
             ))}
@@ -411,13 +411,13 @@ export default function ShowcasePage() {
                 style={{ transitionDelay: `${i * 200 + 200}ms` }}
               >
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                  <span className="flex items-center gap-2 text-base font-semibold text-base-100 min-w-[8rem]">
+                  <span className="flex items-center gap-2 text-base font-semibold text-base-900 min-w-[8rem]">
                     <layer.Icon size={18} strokeWidth={1.5} className="text-accent" />
                     {layer.layer}
                   </span>
                   <div className="flex flex-wrap gap-2">
                     {layer.items.map((item, j) => (
-                      <span key={j} className="px-3 py-1 rounded-full text-xs font-medium bg-accent/[.06] text-base-300 border border-accent/10">
+                      <span key={j} className="px-3 py-1 rounded-full text-xs font-medium bg-accent/[.06] text-base-600 border border-accent/10">
                         {item}
                       </span>
                     ))}
@@ -425,7 +425,7 @@ export default function ShowcasePage() {
                 </div>
                 {i < ARCHITECTURE.length - 1 && (
                   <div className="flex justify-center mt-3">
-                    <ChevronDown size={18} strokeWidth={1.5} className="text-base-500 animate-bounce" />
+                    <ChevronDown size={18} strokeWidth={1.5} className="text-base-400 animate-bounce" />
                   </div>
                 )}
               </div>
@@ -437,14 +437,14 @@ export default function ShowcasePage() {
       {/* ━━━━━━━━━━━━ COMPARISON ━━━━━━━━━━━━ */}
       <section className="py-28 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-16 text-base-100">
+          <h2 className="text-3xl sm:text-4xl font-semibold tracking-tight text-center mb-16 text-base-900">
             传统培训 vs SkillQuest
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {/* old way */}
             <div className="rounded-2xl border border-red-500/10 bg-red-950/[.04] p-8">
-              <h3 className="text-lg font-semibold text-base-200 mb-6">传统 PPT 培训</h3>
+              <h3 className="text-lg font-semibold text-base-800 mb-6">传统 PPT 培训</h3>
               <ul className="space-y-3 text-sm text-base-400">
                 {[
                   '枯燥的 PPT 幻灯片',
@@ -455,7 +455,7 @@ export default function ShowcasePage() {
                   '内容更新困难',
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-base-500">—</span>
+                    <span className="text-base-400">—</span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -464,8 +464,8 @@ export default function ShowcasePage() {
 
             {/* new way */}
             <div className="rounded-2xl border border-accent/10 bg-accent/[.03] p-8">
-              <h3 className="text-lg font-semibold text-base-100 mb-6">SkillQuest 游戏化</h3>
-              <ul className="space-y-3 text-sm text-base-200">
+              <h3 className="text-lg font-semibold text-base-900 mb-6">SkillQuest 游戏化</h3>
+              <ul className="space-y-3 text-sm text-base-800">
                 {[
                   '8种互动游戏关卡',
                   'Combo连击激发学习欲望',
@@ -492,10 +492,10 @@ export default function ShowcasePage() {
         </div>
 
         <div className={`relative z-10 text-center max-w-3xl mx-auto transition-all duration-1000 ${cta.visible ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-12 scale-95'}`}>
-          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-base-100">
+          <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 text-base-900">
             准备好革新你的培训方式了吗？
           </h2>
-          <p className="text-lg font-light text-base-300 mb-10 leading-relaxed">
+          <p className="text-lg font-light text-base-600 mb-10 leading-relaxed">
             SkillQuest 是通用游戏化培训引擎，可以部署为任何企业的品牌培训平台。<br />
             只需上传你的培训文档，AI 就能自动生成完整的游戏化课程。
           </p>
@@ -509,7 +509,7 @@ export default function ShowcasePage() {
             </Link>
             <Link
               href="/courses"
-              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-base-600/60 text-base-300 font-semibold text-base hover:border-accent/30 hover:bg-accent/[.05] transition-all hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl border border-base-200/60 text-base-600 font-semibold text-base hover:border-accent/30 hover:bg-accent/[.05] transition-all hover:scale-105"
             >
               <Mail size={18} strokeWidth={1.5} />
               课程管理后台
@@ -519,7 +519,7 @@ export default function ShowcasePage() {
       </section>
 
       {/* ━━━━━━━━━━━━ FOOTER ━━━━━━━━━━━━ */}
-      <footer className="py-10 border-t border-base-600/30 text-center text-xs text-base-500">
+      <footer className="py-10 border-t border-base-200 text-center text-xs text-base-400">
         <p>SkillQuest — 通用游戏化企业培训引擎</p>
         <p className="mt-1">Next.js 15 · Canvas 2D · NestJS · Prisma · MinerU 2.5 · GPT-4o</p>
         <p className="mt-2 text-base-600">© 2026 SmartX Inc. All rights reserved.</p>

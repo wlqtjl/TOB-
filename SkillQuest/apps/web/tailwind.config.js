@@ -7,52 +7,41 @@ module.exports = {
         sans: ['"Inter"', '"Noto Sans CJK SC"', '"Noto Sans SC"', '"PingFang SC"', '"SF Pro Display"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       colors: {
-        /* ─── Minimalist Design System ─── */
+        /* ─── Light Minimalist Design System (Linear/Stripe) ─── */
+        /* 8px grid · single accent · no heavy shadows */
+        surface: '#F9FAFB',          /* 页面背景 — 极淡灰 */
         base: {
-          DEFAULT: '#0D1117',  /* 深海军蓝底色 */
-          50:  '#f0f6fc',
-          100: '#c9d1d9',
-          200: '#b1bac4',
-          300: '#8b949e',      /* 中性灰 — 辅助信息 */
-          400: '#6e7681',
-          500: '#484f58',
-          600: '#30363d',      /* 卡片边框 */
-          700: '#21262d',      /* 卡片背景 */
-          800: '#161b22',      /* 次级背景 */
-          900: '#0D1117',      /* 主背景 */
+          DEFAULT: '#F9FAFB',        /* 页面背景 */
+          50:  '#F9FAFB',            /* 页面背景 */
+          100: '#F3F4F6',            /* 分割线 / 次级区域 */
+          200: '#E5E7EB',            /* 卡片边框 / 输入框边框 */
+          300: '#D1D5DB',            /* 禁用边框 */
+          400: '#9CA3AF',            /* 辅助文字 — 浅灰 */
+          500: '#6B7280',            /* 次要文字 */
+          600: '#4B5563',            /* 正文 — 深灰 */
+          700: '#374151',            /* 次级标题 */
+          800: '#1F2937',            /* 主标题 */
+          900: '#111827',            /* 纯黑标题 */
         },
         accent: {
-          DEFAULT: '#58A6FF',  /* 电光蓝 — 唯一主题色 */
-          50:  '#f0f7ff',
-          100: '#cce5ff',
-          200: '#a5d6ff',
-          300: '#79c0ff',
-          400: '#58A6FF',      /* 主行动点 */
-          500: '#388bfd',
-          600: '#1f6feb',
-          700: '#1158c7',
-          800: '#0d419d',
-          900: '#0a3069',
-        },
-        brand: {
-          50: '#eff8ff',
-          100: '#dbeefe',
-          200: '#bfe2fe',
-          300: '#92d0fd',
-          400: '#5eb6fa',
-          500: '#3996f6',
-          600: '#2378eb',
-          700: '#1b63d8',
-          800: '#1c4faf',
-          900: '#1c458a',
-          950: '#162b54',
+          DEFAULT: '#4F46E5',        /* Deep Indigo — 唯一主题色 */
+          50:  '#EEF2FF',            /* 极淡 indigo 背景 */
+          100: '#E0E7FF',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',            /* 主按钮 */
+          700: '#4338CA',            /* hover 状态 */
+          800: '#3730A3',
+          900: '#312E81',
         },
         game: {
-          gold: '#FFD700',
-          correct: '#22c55e',
-          wrong: '#ef4444',
-          combo: '#f59e0b',
-          particle: '#00BFFF',
+          gold: '#B45309',           /* 勋章/金色奖励 */
+          correct: '#059669',        /* 正确 — Emerald */
+          wrong: '#DC2626',          /* 错误 — Red */
+          combo: '#D97706',          /* 连击 — Amber */
+          particle: '#6366F1',       /* 粒子效果 — Indigo */
         },
       },
       borderRadius: {
@@ -68,8 +57,8 @@ module.exports = {
       },
       keyframes: {
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 5px rgba(255, 215, 0, 0.5)' },
-          '50%': { boxShadow: '0 0 20px rgba(255, 215, 0, 0.8)' },
+          '0%, 100%': { boxShadow: '0 0 5px rgba(79, 70, 229, 0.3)' },
+          '50%': { boxShadow: '0 0 20px rgba(79, 70, 229, 0.5)' },
         },
         'float-up': {
           '0%': { opacity: '1', transform: 'translateY(0)' },

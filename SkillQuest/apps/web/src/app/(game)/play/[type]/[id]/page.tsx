@@ -142,7 +142,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
           <p className="mt-2 text-sm text-gray-600">
             课程: {course?.title ?? courseId} · 类型: {type} · ID: {id}
           </p>
-          <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-400 hover:underline text-sm">
+          <a href={`/map?course=${courseId}`} className="mt-4 inline-block text-blue-600 hover:underline text-sm">
             ← 返回地图
           </a>
         </div>
@@ -210,8 +210,8 @@ function PlayContent({ type, id }: { type: string; id: string }) {
             key={i}
             className={`rounded-lg px-4 py-2 text-sm ${
               msg.correct
-                ? 'bg-green-500/10 border border-green-500/30 text-green-400'
-                : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                ? 'bg-emerald-50 border border-emerald-200 text-emerald-600'
+                : 'bg-red-50 border border-red-200 text-red-600'
             }`}
           >
             {msg.text}
@@ -231,7 +231,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
                   href={`/play/${type}/${id}?course=${c.id}`}
                   className={`rounded-lg border px-3 py-1.5 text-xs transition ${
                     c.id === courseId
-                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-600'
                       : 'border-gray-700 text-gray-500 hover:border-gray-500'
                   }`}
                 >
@@ -250,7 +250,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
                 href={`/play/${key}/demo?course=${courseId}`}
                 className={`rounded-lg border px-3 py-1.5 text-xs transition ${
                   key === contentType
-                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-600'
                     : 'border-gray-700 text-gray-500 hover:border-gray-500'
                 }`}
               >

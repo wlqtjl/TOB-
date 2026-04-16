@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { tenantConfig } from '../lib/tenant-config';
+import { AuthProvider } from '../lib/auth-context';
 import './globals.css';
 
 const tenant = tenantConfig();
@@ -16,7 +17,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="zh-CN">
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen bg-surface antialiased">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

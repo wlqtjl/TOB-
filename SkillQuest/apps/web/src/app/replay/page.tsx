@@ -26,12 +26,12 @@ export default function ReplayPage() {
         <div className="mx-auto max-w-6xl px-4 py-3 flex items-center justify-between">
           <a
             href="/map"
-            className="flex items-center gap-2 text-sm text-base-300 hover:text-base-100 transition-colors"
+            className="flex items-center gap-2 text-sm text-base-600 hover:text-base-900 transition-colors"
           >
             <ArrowLeft size={14} strokeWidth={1.5} />
             返回关卡地图
           </a>
-          <h1 className="text-sm font-medium text-base-200">
+          <h1 className="text-sm font-medium text-base-800">
             专家对比复盘报告
           </h1>
           <div className="w-20" /> {/* Spacer for centering */}

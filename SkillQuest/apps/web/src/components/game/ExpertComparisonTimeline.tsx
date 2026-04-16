@@ -59,12 +59,12 @@ function SummaryHeader({
 
   // Determine grade
   let grade = 'S';
-  let gradeColor = 'text-yellow-400';
-  if (summary.score >= 90) { grade = 'S'; gradeColor = 'text-yellow-400'; }
+  let gradeColor = 'text-amber-600';
+  if (summary.score >= 90) { grade = 'S'; gradeColor = 'text-amber-600'; }
   else if (summary.score >= 80) { grade = 'A'; gradeColor = 'text-emerald-400'; }
   else if (summary.score >= 60) { grade = 'B'; gradeColor = 'text-accent'; }
   else if (summary.score >= 40) { grade = 'C'; gradeColor = 'text-amber-400'; }
-  else { grade = 'D'; gradeColor = 'text-red-400'; }
+  else { grade = 'D'; gradeColor = 'text-red-600'; }
 
   return (
     <div className="glass rounded-2xl p-5 mb-6">
@@ -73,11 +73,11 @@ function SummaryHeader({
         <div className="flex items-center gap-4">
           {/* Grade badge */}
           <div className="relative flex-shrink-0">
-            <div className={`w-16 h-16 rounded-2xl border border-base-600/60 bg-base-800/80 flex items-center justify-center ${gradeColor}`}>
+            <div className={`w-16 h-16 rounded-2xl border border-base-200/60 bg-white/80 flex items-center justify-center ${gradeColor}`}>
               <span className="text-3xl font-black">{grade}</span>
             </div>
-            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-base-700 border border-base-600 flex items-center justify-center">
-              <Award size={10} className="text-yellow-400" />
+            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-base-100 border border-base-200 flex items-center justify-center">
+              <Award size={10} className="text-amber-600" />
             </div>
           </div>
 
@@ -141,13 +141,13 @@ function StatCard({
 }) {
   const variantStyles = {
     success: 'border-emerald-500/20 bg-emerald-500/5',
-    danger: 'border-red-500/20 bg-red-500/5',
-    neutral: 'border-base-600/40 bg-base-800/40',
+    danger: 'border-red-200 bg-red-50',
+    neutral: 'border-base-200 bg-white',
   };
   const valueColor = {
     success: 'text-emerald-400',
-    danger: 'text-red-400',
-    neutral: 'text-base-100',
+    danger: 'text-red-600',
+    neutral: 'text-base-900',
   };
 
   return (
@@ -159,7 +159,7 @@ function StatCard({
       <div className={`text-sm font-semibold font-mono ${valueColor[variant]}`}>
         {value}
       </div>
-      <div className="text-[11px] text-base-500 mt-0.5">{sub}</div>
+      <div className="text-[11px] text-base-400 mt-0.5">{sub}</div>
     </div>
   );
 }
@@ -335,7 +335,7 @@ export default function ExpertComparisonTimeline({
   }, [summaryFull]);
 
   return (
-    <div className="relative min-h-screen bg-base-900">
+    <div className="relative min-h-screen bg-surface">
       {/* Summary Header */}
       <div className="mx-auto max-w-6xl px-4 pt-6">
         <SummaryHeader data={data} deviations={deviations} slaCurve={slaCurve} />
@@ -352,10 +352,10 @@ export default function ExpertComparisonTimeline({
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <ChevronDown size={14} className="text-base-500" />
+            <ChevronDown size={14} className="text-base-400" />
           </div>
           <div className="text-left">
-            <div className="inline-flex items-center gap-2 rounded-lg border border-base-600/40 bg-base-800/40 px-3 py-1.5">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-base-200 bg-white px-3 py-1.5">
               <Award size={12} className="text-base-400" />
               <span className="text-xs font-medium text-base-400">专家路径</span>
             </div>
@@ -411,7 +411,7 @@ export default function ExpertComparisonTimeline({
                   className="flex items-center justify-center"
                   style={{ minHeight: ROW_HEIGHT - 16 }}
                 >
-                  <span className="text-[11px] font-mono text-base-500 bg-base-900/80 px-2 py-0.5 rounded-md border border-base-700/40">
+                  <span className="text-[11px] font-mono text-base-400 bg-surface/80 px-2 py-0.5 rounded-md border border-base-200/40">
                     +{min}:{sec.toString().padStart(2, '0')}
                   </span>
                 </div>
@@ -447,7 +447,7 @@ export default function ExpertComparisonTimeline({
               事故复盘总结
             </span>
           </div>
-          <p className="text-sm text-base-200 leading-relaxed">
+          <p className="text-sm text-base-800 leading-relaxed">
             {summaryText}
             {summaryText.length < summaryFull.length && (
               <span className="animate-pulse text-accent">▌</span>

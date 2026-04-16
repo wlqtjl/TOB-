@@ -72,15 +72,15 @@ function LearningPathContent() {
   const [roleFilter, setRoleFilter] = useState('All');
 
   return (
-    <div className="min-h-screen bg-base-900 px-6 py-10">
+    <div className="min-h-screen bg-surface px-6 py-10">
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-base-100">Learning Paths</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-base-900">Learning Paths</h1>
             <p className="mt-1 text-sm text-base-400">Personalized training roadmaps</p>
           </div>
-          <Link href="/" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-300 hover:text-base-100 hover:bg-base-700/50 transition">
+          <Link href="/" className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs text-base-600 hover:text-base-900 hover:bg-base-100 transition">
             <ArrowLeft size={14} strokeWidth={1.5} />
             Home
           </Link>
@@ -89,7 +89,7 @@ function LearningPathContent() {
         {/* Role Filter */}
         <div className="flex gap-2 mb-8">
           {ROLES.map((r) => (
-            <button key={r} onClick={() => setRoleFilter(r)} className={`rounded-lg px-3 py-1.5 text-xs transition ${roleFilter === r ? 'bg-accent/10 text-accent' : 'text-base-400 hover:text-base-200 hover:bg-base-700/50'}`}>
+            <button key={r} onClick={() => setRoleFilter(r)} className={`rounded-lg px-3 py-1.5 text-xs transition ${roleFilter === r ? 'bg-accent/10 text-accent' : 'text-base-400 hover:text-base-800 hover:bg-base-100'}`}>
               {r}
             </button>
           ))}
@@ -103,16 +103,16 @@ function LearningPathContent() {
           </h3>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {MOCK_RECOMMENDATIONS.map((rec) => (
-              <div key={rec.courseId} className="rounded-2xl border border-base-600/30 bg-base-800/40 p-5">
-                <span className="text-xs text-base-500">{rec.category}</span>
-                <h4 className="mt-1 text-sm font-semibold text-base-100">{rec.title}</h4>
+              <div key={rec.courseId} className="rounded-2xl border border-base-200 bg-white p-5">
+                <span className="text-xs text-base-400">{rec.category}</span>
+                <h4 className="mt-1 text-sm font-semibold text-base-900">{rec.title}</h4>
                 <p className="mt-1 text-xs text-base-400">{rec.reason}</p>
                 <div className="mt-3">
                   <div className="flex justify-between text-xs mb-1">
                     <span className="text-base-400">Match</span>
-                    <span className="text-base-300">{Math.round(rec.matchScore * 100)}%</span>
+                    <span className="text-base-600">{Math.round(rec.matchScore * 100)}%</span>
                   </div>
-                  <div className="h-1.5 w-full rounded-full bg-base-700/60 overflow-hidden">
+                  <div className="h-1.5 w-full rounded-full bg-base-100 overflow-hidden">
                     <div className="h-full rounded-full bg-accent/50" style={{ width: `${rec.matchScore * 100}%` }} />
                   </div>
                 </div>
@@ -128,26 +128,26 @@ function LearningPathContent() {
         <div className="mb-10">
           <h3 className="text-sm font-medium text-base-400 mb-3">Active Learning Paths</h3>
           {MOCK_ACTIVE_PATHS.map((path) => (
-            <div key={path.id} className="rounded-2xl border border-base-600/30 bg-base-800/40 p-6 mb-4">
+            <div key={path.id} className="rounded-2xl border border-base-200 bg-white p-6 mb-4">
               <div className="flex justify-between mb-1">
-                <h4 className="text-base font-semibold text-base-100">{path.name}</h4>
+                <h4 className="text-base font-semibold text-base-900">{path.name}</h4>
                 <span className="text-xs text-base-400">{Math.round(path.progress * 100)}%</span>
               </div>
               <p className="text-xs text-base-400 mb-3">{path.description}</p>
-              <div className="h-2 w-full rounded-full bg-base-700/60 overflow-hidden mb-4">
-                <div className="h-full rounded-full bg-green-400/50" style={{ width: `${path.progress * 100}%` }} />
+              <div className="h-2 w-full rounded-full bg-base-100 overflow-hidden mb-4">
+                <div className="h-full rounded-full bg-emerald-500/50" style={{ width: `${path.progress * 100}%` }} />
               </div>
               <div className="space-y-2">
                 {path.courses.map((c, i) => (
                   <div key={c.id} className={`flex items-center gap-3 rounded-lg px-3 py-2 ${(c as { current?: boolean }).current ? 'bg-accent/5 border border-accent/20' : ''}`}>
                     {c.completed ? (
-                      <CheckCircle2 size={16} strokeWidth={1.5} className="text-green-400" />
+                      <CheckCircle2 size={16} strokeWidth={1.5} className="text-emerald-600" />
                     ) : (c as { current?: boolean }).current ? (
                       <ChevronRight size={16} strokeWidth={1.5} className="text-accent" />
                     ) : (
                       <Circle size={16} strokeWidth={1.5} className="text-base-600" />
                     )}
-                    <span className={`text-sm ${c.completed ? 'text-base-300 line-through' : (c as { current?: boolean }).current ? 'text-accent font-medium' : 'text-base-400'}`}>
+                    <span className={`text-sm ${c.completed ? 'text-base-600 line-through' : (c as { current?: boolean }).current ? 'text-accent font-medium' : 'text-base-400'}`}>
                       {i + 1}. {c.title}
                     </span>
                   </div>
@@ -167,20 +167,20 @@ function LearningPathContent() {
             {MOCK_SKILL_TREE.map((branch) => {
               const completed = branch.courses.filter((c) => c.completed).length;
               return (
-                <div key={branch.category} className="rounded-2xl border border-base-600/30 bg-base-800/40 p-5">
+                <div key={branch.category} className="rounded-2xl border border-base-200 bg-white p-5">
                   <div className="flex justify-between mb-3">
-                    <h4 className="text-sm font-semibold text-base-100">{branch.category}</h4>
+                    <h4 className="text-sm font-semibold text-base-900">{branch.category}</h4>
                     <span className="text-xs text-base-400">{completed}/{branch.courses.length}</span>
                   </div>
                   <div className="space-y-2">
                     {branch.courses.map((c) => (
                       <div key={c.id} className="flex items-center gap-2">
                         {c.completed ? (
-                          <CheckCircle2 size={14} strokeWidth={1.5} className="text-green-400 shrink-0" />
+                          <CheckCircle2 size={14} strokeWidth={1.5} className="text-emerald-600 shrink-0" />
                         ) : (
                           <Circle size={14} strokeWidth={1.5} className="text-base-600 shrink-0" />
                         )}
-                        <span className={`text-xs ${c.completed ? 'text-base-300' : 'text-base-400'}`}>{c.title}</span>
+                        <span className={`text-xs ${c.completed ? 'text-base-600' : 'text-base-400'}`}>{c.title}</span>
                       </div>
                     ))}
                   </div>
@@ -196,7 +196,7 @@ function LearningPathContent() {
 
 export default function LearningPathPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-base-900 flex items-center justify-center"><p className="text-base-400 animate-pulse">Loading learning paths...</p></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-surface flex items-center justify-center"><p className="text-base-400 animate-pulse">Loading learning paths...</p></div>}>
       <LearningPathContent />
     </Suspense>
   );

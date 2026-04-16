@@ -151,6 +151,36 @@ const MOCK_REVIEW_DETAIL: ReviewDetail = {
   feedbackLog: [],
 };
 
+const MOCK_SANDBOX_REVIEW_DETAIL: ReviewDetail = {
+  level: {
+    id: 'review-4',
+    title: '硬盘故障重构模拟实验',
+    type: 'SANDBOX',
+    reviewStatus: 'PENDING',
+    content: {
+      question: '通过调节硬盘条带深度和并发修复流数，观察存储集群故障重构时间的变化',
+      options: ['条带深度增大 → 修复加速', '并发流过多 → 网络拥塞', '数据总量不影响修复时间', '修复流数与时间成正比'],
+      answer: 1,
+      explanation: '并发修复流超过网络带宽承载能力后，拥塞导致有效吞吐下降，修复时间反而增加',
+    },
+  },
+  sourceQuotes: [
+    { chunkId: 'c3', quote: 'RAID 重建期间并发修复流数应根据网络带宽合理配置...', chapterTitle: '第5章: 故障恢复策略', relevanceScore: 0.92 },
+    { chunkId: 'c4', quote: '条带深度影响单次 IO 的数据量，进而影响重建效率...', chapterTitle: '第3章: RAID配置参数', relevanceScore: 0.87 },
+  ],
+  validationLogs: [
+    {
+      id: 'vl2',
+      round: 1,
+      agentAAnswer: JSON.stringify({ answer: 1, confidence: 0.88, reasoning: '文档明确指出网络带宽是瓶颈' }),
+      agentBAnswer: JSON.stringify({ answer: 1, confidence: 0.91, reference: '第5章故障恢复策略一节' }),
+      finalVerdict: 'CONFIRMED',
+      confidenceScore: 0.85,
+    },
+  ],
+  feedbackLog: [],
+};
+
 // ─── API Helpers ─────────────────────────────────────────────────────
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '';
@@ -747,13 +777,22 @@ function ReviewContent() {
     setActionMessage(null);
     try {
       const apiData = await fetchWithAuth<ReviewDetail>(`/review/${levelId}`);
-      setDetail(apiData ?? { ...MOCK_REVIEW_DETAIL, level: { ...MOCK_REVIEW_DETAIL.level, id: levelId } });
+      if (apiData) {
+        setDetail(apiData);
+      } else {
+        // Mock mode: pick correct mock detail based on the selected item
+        const mockItem = items.find((i) => i.id === levelId);
+        const baseMock = mockItem?.type === 'SANDBOX' ? MOCK_SANDBOX_REVIEW_DETAIL : MOCK_REVIEW_DETAIL;
+        setDetail({ ...baseMock, level: { ...baseMock.level, id: levelId } });
+      }
     } catch {
-      setDetail({ ...MOCK_REVIEW_DETAIL, level: { ...MOCK_REVIEW_DETAIL.level, id: levelId } });
+      const mockItem = items.find((i) => i.id === levelId);
+      const baseMock = mockItem?.type === 'SANDBOX' ? MOCK_SANDBOX_REVIEW_DETAIL : MOCK_REVIEW_DETAIL;
+      setDetail({ ...baseMock, level: { ...baseMock.level, id: levelId } });
     } finally {
       setDetailLoading(false);
     }
-  }, []);
+  }, [items]);
 
   useEffect(() => { void loadList(); }, [loadList]);
 

@@ -10,6 +10,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Map,
@@ -75,7 +76,7 @@ export default function Navbar() {
         {/* Left: Logo */}
         <Link href={user.role === 'LEARNER' ? '/dashboard' : '/courses'} className="flex items-center gap-2">
           {tenant.logoUrl ? (
-            <img src={tenant.logoUrl} alt={tenant.companyName} className="h-7" />
+            <Image src={tenant.logoUrl} alt={tenant.companyName} width={112} height={28} className="h-7 w-auto" />
           ) : (
             <span className="text-base font-semibold text-base-900">
               {tenant.platformName}

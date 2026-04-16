@@ -18,7 +18,8 @@ export type LevelType =
   | 'topology'   // 交互拓扑连线题 ★★★★★ (对标 Data Center packet-balls)
   | 'terminal'   // VRP 终端命令填空 ★★★★
   | 'scenario'   // 故障排查情景剧本 ★★★★
-  | 'flow_sim';  // 数据流向仿真 ★★★★★★ — 可视化任意系统内部的不可见流程
+  | 'flow_sim'   // 数据流向仿真 ★★★★★★ — 可视化任意系统内部的不可见流程
+  | 'sandbox';   // 交互沙盒实验 — Gemini 交互实验室 (GPSL v1.1)
 
 export type LevelStatus =
   | 'locked'
@@ -1419,4 +1420,54 @@ export interface EnergyMetrics {
   bandwidthLossRate: number;
   /** 系统熵增 (操作导致的引力波动度量) */
   entropyDelta: number;
+}
+
+// ─── 题型: 交互沙盒实验 ★★★★★★ (GPSL v1.1 — Gemini 动力模拟实验室) ──
+
+/** 模型描述协议 (MDP) — Gemini 生成的模拟模型 JSON 规范 */
+export type SimModelType = 'physical_law' | 'logic_flow' | 'mechanical_cycle';
+
+/** 模拟变量定义 — 对应沙盒中可调参的滑块/旋钮 */
+export interface SimVariable {
+  name: string;
+  label: string;
+  min: number;
+  max: number;
+  default: number;
+  step?: number;
+  unit?: string;
+}
+
+/** 沙盒交互式模拟配置 (存储于 Level.simConfig) */
+export interface SandboxSimConfig {
+  /** 模型分类 */
+  modelType: SimModelType;
+  /** LaTeX 格式数学公式 */
+  mathFormula: string;
+  /** 可调变量列表 */
+  variables: SimVariable[];
+  /** SVG/Canvas 动画行为描述 */
+  visualLogic: string;
+  /** 学习检验问题 */
+  learningCheck: string;
+  /** 可选: 告警阈值 (变量名 → 阈值) */
+  alertThresholds?: Record<string, { min?: number; max?: number; message: string }>;
+  /** 可选: 物理引擎类型 */
+  engineType?: 'wave' | 'particle' | 'vector_field' | 'logic_gate';
+}
+
+/** 沙盒关卡完整定义 */
+export interface SandboxLevel {
+  id: string;
+  levelId: string;
+  type: 'sandbox';
+  /** 实验任务描述 */
+  task: string;
+  /** 学习目标 */
+  objective: string;
+  /** 模拟配置 */
+  simConfig: SandboxSimConfig;
+  /** AI 动态引导文本 */
+  guidanceText: string;
+  explanation: string;
 }

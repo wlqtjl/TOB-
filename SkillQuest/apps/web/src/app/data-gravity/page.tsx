@@ -7,7 +7,8 @@
  * Uses @skillquest/game-engine for physics and @skillquest/types for type safety.
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Anchor, Shield, ScanSearch, Atom, RotateCcw, ArrowLeft,
@@ -29,10 +30,10 @@ import type { EntropyHistory } from '@skillquest/game-engine';
 /* ────────────────── constants ────────────────── */
 
 const TOOLS: { id: GravityGunToolType; label: string; Icon: typeof Anchor }[] = [
-  { id: 'gravity_anchor', label: '引力锚点', Icon: Anchor },
-  { id: 'force_shield',   label: '能量护盾',  Icon: Shield },
-  { id: 'the_lens',       label: '引力透镜',   Icon: ScanSearch },
-  { id: 'singularity',    label: '奇点引爆',   Icon: Atom },
+  { id: 'gravity_anchor', label: '副本锚定', Icon: Anchor },
+  { id: 'force_shield',   label: '网络隔离',  Icon: Shield },
+  { id: 'the_lens',       label: '副本检测',   Icon: ScanSearch },
+  { id: 'singularity',    label: '节点故障注入',   Icon: Atom },
 ];
 
 const NODE_COLORS: Record<string, string> = {
@@ -57,6 +58,20 @@ function speed(v: Vec2): number {
 }
 
 /* ────────────────── component ────────────────── */
+
+function BackToLevelButton() {
+  const searchParams = useSearchParams();
+  const fromLevel = searchParams.get('from') === 'level';
+  if (!fromLevel) return null;
+  return (
+    <Link
+      href="/level/2"
+      className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-base-200/40 bg-white/10 backdrop-blur px-3 py-1.5 text-xs text-base-300 hover:text-white hover:border-base-200/60 transition-colors"
+    >
+      <ArrowLeft size={12} strokeWidth={1.5} /> 返回关卡
+    </Link>
+  );
+}
 
 export default function DataGravityPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -378,6 +393,15 @@ export default function DataGravityPage() {
           <ArrowLeft size={14} strokeWidth={1.5} /> 返回首页
         </Link>
 
+        {/* ZBS knowledge banner */}
+        <div className="rounded-lg border border-accent/20 bg-accent/5 p-2.5 text-[10px] text-base-600 leading-relaxed space-y-1">
+          <p className="font-semibold text-accent text-xs mb-1">本页面模拟 ZBS 分布式块存储的数据分布原理：</p>
+          <p>• <span className="text-base-800 font-medium">粒子</span> = 数据块（16MB chunk）</p>
+          <p>• <span className="text-base-800 font-medium">存储节点</span> = ZBS 物理存储节点</p>
+          <p>• <span className="text-base-800 font-medium">引力</span> = 节点副本亲和度</p>
+          <p>• 节点故障时，粒子自动向健康节点迁移 = 数据重建</p>
+        </div>
+
         {/* tools */}
         <div>
           <h3 className="text-xs font-semibold text-base-400 mb-2">工具栏</h3>
@@ -401,7 +425,7 @@ export default function DataGravityPage() {
 
         {/* node toggles */}
         <div>
-          <h3 className="text-xs font-semibold text-base-400 mb-2">节点状态</h3>
+          <h3 className="text-xs font-semibold text-base-400 mb-2">ZBS 存储节点状态</h3>
           <div className="space-y-1.5">
             {nodeList.map((n) => (
               <button
@@ -414,7 +438,9 @@ export default function DataGravityPage() {
                   style={{ backgroundColor: NODE_COLORS[n.status] || '#3fb950' }}
                 />
                 <span className="truncate text-base-600">{n.label}</span>
-                <span className="ml-auto text-[10px] text-base-400">{n.status}</span>
+                <span className="ml-auto text-[10px] text-base-400">
+                  {n.status === 'normal' ? '正常' : n.status === 'failed' ? '已故障' : n.status === 'overloaded' ? '过载' : n.status}
+                </span>
               </button>
             ))}
           </div>
@@ -424,7 +450,7 @@ export default function DataGravityPage() {
         <div>
           <h3 className="text-xs font-semibold text-base-400 mb-2">物理参数</h3>
           <label className="block text-[10px] text-base-400 mb-1">
-            G = {gConst}
+            副本亲和力 G = {gConst}
           </label>
           <input
             type="range" min={50} max={2000} value={gConst}
@@ -432,7 +458,7 @@ export default function DataGravityPage() {
             className="w-full accent-[#58A6FF] h-1"
           />
           <label className="block text-[10px] text-base-400 mt-2 mb-1">
-            Friction = {friction.toFixed(2)}
+            带宽上限系数 = {friction.toFixed(2)}
           </label>
           <input
             type="range" min={80} max={100} value={friction * 100}
@@ -442,19 +468,28 @@ export default function DataGravityPage() {
         </div>
 
         <div className="text-xs text-base-400">
-          粒子: <span className="text-base-900 font-semibold">{particleCount}</span>
+          数据块 (16MB chunk): <span className="text-base-900 font-semibold">{particleCount}</span>
         </div>
 
         <button
           onClick={handleReset}
           className="flex items-center justify-center gap-1.5 rounded-lg border border-base-200 bg-white py-2 text-xs text-base-600 hover:border-accent/30 hover:text-accent transition-all"
         >
-          <RotateCcw size={12} strokeWidth={1.5} /> 重置
+          <RotateCcw size={12} strokeWidth={1.5} /> 重置模拟
         </button>
       </aside>
 
       {/* ── Center Canvas ── */}
       <main className="relative flex-1">
+        {/* Title bar */}
+        <div className="pointer-events-none absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 py-2 bg-gradient-to-b from-[#0D1117]/80 to-transparent">
+          <span className="text-xs text-base-400/80 font-medium">
+            ZBS 数据分布仿真 — 副本亲和力驱动的分布式存储模型
+          </span>
+          <Suspense fallback={null}>
+            <BackToLevelButton />
+          </Suspense>
+        </div>
         <canvas
           ref={canvasRef}
           className="h-full w-full cursor-crosshair"
@@ -483,20 +518,20 @@ export default function DataGravityPage() {
         <h3 className="text-xs font-semibold text-base-400">能量指标</h3>
         {metrics && (
           <>
-            <MetricBar label="动能 (KE)" value={metrics.kineticEnergy} max={500} Icon={Activity} />
-            <MetricBar label="势能 (PE)" value={metrics.potentialEnergy} max={500} Icon={Gauge} />
-            <MetricBar label="带宽损耗" value={metrics.bandwidthLossRate} max={1} Icon={Zap} />
-            <MetricBar label="熵增" value={metrics.entropyDelta} max={5} Icon={TrendingDown} />
+            <MetricBar label="IO 速率 (读写吞吐)" value={metrics.kineticEnergy} max={500} Icon={Activity} />
+            <MetricBar label="节点负载压力" value={metrics.potentialEnergy} max={500} Icon={Gauge} />
+            <MetricBar label="带宽损耗率" value={metrics.bandwidthLossRate} max={1} Icon={Zap} />
+            <MetricBar label="数据分布混乱度" value={metrics.entropyDelta} max={5} Icon={TrendingDown} />
 
             <div className="mt-1">
-              <span className="text-[10px] text-base-400">总位移量</span>
+              <span className="text-[10px] text-base-400">数据迁移总量 (MB)</span>
               <p className="text-sm font-semibold text-base-900">{metrics.displacement.toFixed(1)}</p>
             </div>
           </>
         )}
 
         <div>
-          <span className="text-[10px] text-base-400">熵增历史</span>
+          <span className="text-[10px] text-base-400">数据混乱度历史</span>
           <Sparkline />
         </div>
       </aside>

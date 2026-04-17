@@ -531,6 +531,12 @@ export interface LevelBriefing {
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   /** 可选: 小贴士/攻略提示 */
   tips?: string[];
+  /** 可选：关卡前互动演示入口 */
+  interactiveDemo?: {
+    href: string;        // 跳转路径
+    label: string;       // 按钮文字
+    description: string; // 一句话说明这个 demo 和本关的关系
+  };
 }
 
 // ─── 徽章系统 (Badge System) ────────────────────────────────────────

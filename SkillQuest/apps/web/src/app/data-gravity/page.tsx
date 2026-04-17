@@ -40,6 +40,10 @@ const NODE_COLORS: Record<string, string> = {
   normal: '#3fb950', failed: '#f85149', overloaded: '#d29922',
 };
 
+const NODE_STATUS_LABELS: Record<string, string> = {
+  normal: '正常', failed: '已故障', overloaded: '过载',
+};
+
 const INITIAL_NODES: { label: string; x: number; y: number; cap: number; bw: number }[] = [
   { label: '存储节点-A', x: 200, y: 300, cap: 1.0, bw: 1.0 },
   { label: '存储节点-B', x: 500, y: 300, cap: 0.8, bw: 0.9 },
@@ -62,10 +66,11 @@ function speed(v: Vec2): number {
 function BackToLevelButton() {
   const searchParams = useSearchParams();
   const fromLevel = searchParams.get('from') === 'level';
+  const levelId = searchParams.get('levelId') ?? '2';
   if (!fromLevel) return null;
   return (
     <Link
-      href="/level/2"
+      href={`/level/${levelId}`}
       className="pointer-events-auto flex items-center gap-1.5 rounded-lg border border-base-200/40 bg-white/10 backdrop-blur px-3 py-1.5 text-xs text-base-300 hover:text-white hover:border-base-200/60 transition-colors"
     >
       <ArrowLeft size={12} strokeWidth={1.5} /> 返回关卡
@@ -439,7 +444,7 @@ export default function DataGravityPage() {
                 />
                 <span className="truncate text-base-600">{n.label}</span>
                 <span className="ml-auto text-[10px] text-base-400">
-                  {n.status === 'normal' ? '正常' : n.status === 'failed' ? '已故障' : n.status === 'overloaded' ? '过载' : n.status}
+                  {NODE_STATUS_LABELS[n.status] ?? n.status}
                 </span>
               </button>
             ))}

@@ -25,6 +25,8 @@ import { CHUNK_COLORS } from '@skillquest/types';
 
 /* ────────────────── Constants ────────────────── */
 
+const TOTAL_CHUNKS = 4;
+const NODE_COUNT = 3;
 const CHUNK_LABELS = ['C1', 'C2', 'C3', 'C4'];
 
 const SCENES: ZBSScene[] = [
@@ -450,7 +452,7 @@ function Scene4() {
             <span className="text-xs text-gray-600">{name}</span>
             <div className="flex flex-wrap justify-center gap-1">
               {/* Each node holds (totalChunks × replicaCount / numberOfNodes) data blocks */}
-              {Array.from({ length: Math.ceil((4 * replicaCount) / 3) }).map((_, i) => (
+              {Array.from({ length: Math.ceil((TOTAL_CHUNKS * replicaCount) / NODE_COUNT) }).map((_, i) => (
                 <motion.div
                   key={i}
                   className="w-3 h-3 rounded-sm bg-indigo-400"

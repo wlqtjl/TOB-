@@ -28,6 +28,7 @@ interface ScenarioGameRendererProps {
 
 /** Calculate star rating based on correctness percentage */
 function calculateStars(correctCount: number, totalQuestions: number): 0 | 1 | 2 | 3 {
+  if (totalQuestions === 0) return 0;
   const percentage = Math.round((correctCount / totalQuestions) * 100);
   if (percentage >= 90) return 3;
   if (percentage >= 70) return 2;

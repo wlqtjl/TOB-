@@ -15,10 +15,10 @@ import {
   User, CheckCircle2, XCircle, Lightbulb,
   ChevronRight, RotateCcw, Trophy,
 } from 'lucide-react';
-import type { ScenarioQuestion } from '@skillquest/types';
+import type { ScenarioDecisionQuestion } from '@skillquest/types';
 
 interface ScenarioGameRendererProps {
-  questions: ScenarioQuestion[];
+  questions: ScenarioDecisionQuestion[];
   levelTitle?: string;
   onComplete: (score: number, stars: number) => void;
   onAnswer?: (questionIndex: number, choiceId: string, isCorrect: boolean) => void;
@@ -32,7 +32,7 @@ function ScenarioCard({
   totalQuestions,
   onAnswered,
 }: {
-  question: ScenarioQuestion;
+  question: ScenarioDecisionQuestion;
   questionIndex: number;
   totalQuestions: number;
   onAnswered: (choiceId: string, isCorrect: boolean) => void;

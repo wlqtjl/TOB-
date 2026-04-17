@@ -1527,7 +1527,7 @@ export interface LevelNarrative {
 // ─── 情景选择关 (Scenario Decision) ─────────────────────────────────
 
 /** 情景选择题选项 */
-export interface ScenarioChoice {
+export interface ScenarioDecisionChoice {
   id: string;
   text: string;
   isCorrect: boolean;
@@ -1536,13 +1536,13 @@ export interface ScenarioChoice {
 }
 
 /** 情景选择题数据 */
-export interface ScenarioQuestion {
+export interface ScenarioDecisionQuestion {
   /** 情景描述 */
   scenario: string;
   /** 角色设定 */
   role: string;
   /** 选项列表 */
-  choices: ScenarioChoice[];
+  choices: ScenarioDecisionChoice[];
   /** 正确答案解析 */
   correctRationale: string;
   /** 知识点提炼 */

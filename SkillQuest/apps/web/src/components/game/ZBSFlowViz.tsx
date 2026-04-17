@@ -229,7 +229,7 @@ function Scene1() {
           animate={{ opacity: 1, y: 0 }}
         >
           ✨ ZBS 会把你的文件自动切成小块（Chunk），分散存储到不同的机器上。
-          这就是"分布式存储"的第一步！
+          这就是&ldquo;分布式存储&rdquo;的第一步！
         </motion.div>
       )}
     </div>

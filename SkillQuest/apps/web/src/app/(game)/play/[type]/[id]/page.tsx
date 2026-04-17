@@ -23,7 +23,7 @@ import type {
   ScenarioQuizLevel,
   VirtualizationLevel,
   NarrativeConfig,
-  ScenarioQuestion,
+  ScenarioDecisionQuestion,
   LevelNarrative,
 } from '@skillquest/types';
 import type { VisualScene, InteractionResult } from '@skillquest/game-engine';
@@ -147,7 +147,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
 
   // ─── Scenario Decision — dedicated renderer ───
   if (contentType === 'scenario_decision' && content) {
-    const questions = (content.questions ?? []) as ScenarioQuestion[];
+    const questions = (content.questions ?? []) as ScenarioDecisionQuestion[];
     const narrative = content.narrative as LevelNarrative | undefined;
 
     if (questions.length === 0) {

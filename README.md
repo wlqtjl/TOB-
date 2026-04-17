@@ -28,19 +28,19 @@
 
 ## 页面截图
 
-👉 [查看 SkillQuest 全部 9 页截图](docs/screenshots.md)
+👉 [查看 SkillQuest 全部 26 页截图](docs/screenshots.md)
 
 | 首页 | 数据引力场 | 课程管理 |
 |:---:|:---:|:---:|
-| [![首页](docs/screenshots/01-homepage.png)](docs/screenshots.md#1-首页含数据引力场入口) | [![数据引力场](docs/screenshots/02-data-gravity.png)](docs/screenshots.md#2-数据引力场--物理可视化新增功能) | [![课程管理](docs/screenshots/03-course-admin.png)](docs/screenshots.md#3-课程管理后台) |
+| [![首页](docs/screenshots/01-homepage.png)](docs/screenshots.md#11-首页-) | [![数据引力场](docs/screenshots/22-data-gravity.png)](docs/screenshots.md#62-数据引力场-data-gravity) | [![课程管理](docs/screenshots/08-courses.png)](docs/screenshots.md#41-课程管理后台-courses) |
 
 | 闯关地图 | 排行榜 | 关卡知识普及 |
 |:---:|:---:|:---:|
-| [![闯关地图](docs/screenshots/04-level-map.png)](docs/screenshots.md#4-闯关地图) | [![排行榜](docs/screenshots/05-leaderboard.png)](docs/screenshots.md#5-排行榜) | [![知识普及](docs/screenshots/06-level-briefing.png)](docs/screenshots.md#6-关卡知识普及level-briefing) |
+| [![闯关地图](docs/screenshots/06-map.png)](docs/screenshots.md#22-闯关地图-map) | [![排行榜](docs/screenshots/07-leaderboard.png)](docs/screenshots.md#23-排行榜-leaderboard) | [![关卡知识普及](docs/screenshots/24-level-briefing.png)](docs/screenshots.md#31-关卡知识普及-level1) |
 
-| 拓扑连线 | 专家复盘 | 产品介绍 |
+| 关卡答题 | 专家复盘 | 产品介绍 |
 |:---:|:---:|:---:|
-| [![拓扑连线](docs/screenshots/07-topology-level.png)](docs/screenshots.md#7-拓扑连线关卡含知识普及) | [![专家复盘](docs/screenshots/08-expert-replay.png)](docs/screenshots.md#8-专家对比复盘报告) | [![产品介绍](docs/screenshots/09-showcase.png)](docs/screenshots.md#9-产品介绍七大核心能力) |
+| [![关卡答题](docs/screenshots/25-level-play.png)](docs/screenshots.md#32-关卡答题-canvas-游戏界面) | [![专家复盘](docs/screenshots/26-replay.png)](docs/screenshots.md#34-专家对比复盘-replay) | [![产品介绍](docs/screenshots/21-showcase.png)](docs/screenshots.md#61-产品介绍-showcase) |
 
 ---
 
@@ -251,7 +251,7 @@ TOB-/
 │   ├── vendor/                        # 厂商 Pack（SmartX 等）
 │   └── build/                         # 构建脚本
 ├── docs/
-│   ├── screenshots/                   # 9 张页面截图（PNG）
+│   ├── screenshots/                   # 26 张页面截图（PNG）
 │   └── screenshots.md                 # 截图文档页
 ├── game20_extracted/                  # 提取的游戏资产
 └── 游戏攻关2.0.tar.gz                 # 原始归档

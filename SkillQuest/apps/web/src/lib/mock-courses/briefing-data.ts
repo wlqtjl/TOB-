@@ -58,9 +58,9 @@ const SMARTX_HALO_BRIEFINGS: LevelBriefing[] = [
       '纠删码空间利用率更高但计算开销更大',
     ],
     interactiveDemo: {
-      href: '/data-gravity',
-      label: '🧲 互动体验：ZBS 数据分布模拟器',
-      description: '通过粒子物理仿真，直观感受数据副本在存储节点间的分布、迁移与故障重建过程。',
+      href: '/data-gravity/story?from=level&levelId=2',
+      label: '🎬 互动体验：ZBS 数据流可视化',
+      description: '通过 5 个互动场景，直观理解文件如何写入、数据如何分布、节点故障后如何自动恢复。',
     },
   },
   {

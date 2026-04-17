@@ -1477,3 +1477,83 @@ export interface SandboxLevel {
   guidanceText: string;
   explanation: string;
 }
+
+// ─── ZBS 数据流可视化 (五场景交互叙事) ───────────────────────────────
+
+/** ZBS 可视化场景定义 */
+export interface ZBSScene {
+  id: 1 | 2 | 3 | 4 | 5;
+  title: string;
+  description: string;
+  interactable: boolean;
+}
+
+/** ZBS 数据块颜色方案 */
+export const CHUNK_COLORS: Record<string, string> = {
+  chunk1: '#6366F1',  // 靛紫
+  chunk2: '#22C55E',  // 绿
+  chunk3: '#F59E0B',  // 橙
+  chunk4: '#EC4899',  // 粉
+};
+
+/** 存储节点状态 */
+export type ZBSNodeState = 'normal' | 'active' | 'failed' | 'recovering' | 'recovered';
+
+/** ZBS 可视化组件 props */
+export interface ZBSFlowVizProps {
+  onComplete: () => void;
+  courseId: string;
+  levelId: string;
+}
+
+// ─── 关卡叙事系统 (Level Narrative) ─────────────────────────────────
+
+/** 关卡背景叙事 — 让每一关都有角色扮演感 */
+export interface LevelNarrative {
+  /** 关卡标题 (如 "第3关：ZBS的守护者") */
+  title: string;
+  /** 开场引子 (如 "北京某代理商IDC机房，凌晨3点警报响起...") */
+  hook: string;
+  /** 主角设定 (如 "你是刚入职的运维工程师李志远") */
+  protagonist: string;
+  /** 任务简报 (如 "今晚必须处理3个告警，保证业务不中断") */
+  missionBrief: string;
+  /** 通关成功文案 */
+  successMessage: string;
+  /** 通关失败文案 */
+  failureMessage: string;
+}
+
+// ─── 情景选择关 (Scenario Decision) ─────────────────────────────────
+
+/** 情景选择题选项 */
+export interface ScenarioChoice {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  /** 选择此选项后的后果描述 */
+  consequence: string;
+}
+
+/** 情景选择题数据 */
+export interface ScenarioQuestion {
+  /** 情景描述 */
+  scenario: string;
+  /** 角色设定 */
+  role: string;
+  /** 选项列表 */
+  choices: ScenarioChoice[];
+  /** 正确答案解析 */
+  correctRationale: string;
+  /** 知识点提炼 */
+  knowledgePoint: string;
+}
+
+/** 游戏渲染器通用 Props */
+export interface GameRendererProps {
+  levelId: string;
+  courseId: string;
+  onComplete: (score: number, stars: number) => void;
+  onAnswer: (questionId: string, answer: unknown, isCorrect: boolean) => void;
+  skipIntro?: boolean;
+}

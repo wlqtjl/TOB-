@@ -104,6 +104,55 @@ const SMARTX_HALO_CONTENT: Record<string, Record<string, unknown>> = {
     ],
     explanation: 'HALO-01 CPU/内存均衡，HALO-02 已高负载，HALO-03 存储节点适合存储密集型但 CPU/内存有限',
   },
+  scenario_decision: {
+    id: 'scenario-decision-smartx', levelId: 'l8', type: 'scenario_decision',
+    questions: [
+      {
+        scenario: '🎭 张工，你接到了报警通知：\n\n"ZBS 集群中 Node-3 状态变为 WARNING，磁盘使用率达到 87%"\n\n现在是下午5点，明天早上有重要演示。你会怎么做？',
+        role: '运维工程师张工',
+        choices: [
+          { id: 'A', text: '立即扩容存储，今晚就处理', isCorrect: false, consequence: '你尝试在线扩容，但发现当前没有空余节点可用，扩容需要新采购硬件。时间上来不及，明天演示依然面临风险。' },
+          { id: 'B', text: '先设置告警阈值，明天上班再处理', isCorrect: false, consequence: '到了晚上10点，磁盘使用率飙升至 95%，触发了自动保护机制，部分业务 VM 被限制 IO，客户提前测试时发现系统卡顿。' },
+          { id: 'C', text: '迁移部分数据到其他节点，释放空间', isCorrect: true, consequence: '你登录 CloudTower，选择了 Node-3 上占用最大的几个数据集，迁移到 Node-1（当前使用率：61%）。操作耗时 23 分钟，Node-3 使用率降至 64%，明天的演示顺利进行！' },
+          { id: 'D', text: '忽略这条告警，87% 还不算严重', isCorrect: false, consequence: '凌晨2点，磁盘使用率突破 95% 阈值，ZBS 触发了数据保护机制，拒绝新的写入请求。客户的业务系统无法正常写入数据，第二天演示直接失败。' },
+        ],
+        correctRationale: '在磁盘使用率较高且时间紧迫时，迁移数据是最快速有效的方式。不中断业务，不需要新硬件。',
+        knowledgePoint: '短期扩容不如迁移 — ZBS 支持在线数据迁移，不中断业务，是处理存储容量告警的首选方案。',
+      },
+      {
+        scenario: '你刚处理完 Node-3 的告警，CloudTower 又弹出一条新消息：\n\n"ZBS 检测到 Node-2 上一块 SSD 的 SMART 状态异常，预测将在 48 小时内故障"\n\n当前集群使用 3 副本策略，Node-2 上有 200 个数据块。',
+        role: '运维工程师张工',
+        choices: [
+          { id: 'A', text: '立即更换这块 SSD', isCorrect: false, consequence: '你申请了紧急更换，但发现备件仓库没有相同型号的 SSD。采购需要 3-5 个工作日，不能当场解决问题。' },
+          { id: 'B', text: '让 ZBS 自动处理，3 副本足够安全', isCorrect: false, consequence: '虽然 3 副本确实能容忍 1 块盘故障，但如果这期间又有其他盘出问题，数据就有风险了。等到盘真的坏了再处理，中间的数据重建会给集群带来额外 IO 压力。' },
+          { id: 'C', text: '先将 Node-2 标记为维护模式，让数据提前迁出', isCorrect: true, consequence: '你在 CloudTower 中将 Node-2 设为"维护模式"，ZBS 开始自动将这个节点上的数据迁移到其他健康节点。迁移在 2 小时内完成，随后安全下线更换 SSD。整个过程业务零中断！' },
+          { id: 'D', text: '关闭这台服务器等待更换', isCorrect: false, consequence: '直接关机导致集群突然少了一个节点，ZBS 紧急启动数据重建。在重建期间集群性能下降 30%，客户报告业务系统变慢。' },
+        ],
+        correctRationale: '预防性维护是最佳实践 — 在磁盘彻底故障前，通过维护模式主动迁出数据，避免被动重建带来的性能影响。',
+        knowledgePoint: '维护模式 — ZBS 支持将节点标记为"维护模式"，系统会自动将数据迁出该节点，确保数据安全后再进行硬件维护。',
+      },
+      {
+        scenario: '周五下午，你的同事小李发现生产集群的 ZBS 副本策略是 2 副本，但公司安全规范要求生产环境必须使用 3 副本。\n\n小李问你："直接在 CloudTower 里把副本数从 2 改成 3 可以吗？会影响业务吗？"\n\n当前集群 3 个节点，存储使用率分别是 45%、52%、48%。',
+        role: '高级运维工程师',
+        choices: [
+          { id: 'A', text: '可以直接改，ZBS 会自动增加副本，不影响业务', isCorrect: true, consequence: '你指导小李在 CloudTower 中修改存储策略为 3 副本。ZBS 开始在后台自动创建额外的副本，整个过程对业务透明。由于当前存储使用率不到 60%，有足够空间容纳额外副本。2 小时后副本策略变更完成。' },
+          { id: 'B', text: '不行，必须停机后才能修改副本策略', isCorrect: false, consequence: '其实 ZBS 支持在线修改副本策略。你建议的停机方案让小李在周末加了班，而且业务中断了 4 小时，客户非常不满。' },
+          { id: 'C', text: '可以改，但需要先添加新节点', isCorrect: false, consequence: '3 副本不一定需要 3 个以上节点（虽然推荐），当前 3 个节点完全可以支持 3 副本。额外采购节点浪费了预算和时间。' },
+          { id: 'D', text: '建议用纠删码替代 3 副本，更省空间', isCorrect: false, consequence: '纠删码虽然省空间，但在线从 2 副本切换到纠删码比切换到 3 副本复杂得多，而且纠删码的随机读写性能不如副本。对于生产环境的关键业务，3 副本是更稳妥的选择。' },
+        ],
+        correctRationale: 'ZBS 支持在线修改副本策略，从 2 副本升级到 3 副本是无缝的，系统在后台自动创建额外副本。',
+        knowledgePoint: 'ZBS 在线副本策略调整 — 副本数可在线变更，ZBS 会自动在后台创建/删除副本，整个过程对业务零感知。',
+      },
+    ],
+    narrative: {
+      title: 'ZBS 守护者任务',
+      hook: '北京某代理商的 IDC 机房，下午5点，你正准备下班。突然 CloudTower 弹出了一连串告警...',
+      protagonist: '你是一名刚入职三个月的运维工程师张工',
+      missionBrief: '处理3个存储告警，确保明天的客户演示顺利进行',
+      successMessage: '🎉 太棒了！你成功处理了所有告警，明天的演示将顺利进行。你的快速反应和专业判断赢得了同事的尊敬！',
+      failureMessage: '💪 虽然没能全部答对，但这正是学习的过程。在真实环境中犯错的代价更高 — 好在这只是模拟！',
+    },
+  },
 };
 
 const PLAY_CONTENT: ContentMap = {
@@ -128,5 +177,6 @@ export function getPlayContentTypes(): Record<string, string> {
     terminal: '命令行',
     scenario: '故障排查',
     vm_placement: 'VM调度',
+    scenario_decision: '情景选择',
   };
 }

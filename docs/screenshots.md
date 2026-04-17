@@ -101,5 +101,9 @@
 ### 6.1 产品介绍 (`/showcase`)
 [![产品介绍](screenshots/21-showcase.png)](screenshots/21-showcase.png)
 
-### 6.2 数据引力场 (`/data-gravity`)
-[![数据引力场](screenshots/22-data-gravity.png)](screenshots/22-data-gravity.png)
+### 6.2 ZBS 数据分布仿真 (`/data-gravity`)
+
+> **定位变更**：原为独立物理仿真 Demo，现已作为 ZBS 分布式存储关卡 (l2) 的前置互动预习页面。
+> 所有 UI 术语已改为 ZBS 知识点语义（副本锚定、网络隔离、节点故障注入等），详见 `SkillQuest/docs/ARCHITECTURE.md` 变更日志。
+
+[![ZBS 数据分布仿真](screenshots/22-data-gravity.png)](screenshots/22-data-gravity.png)

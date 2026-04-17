@@ -13,6 +13,7 @@
  */
 
 import React, { useState, useCallback } from 'react';
+import Link from 'next/link';
 import {
   BookOpen,
   Target,
@@ -22,6 +23,7 @@ import {
   Gamepad2,
   BarChart3,
   X,
+  FlaskConical,
 } from 'lucide-react';
 import type { LevelBriefing } from '@skillquest/types';
 
@@ -141,6 +143,33 @@ export default function LevelBriefingModal({ briefing, onStart, onSkip }: LevelB
               ))}
             </ul>
           </section>
+
+          {/* Interactive Demo */}
+          {briefing.interactiveDemo && (
+            <section>
+              <h3 className="flex items-center gap-2 text-sm font-medium text-base-800 mb-3">
+                <FlaskConical size={15} strokeWidth={1.5} className="text-accent" />
+                互动预习
+              </h3>
+              <div className="rounded-lg border border-accent/20 bg-gradient-to-br from-accent/5 to-accent/10 px-3 py-3 space-y-2">
+                <p className="text-xs text-base-600 leading-relaxed">
+                  {briefing.interactiveDemo.description}
+                </p>
+                <Link
+                  href={briefing.interactiveDemo.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent/40 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/10 transition-colors"
+                >
+                  {briefing.interactiveDemo.label}
+                  <ChevronRight size={12} strokeWidth={2} />
+                </Link>
+                <p className="text-[10px] text-base-400 leading-relaxed">
+                  在新标签页体验后，回到此页面点击&ldquo;开始闯关&rdquo;
+                </p>
+              </div>
+            </section>
+          )}
 
           {/* Tips */}
           {briefing.tips && briefing.tips.length > 0 && (

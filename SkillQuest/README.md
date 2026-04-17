@@ -83,6 +83,7 @@ SkillQuest/
 - VM 拖拽放置 → 资源条实时变化
 - 多副本写入动画 → 数据包球流向多节点
 - 节点故障触发 → VM 高可用迁移动画
+- 🧲 **ZBS 数据分布仿真** (`/data-gravity`) — 关卡 l2 前置互动预习，Canvas 物理引擎模拟数据副本分布
 
 ### ★★ 基础选择题 / 排序题 / 连线配对
 
@@ -195,3 +196,13 @@ npx prisma migrate reset      # 重置数据库 (删除所有数据)
 | **Phase 2** | 第9-14周 | ✅ **文档上传 + AI题目生成**（GPT-4o · PDF/DOCX · 7种题型自动生成）|
 | **Phase 3** | 第15-20周 | 成就/徽章 + 每日挑战 + 数字证书 |
 | **Phase 4** | 第21-28周 | 钉钉/飞书SSO + 团队管理 + PWA |
+
+## 📖 更多文档
+
+| 文档 | 路径 | 说明 |
+|---|---|---|
+| **架构文档** | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 完整架构、类型系统、页面路由、变更日志 |
+| 部署文档 | [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) | 部署指南 |
+| 安全文档 | [`docs/SECURITY.md`](docs/SECURITY.md) | 安全策略 |
+| 运维文档 | [`docs/OPERATIONS.md`](docs/OPERATIONS.md) | 运维手册 |
+| 页面截图 | [`../docs/screenshots.md`](../docs/screenshots.md) | 全部页面截图 |

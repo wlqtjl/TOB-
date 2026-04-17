@@ -57,6 +57,11 @@ const SMARTX_HALO_BRIEFINGS: LevelBriefing[] = [
       '2 副本 = 数据存 2 份，可容忍 1 节点故障',
       '纠删码空间利用率更高但计算开销更大',
     ],
+    interactiveDemo: {
+      href: '/data-gravity',
+      label: '🧲 互动体验：ZBS 数据分布模拟器',
+      description: '通过粒子物理仿真，直观感受数据副本在存储节点间的分布、迁移与故障重建过程。',
+    },
   },
   {
     levelId: 'l3',

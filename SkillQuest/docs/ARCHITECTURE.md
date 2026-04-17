@@ -14,7 +14,10 @@
 5. [游戏引擎 (`@skillquest/game-engine`)](#5-游戏引擎)
 6. [关卡知识普及系统 (Level Briefing)](#6-关卡知识普及系统)
 7. [数据引力场 (`/data-gravity`)](#7-数据引力场)
-8. [变更日志](#8-变更日志)
+8. [ZBS 数据流可视化 (`/data-gravity/story`)](#8-zbs-数据流可视化)
+9. [情景选择关 (Scenario Decision)](#9-情景选择关)
+10. [关卡叙事系统 (Level Narrative)](#10-关卡叙事系统)
+11. [变更日志](#11-变更日志)
 
 ---
 
@@ -32,6 +35,7 @@ SkillQuest/
 │   │   │   │   ├── leaderboard/      # 🏆 排行榜
 │   │   │   │   └── replay/           # 🔁 专家对比复盘
 │   │   │   ├── data-gravity/         # 🧲 ZBS 数据分布仿真 (Canvas 物理引擎)
+│   │   │   │   └── story/            # 🎬 ZBS 数据流可视化 (五场景交互叙事)
 │   │   │   ├── dashboard/            # 📊 学员仪表盘
 │   │   │   ├── admin/                # ⚙️ 管理后台
 │   │   │   ├── login/                # 🔐 登录
@@ -41,7 +45,10 @@ SkillQuest/
 │   │   ├── src/components/
 │   │   │   ├── game/                 # 游戏相关组件
 │   │   │   │   ├── LevelBriefingModal.tsx   # 关卡前知识普及弹窗
-│   │   │   │   └── UniversalGameRenderer.tsx
+│   │   │   │   ├── UniversalGameRenderer.tsx
+│   │   │   │   ├── ZBSFlowViz.tsx           # ZBS 五场景交互叙事可视化
+│   │   │   │   ├── ScenarioGameRenderer.tsx # 情景选择关渲染器
+│   │   │   │   └── LevelIntroModal.tsx      # 关卡叙事入口弹窗
 │   │   │   ├── sandbox/              # GPSL v1.1 交互沙盒组件
 │   │   │   ├── layout/               # 布局组件 (Navbar, AdminSidebar)
 │   │   │   └── ui/                   # 通用 UI 组件
@@ -144,7 +151,8 @@ SkillQuest/
 ### 特殊页面
 | 路由 | 文件 | 说明 |
 |---|---|---|
-| `/data-gravity` | `app/data-gravity/page.tsx` | **ZBS 数据分布仿真**（Canvas 物理引擎，关卡 l2 前置互动预习）|
+| `/data-gravity` | `app/data-gravity/page.tsx` | **ZBS 数据分布仿真**（Canvas 物理引擎，关卡 l2 前置互动预习，含故事/仿真模式切换）|
+| `/data-gravity/story` | `app/data-gravity/story/page.tsx` | **ZBS 数据流可视化**（五场景交互叙事模式，framer-motion 动画）|
 
 ---
 
@@ -156,7 +164,7 @@ SkillQuest/
 
 | 类型 | 用途 |
 |---|---|
-| `LevelType` | 关卡题型枚举：`choice`、`topology`、`terminal`、`scenario`、`flow_sim`、`sandbox` |
+| `LevelType` | 关卡题型枚举：`choice`、`topology`、`terminal`、`scenario`、`flow_sim`、`sandbox`、`scenario_decision` |
 | `LevelNode` | 关卡节点 |
 | `ScoreResult` | 评分结果 |
 | `LevelBriefing` | 关卡前知识普及配置 |
@@ -168,6 +176,14 @@ SkillQuest/
 | `EnergyMetrics` | 能量指标 |
 | `GravityGunToolType` | 引力枪工具类型 |
 | `SandboxSimConfig` | 沙盒模拟配置 (GPSL v1.1) |
+| `ZBSScene` | ZBS 可视化场景定义（id 1-5, title, description, interactable） |
+| `CHUNK_COLORS` | ZBS 数据块颜色方案（chunk1-4, const assertion） |
+| `ZBSNodeState` | 存储节点状态：`normal` \| `active` \| `failed` \| `recovering` \| `recovered` |
+| `ZBSFlowVizProps` | ZBS 可视化组件 props（onComplete, courseId, levelId） |
+| `LevelNarrative` | 关卡背景叙事（title, hook, protagonist, missionBrief, successMessage, failureMessage） |
+| `ScenarioDecisionChoice` | 情景选择题选项（id, text, isCorrect, consequence） |
+| `ScenarioDecisionQuestion` | 情景选择题数据（scenario, role, choices, correctRationale, knowledgePoint） |
+| `GameRendererProps` | 游戏渲染器通用 Props（levelId, courseId, onComplete, onAnswer, skipIntro） |
 
 ### `LevelBriefing` 接口（含 `interactiveDemo`）
 
@@ -189,6 +205,68 @@ export interface LevelBriefing {
     description: string; // 说明这个 demo 和本关的关系
   };
 }
+```
+
+### `LevelNarrative` 接口（关卡叙事系统）
+
+```typescript
+export interface LevelNarrative {
+  /** 关卡标题 (如 "第3关：ZBS的守护者") */
+  title: string;
+  /** 开场引子 (如 "北京某代理商IDC机房，凌晨3点警报响起...") */
+  hook: string;
+  /** 主角设定 (如 "你是刚入职的运维工程师李志远") */
+  protagonist: string;
+  /** 任务简报 (如 "今晚必须处理3个告警，保证业务不中断") */
+  missionBrief: string;
+  /** 通关成功文案 */
+  successMessage: string;
+  /** 通关失败文案 */
+  failureMessage: string;
+}
+```
+
+### `ScenarioDecisionQuestion` 接口（情景选择关题目）
+
+```typescript
+export interface ScenarioDecisionChoice {
+  id: string;
+  text: string;
+  isCorrect: boolean;
+  /** 选择此选项后的后果描述 */
+  consequence: string;
+}
+
+export interface ScenarioDecisionQuestion {
+  /** 情景描述 */
+  scenario: string;
+  /** 角色设定 */
+  role: string;
+  /** 选项列表 */
+  choices: ScenarioDecisionChoice[];
+  /** 正确答案解析 */
+  correctRationale: string;
+  /** 知识点提炼 */
+  knowledgePoint: string;
+}
+```
+
+### `ZBSScene` 接口（ZBS 可视化场景）
+
+```typescript
+export interface ZBSScene {
+  id: 1 | 2 | 3 | 4 | 5;
+  title: string;
+  description: string;
+  interactable: boolean;
+}
+
+export const CHUNK_COLORS = {
+  chunk1: '#6366F1',  // 靛紫
+  chunk2: '#22C55E',  // 绿
+  chunk3: '#F59E0B',  // 橙
+  chunk4: '#EC4899',  // 粉
+} as const;
 ```
 
 ---
@@ -343,9 +421,245 @@ LevelBriefingModal.tsx
 
 ---
 
-## 8. 变更日志
+## 8. ZBS 数据流可视化
+
+### 页面定位
+
+| 属性 | 值 |
+|---|---|
+| 路由 | `/data-gravity/story` |
+| 文件 | `apps/web/src/app/data-gravity/story/page.tsx` |
+| 核心组件 | `apps/web/src/components/game/ZBSFlowViz.tsx` |
+| 定位 | **ZBS 分布式存储的故事化叙事教学**，用非技术用户能理解的方式讲解 ZBS 原理 |
+| 动画库 | framer-motion（项目已有依赖，无 Three.js） |
+| 关联关卡 | `l2`（ZBS 分布式存储） |
+
+### 设计原则
+
+1. **用用户熟悉的现实事物作类比** — 副本=备份U盘，节点=仓库，分片=把书撕成三份
+2. **分步可操控，不要一次全展示** — 5个场景逐步推进，用户点"下一步"触发
+3. **动画描述"结果"而非"过程"** — 不展示数据包传输细节，展示"3台机器都亮了，数据安全了"
+
+### 五场景结构
+
+| 场景 | 标题 | 描述 | 可交互 |
+|---|---|---|---|
+| 1 | 文件写入 | 文件自动切成 4 个 Chunk | 否 |
+| 2 | 数据分布 | 4 个数据块分布到 3 个节点 | ✅ 可点击节点查看详情 |
+| 3 | 节点故障 | 一台机器故障，自动恢复副本 | 否 |
+| 4 | 副本策略 | 滑块调整副本数，实时计算安全性/存储占用 | ✅ 滑块交互 |
+| 5 | 数据读取 | 就近路由选择最快节点，拼合返回完整文件 | 否 |
+
+### 数据块颜色方案
+
+| 数据块 | 颜色 | 色值 |
+|---|---|---|
+| Chunk 1 (C1) | 靛紫 | `#6366F1` |
+| Chunk 2 (C2) | 绿 | `#22C55E` |
+| Chunk 3 (C3) | 橙 | `#F59E0B` |
+| Chunk 4 (C4) | 粉 | `#EC4899` |
+
+### 与关卡的联动
+
+```
+用户进入第2关（ZBS存储原理）
+    ↓
+LevelBriefingModal 显示"互动预习"卡片
+    ↓ 点击
+/data-gravity/story?from=level&levelId=2
+    ↓ 5个场景约3分钟
+点击"我看懂了" → onComplete → 返回 /level/2
+    ↓
+游戏关卡正式开始
+```
+
+### 模式切换
+
+`/data-gravity` 页面左侧面板提供模式切换器：
+
+- 🎬 **故事模式** → `/data-gravity/story` — 非技术用户友好的叙事教学
+- ⚛️ **仿真模式** → `/data-gravity` — 物理粒子仿真（面向技术用户）
+
+---
+
+## 9. 情景选择关
+
+### 概述
+
+| 属性 | 值 |
+|---|---|
+| 关卡类型 | `scenario_decision` |
+| 渲染组件 | `apps/web/src/components/game/ScenarioGameRenderer.tsx` |
+| 适用知识点 | 操作流程、故障处理、最佳实践 |
+| 数据来源 | `apps/web/src/lib/mock-courses/play-content.ts` |
+
+### 核心体验
+
+用户扮演一个角色（如"运维工程师张工"），遇到真实情景，做出选择。每个选择都有后果展示 + 知识点提炼。
+
+### UI 结构
+
+```
+┌─────────────────────────────────────────────────────────┐
+│  🎭 角色名，情景描述：                                   │
+│                                                         │
+│  "ZBS 集群中 Node-3 状态变为 WARNING，                  │
+│   磁盘使用率达到 87%"                                   │
+│                                                         │
+│  [A] 选项1                                              │
+│  [B] 选项2                                              │
+│  [C] 选项3 ← 正确                                      │
+│  [D] 选项4                                              │
+└─────────────────────────────────────────────────────────┘
+
+选择后 →
+
+┌─────────────────────────────────────────────────────────┐
+│  ✅/❌ 选择结果                                          │
+│  🎬 后果叙述                                             │
+│  💡 知识点提炼                                           │
+│  [继续 →]                                               │
+└─────────────────────────────────────────────────────────┘
+```
+
+### 评分机制
+
+```typescript
+function calculateStars(correctCount: number, totalQuestions: number): 0 | 1 | 2 | 3 {
+  const percentage = Math.round((correctCount / totalQuestions) * 100);
+  if (percentage >= 90) return 3;   // ★★★
+  if (percentage >= 70) return 2;   // ★★
+  if (percentage >= 50) return 1;   // ★
+  return 0;
+}
+// score = Math.round((correctCount / totalQuestions) * 100)
+```
+
+### 路由与适配
+
+- **路由**: `/play/scenario_decision/{id}?course={courseId}`
+- **适配**: `scenario_decision` 类型**不使用** `UniversalGameRenderer` 适配器模式
+- **渲染**: 直接由 `ScenarioGameRenderer` 组件渲染
+- **原因**: 情景选择关的 UI 结构（角色扮演 + 后果叙事）与通用渲染器差异较大
+
+### 涉及文件
+
+| 文件 | 作用 |
+|---|---|
+| `packages/types/src/index.ts` | `ScenarioDecisionChoice`, `ScenarioDecisionQuestion` 类型 |
+| `apps/web/src/components/game/ScenarioGameRenderer.tsx` | 情景选择关渲染器 |
+| `apps/web/src/lib/mock-courses/play-content.ts` | Mock 情景选择题数据（3道 ZBS 守护者任务题） |
+| `apps/web/src/app/(game)/play/[type]/[id]/page.tsx` | 路由分发，`scenario_decision` 类型的特殊处理 |
+
+---
+
+## 10. 关卡叙事系统
+
+### 概述
+
+让游戏"感觉像游戏"而不是"考试"。进入关卡时展示角色扮演场景，让每一关都有叙事连续性。
+
+### 涉及文件
+
+| 文件 | 作用 |
+|---|---|
+| `packages/types/src/index.ts` | `LevelNarrative` 接口定义 |
+| `apps/web/src/components/game/LevelIntroModal.tsx` | 关卡叙事入口弹窗 |
+| `apps/web/src/lib/mock-courses/play-content.ts` | Mock 叙事数据 |
+
+### LevelIntroModal UI 结构
+
+```
+╔════════════════════════════════════════╗
+║  🎮 第N关：{narrative.title}           ║
+║                                        ║
+║  {narrative.hook}                      ║
+║                                        ║
+║  👤 你的角色：{narrative.protagonist}   ║
+║  📋 任务：{narrative.missionBrief}      ║
+║                                        ║
+║  [📋 查看任务背景]  [⚡ 直接开始]      ║
+╚════════════════════════════════════════╝
+```
+
+### 使用方式
+
+`LevelIntroModal` 目前仅在 `scenario_decision` 关卡类型中使用。进入关卡时，如果 `play-content.ts` 中配置了 `narrative` 字段，将自动弹出叙事弹窗。用户点击"直接开始"后，弹窗关闭，游戏正式开始。
+
+### 叙事数据流
+
+```
+play-content.ts (narrative 配置)
+    ↓
+play/[type]/[id]/page.tsx (读取 narrative)
+    ↓ narrative && !introDismissed
+LevelIntroModal (弹窗渲染)
+    ↓ onStart
+setIntroDismissed(true) → ScenarioGameRenderer (游戏开始)
+    ↓ onComplete
+narrative.successMessage / narrative.failureMessage (结算展示)
+```
+
+---
+
+## 11. 变更日志
 
 > **规则**：每次涉及多文件联动的改动，必须在此追加一条记录。
+
+### 2026-04-17 — ZBS 数据流可视化 + 情景选择关 + 关卡叙事系统
+
+**背景**：非技术用户（代理商销售、初级运维）看不懂物理粒子仿真式的数据可视化，游戏关卡只有 MCQ 单一类型缺乏叙事感。本次新增三大系统：五场景故事化 ZBS 教学、情景选择关游戏类型、关卡叙事入口系统。
+
+**涉及文件**：
+
+| # | 文件路径 | 改动摘要 |
+|---|---|---|
+| 1 | `packages/types/src/index.ts` | 新增 `ZBSScene`, `CHUNK_COLORS`, `ZBSNodeState`, `ZBSFlowVizProps`, `LevelNarrative`, `ScenarioDecisionChoice`, `ScenarioDecisionQuestion`, `GameRendererProps` 类型定义 |
+| 2 | `apps/web/src/components/game/ZBSFlowViz.tsx` | **新文件** — ZBS 五场景交互叙事可视化组件（framer-motion 动画，无 Three.js） |
+| 3 | `apps/web/src/components/game/ScenarioGameRenderer.tsx` | **新文件** — 情景选择关渲染器（角色扮演 + 4选1 + 后果叙事 + 知识点提炼） |
+| 4 | `apps/web/src/components/game/LevelIntroModal.tsx` | **新文件** — 关卡叙事入口弹窗（角色、时间、地点、任务简报） |
+| 5 | `apps/web/src/app/data-gravity/story/page.tsx` | **新文件** — ZBS 数据流故事模式页面 |
+| 6 | `apps/web/src/app/data-gravity/page.tsx` | 新增故事模式/仿真模式切换器 |
+| 7 | `apps/web/src/app/(game)/play/[type]/[id]/page.tsx` | 新增 `scenario_decision` 类型路由分发，使用独立的 `ScenarioGameRenderer` |
+| 8 | `apps/web/src/lib/mock-courses/play-content.ts` | 新增 `scenario_decision` Mock 数据（3道 ZBS 守护者任务情景题 + LevelNarrative） |
+| 9 | `apps/web/src/lib/mock-courses/briefing-data.ts` | `l2` 互动预习链接改为 `/data-gravity/story`（故事模式） |
+
+**关联组件依赖图**：
+
+```
+@skillquest/types
+  ├── ZBSScene, CHUNK_COLORS, ZBSFlowVizProps
+  │     ↓ 被引用
+  │   ZBSFlowViz.tsx (五场景可视化)
+  │     ↓ 被引用
+  │   data-gravity/story/page.tsx (故事模式页面)
+  │     ↑ 模式切换
+  │   data-gravity/page.tsx (仿真模式 + 切换器)
+  │     ↑ interactiveDemo.href
+  │   briefing-data.ts (l2 互动预习链接)
+  │
+  ├── LevelNarrative
+  │     ↓ 被引用
+  │   LevelIntroModal.tsx (叙事入口弹窗)
+  │     ↓ 被引用
+  │   play/[type]/[id]/page.tsx (scenario_decision 路由)
+  │
+  └── ScenarioDecisionQuestion, ScenarioDecisionChoice
+        ↓ 被引用
+      ScenarioGameRenderer.tsx (情景选择关渲染器)
+        ↓ 被引用
+      play/[type]/[id]/page.tsx (scenario_decision 路由)
+        ↑ Mock 数据
+      play-content.ts (3道情景题 + narrative)
+```
+
+**游戏类型扩展**：
+
+原有 7 种：`topology` | `matching` | `ordering` | `quiz` | `terminal` | `scenario` | `vm_placement`
+
+新增 1 种：`scenario_decision`（情景选择关，独立渲染器，不走 UniversalGameRenderer 适配器）
+
+---
 
 ### 2026-04-17 — 数据引力场 → ZBS l2 关卡前置互动预习
 

@@ -7,7 +7,7 @@
  * - course selects the vendor course
  *
  * Flow: Load content → adapter(content) → VisualScene → UniversalGameRenderer
- * All 7 level types share this single page.
+ * All level types share this single page. Scenario Decision has its own renderer.
  */
 
 'use client';
@@ -23,6 +23,8 @@ import type {
   ScenarioQuizLevel,
   VirtualizationLevel,
   NarrativeConfig,
+  ScenarioDecisionQuestion,
+  LevelNarrative,
 } from '@skillquest/types';
 import type { VisualScene, InteractionResult } from '@skillquest/game-engine';
 import {
@@ -37,6 +39,8 @@ import {
 import UniversalGameRenderer from '../../../../../components/game/UniversalGameRenderer';
 import GameHUD from '../../../../../components/game/GameHUD';
 import NarrativeModal from '../../../../../components/game/NarrativeModal';
+import ScenarioGameRenderer from '../../../../../components/game/ScenarioGameRenderer';
+import LevelIntroModal from '../../../../../components/game/LevelIntroModal';
 import { useGameState } from '../../../../../components/game/hooks/useGameState';
 import { ErrorBoundary } from '../../../../../components/ui/ErrorBoundary';
 import { useCourseId } from '../../../../../hooks/useCourseId';
@@ -46,10 +50,12 @@ import LevelBriefingModal from '../../../../../components/game/LevelBriefingModa
 
 // ─── Adapter dispatch ──────────────────────────────────────────────
 
-type ContentType = 'topology' | 'matching' | 'ordering' | 'quiz' | 'terminal' | 'scenario' | 'vm_placement';
+type ContentType = 'topology' | 'matching' | 'ordering' | 'quiz' | 'terminal' | 'scenario' | 'vm_placement' | 'scenario_decision';
 
 function adaptContent(type: ContentType, data: Record<string, unknown>): VisualScene | null {
   if (!data || typeof data !== 'object') return null;
+  // scenario_decision uses its own renderer, no adapter needed
+  if (type === 'scenario_decision') return null;
   try {
     switch (type) {
       case 'topology': return topologyAdapter(data as unknown as TopologyQuizLevel);
@@ -98,6 +104,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const [messages, setMessages] = useState<Array<{ text: string; correct: boolean }>>([]);
   const [narrativeComplete, setNarrativeComplete] = useState(false);
   const [briefingDismissed, setBriefingDismissed] = useState(false);
+  const [introDismissed, setIntroDismissed] = useState(false);
 
   // Load content from shared data layer
   const content = getPlayContent(courseId, contentType);
@@ -111,11 +118,15 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const preStory = getContentNarrative(content);
   const hasNarrative = !!preStory && !narrativeComplete;
 
+  // Check for level narrative (scenario_decision type)
+  const levelNarrative = content?.narrative as LevelNarrative | undefined;
+
   const { state: gameState, answerCorrect, answerWrong } = useGameState(totalQuestions);
 
-  // Convert content → VisualScene via adapter
+  // Convert content → VisualScene via adapter (null for scenario_decision)
   const scene = useMemo(() => {
     if (!content) return null;
+    if (contentType === 'scenario_decision') return null; // Uses own renderer
     return adaptContent(contentType, content);
   }, [contentType, content]);
 
@@ -133,6 +144,77 @@ function PlayContent({ type, id }: { type: string; id: string }) {
     },
     [id, answerCorrect, answerWrong],
   );
+
+  // ─── Scenario Decision — dedicated renderer ───
+  if (contentType === 'scenario_decision' && content) {
+    const questions = (content.questions ?? []) as ScenarioDecisionQuestion[];
+    const narrative = content.narrative as LevelNarrative | undefined;
+
+    if (questions.length === 0) {
+      return (
+        <div className="min-h-screen bg-surface flex items-center justify-center">
+          <p className="text-gray-400">没有情景选择题</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-surface p-4">
+        {/* Level Intro (narrative) */}
+        {narrative && !introDismissed && (
+          <LevelIntroModal
+            narrative={narrative}
+            onStart={() => setIntroDismissed(true)}
+          />
+        )}
+
+        <div className="mx-auto max-w-[700px]">
+          {/* Back link */}
+          <div className="mb-4">
+            <a
+              href={`/map?course=${encodeURIComponent(courseId)}`}
+              className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-400 transition"
+            >
+              ← 返回地图
+            </a>
+          </div>
+
+          <ScenarioGameRenderer
+            questions={questions}
+            levelTitle={narrative?.title ?? '情景选择关'}
+            onComplete={() => {
+              // Production: save progress via API (POST /api/levels/{id}/complete)
+            }}
+            onAnswer={() => {
+              // Production: record answer via API (POST /api/levels/{id}/answer)
+            }}
+          />
+        </div>
+
+        {/* Course/type tabs */}
+        <div className="mx-auto max-w-[700px] mt-6 space-y-4">
+          <div>
+            <p className="text-xs text-gray-600 mb-2">切换关卡类型:</p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(TYPE_LABELS).map(([key, label]) => (
+                <Link
+                  key={key}
+                  href={`/play/${key}/demo?course=${courseId}`}
+                  className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                    key === contentType
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-600'
+                      : 'border-gray-200 text-gray-500 hover:border-gray-400'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!content || !scene) {
     return (

@@ -22,6 +22,7 @@ import {
   FolderUp,
   LogIn,
   UsersRound,
+  Gamepad2,
 } from 'lucide-react';
 import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
@@ -120,6 +121,8 @@ export default function Home() {
           { href: '/login', label: '登录', desc: '用户认证 · 权限管理', Icon: LogIn },
           { href: '/showcase', label: '产品介绍', desc: '动态展示 · 平台亮点', Icon: Presentation },
           { href: '/data-gravity', label: '数据引力场', desc: '物理可视化 · 数据流动', Icon: Orbit },
+          { href: '/data-gravity/story', label: 'ZBS 数据流', desc: '五场景叙事 · 交互学习', Icon: Presentation },
+          { href: '/play/scenario_decision/demo?course=smartx-halo', label: '情景选择关', desc: '角色扮演 · 决策训练', Icon: Gamepad2 },
           { href: '/achievements', label: 'Achievements', desc: 'Badges / Level / Milestones', Icon: Award },
           { href: '/profile', label: 'Profile', desc: 'Stats / Skills / Progress', Icon: User },
           { href: '/analytics', label: 'Analytics', desc: 'Reports / Insights / ROI', Icon: LineChart },

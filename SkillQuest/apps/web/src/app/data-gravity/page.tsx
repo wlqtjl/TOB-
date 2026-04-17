@@ -398,6 +398,21 @@ export default function DataGravityPage() {
           <ArrowLeft size={14} strokeWidth={1.5} /> 返回首页
         </Link>
 
+        {/* Mode switcher: Story mode vs Physics sim */}
+        <div className="rounded-lg border border-base-200 bg-base-50 p-1 flex gap-1">
+          <Link
+            href="/data-gravity/story"
+            className="flex-1 rounded-md px-2 py-1.5 text-center text-[10px] font-medium transition-all text-base-400 hover:text-accent hover:bg-accent/5"
+          >
+            🎬 故事模式
+          </Link>
+          <span
+            className="flex-1 rounded-md px-2 py-1.5 text-center text-[10px] font-medium bg-accent/10 text-accent border border-accent/20"
+          >
+            ⚛️ 仿真模式
+          </span>
+        </div>
+
         {/* ZBS knowledge banner */}
         <div className="rounded-lg border border-accent/20 bg-accent/5 p-2.5 text-[10px] text-base-600 leading-relaxed space-y-1">
           <p className="font-semibold text-accent text-xs mb-1">本页面模拟 ZBS 分布式块存储的数据分布原理：</p>

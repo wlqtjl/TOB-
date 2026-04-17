@@ -166,10 +166,11 @@ function DistributionScene({ template }: { template: DataFlowTemplate }) {
 
   const nodeData = template.nodes.filter(n => n.role === 'storage').map(node => ({
     label: node.label,
-    chunks: node.chunks.map((ch, i) => ({
-      label: ch,
-      color: colors[parseInt(ch.replace(/\D/g, ''), 10) - 1] || colors[i % colors.length],
-    })),
+    chunks: node.chunks.map((ch, i) => {
+      const parsed = parseInt(ch.replace(/\D/g, ''), 10);
+      const colorIndex = Number.isNaN(parsed) ? i : parsed - 1;
+      return { label: ch, color: colors[colorIndex % colors.length] || colors[0] };
+    }),
   }));
 
   // If no storage nodes defined, generate defaults
@@ -228,8 +229,10 @@ function FailureScene({ template }: { template: DataFlowTemplate }) {
             if (phase === 'recovering') status = 'recovering';
             if (phase === 'recovered') status = 'recovered';
           }
+          const baseChunkCount = Math.ceil(template.totalChunks / template.nodeCount);
+          const extraRecoveryChunk = (phase === 'recovered' && i === nodeNames.length - 1) ? 1 : 0;
           const chunks = i === 0 && phase !== 'normal' ? [] :
-            Array.from({ length: Math.ceil(template.totalChunks / template.nodeCount) + (phase === 'recovered' && i === nodeNames.length - 1 ? 1 : 0) }, (_, j) => ({
+            Array.from({ length: baseChunkCount + extraRecoveryChunk }, (_, j) => ({
               label: `C${(j % template.totalChunks) + 1}`,
               color: colors[j % colors.length],
             }));

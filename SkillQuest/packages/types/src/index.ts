@@ -1489,12 +1489,12 @@ export interface ZBSScene {
 }
 
 /** ZBS 数据块颜色方案 */
-export const CHUNK_COLORS: Record<string, string> = {
+export const CHUNK_COLORS = {
   chunk1: '#6366F1',  // 靛紫
   chunk2: '#22C55E',  // 绿
   chunk3: '#F59E0B',  // 橙
   chunk4: '#EC4899',  // 粉
-};
+} as const;
 
 /** 存储节点状态 */
 export type ZBSNodeState = 'normal' | 'active' | 'failed' | 'recovering' | 'recovered';

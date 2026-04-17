@@ -21,15 +21,9 @@ import {
   RefreshCw, Zap, Eye,
 } from 'lucide-react';
 import type { ZBSScene } from '@skillquest/types';
+import { CHUNK_COLORS } from '@skillquest/types';
 
 /* ────────────────── Constants ────────────────── */
-
-const CHUNK_COLORS = {
-  chunk1: '#6366F1',
-  chunk2: '#22C55E',
-  chunk3: '#F59E0B',
-  chunk4: '#EC4899',
-};
 
 const CHUNK_LABELS = ['C1', 'C2', 'C3', 'C4'];
 
@@ -455,7 +449,8 @@ function Scene4() {
             <Server className="text-emerald-500" size={20} />
             <span className="text-xs text-gray-600">{name}</span>
             <div className="flex flex-wrap justify-center gap-1">
-              {Array.from({ length: Math.ceil(replicaCount / 3) * 4 / 3 }).map((_, i) => (
+              {/* Each node holds (totalChunks × replicaCount / numberOfNodes) data blocks */}
+              {Array.from({ length: Math.ceil((4 * replicaCount) / 3) }).map((_, i) => (
                 <motion.div
                   key={i}
                   className="w-3 h-3 rounded-sm bg-indigo-400"

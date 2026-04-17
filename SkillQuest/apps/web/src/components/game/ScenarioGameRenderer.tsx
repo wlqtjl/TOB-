@@ -24,6 +24,17 @@ interface ScenarioGameRendererProps {
   onAnswer?: (questionIndex: number, choiceId: string, isCorrect: boolean) => void;
 }
 
+/* ────────────────── Helpers ────────────────── */
+
+/** Calculate star rating based on correctness percentage */
+function calculateStars(correctCount: number, totalQuestions: number): 0 | 1 | 2 | 3 {
+  const percentage = Math.round((correctCount / totalQuestions) * 100);
+  if (percentage >= 90) return 3;
+  if (percentage >= 70) return 2;
+  if (percentage >= 50) return 1;
+  return 0;
+}
+
 /* ────────────────── Single Scenario Card ────────────────── */
 
 function ScenarioCard({
@@ -213,8 +224,7 @@ function ResultsScreen({
   totalQuestions: number;
   onComplete: () => void;
 }) {
-  const percentage = Math.round((correctCount / totalQuestions) * 100);
-  const stars = percentage >= 90 ? 3 : percentage >= 70 ? 2 : percentage >= 50 ? 1 : 0;
+  const stars = calculateStars(correctCount, totalQuestions);
 
   return (
     <motion.div
@@ -274,9 +284,9 @@ export default function ScenarioGameRenderer({
   }, [currentIndex, questions.length, onAnswer]);
 
   const handleComplete = useCallback(() => {
-    const percentage = Math.round((correctCount / questions.length) * 100);
-    const stars = percentage >= 90 ? 3 : percentage >= 70 ? 2 : percentage >= 50 ? 1 : 0;
-    onComplete(correctCount * 100, stars);
+    const stars = calculateStars(correctCount, questions.length);
+    const score = Math.round((correctCount / questions.length) * 100);
+    onComplete(score, stars);
   }, [correctCount, questions.length, onComplete]);
 
   return (

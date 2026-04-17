@@ -172,7 +172,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
           {/* Back link */}
           <div className="mb-4">
             <a
-              href={`/map?course=${courseId}`}
+              href={`/map?course=${encodeURIComponent(courseId)}`}
               className="rounded-lg border border-gray-200 px-3 py-1.5 text-xs text-gray-400 hover:border-gray-400 transition"
             >
               ← 返回地图

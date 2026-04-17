@@ -25,6 +25,7 @@ import {
   Zap,
   LogOut,
   Home,
+  Workflow,
 } from 'lucide-react';
 import { useAuth, type UserRole } from '../../lib/auth-context';
 import { tenantConfig } from '../../lib/tenant-config';
@@ -41,6 +42,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
   ADMIN: [
     { href: '/courses', label: '课程管理', icon: BookOpen },
     { href: '/admin/courses', label: '文档上传', icon: FolderUp },
+    { href: '/admin/content-generator', label: '内容生成器', icon: Workflow },
     { href: '/admin/review', label: '审核中心', icon: ClipboardCheck },
     { href: '/admin/analytics', label: '数据看板', icon: BarChart3 },
     { href: '/admin/users', label: '用户管理', icon: Users },

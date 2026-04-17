@@ -1557,3 +1557,65 @@ export interface GameRendererProps {
   onAnswer: (questionId: string, answer: unknown, isCorrect: boolean) => void;
   skipIntro?: boolean;
 }
+
+// ─── 标准数据流内容生成器 (Standard Data Flow Content Generator) ─────
+
+/** 数据流场景定义（通用化 ZBSScene） */
+export interface FlowScene {
+  id: number;
+  title: string;
+  description: string;
+  interactable: boolean;
+}
+
+/** 数据流节点定义 */
+export interface FlowNode {
+  id: string;
+  label: string;
+  /** 节点角色：入口/处理/存储/路由/出口 */
+  role: 'ingress' | 'process' | 'storage' | 'router' | 'egress';
+  /** 节点接收的数据块标签 */
+  chunks: string[];
+}
+
+/** 数据流模板定义 — 可被任何分布式系统复用 */
+export interface DataFlowTemplate {
+  id: string;
+  /** 模板名称（如 "ZBS 分布式存储"、"Ceph CRUSH"、"iSCSI 路径"） */
+  name: string;
+  /** 模板描述 */
+  description: string;
+  /** 系统类型标签 */
+  category: 'storage' | 'network' | 'compute' | 'security' | 'database' | 'custom';
+  /** 厂商/品牌（可选） */
+  vendor?: string;
+  /** 数据块总数 */
+  totalChunks: number;
+  /** 副本数量 */
+  replicaCount: number;
+  /** 节点数量 */
+  nodeCount: number;
+  /** 数据块颜色方案 */
+  chunkColors: Record<string, string>;
+  /** 场景列表 */
+  scenes: FlowScene[];
+  /** 节点列表 */
+  nodes: FlowNode[];
+  /** 自定义文案 */
+  texts: {
+    writeTitle: string;
+    writeDescription: string;
+    distributionTitle: string;
+    distributionDescription: string;
+    failureTitle: string;
+    failureDescription: string;
+    replicaTitle: string;
+    replicaDescription: string;
+    readTitle: string;
+    readDescription: string;
+  };
+  /** 创建时间 */
+  createdAt: string;
+  /** 更新时间 */
+  updatedAt: string;
+}

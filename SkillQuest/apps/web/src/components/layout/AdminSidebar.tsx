@@ -18,6 +18,7 @@ import {
   Users,
   UsersRound,
   Settings,
+  Workflow,
 } from 'lucide-react';
 import { useAuth } from '../../lib/auth-context';
 import { tenantConfig } from '../../lib/tenant-config';
@@ -33,6 +34,7 @@ interface SidebarItem {
 const ADMIN_ITEMS: SidebarItem[] = [
   { href: '/courses', label: '课程管理', icon: BookOpen },
   { href: '/admin/courses', label: '文档上传', icon: FolderUp },
+  { href: '/admin/content-generator', label: '内容生成器', icon: Workflow },
   { href: '/admin/review', label: 'AI 审核', icon: ClipboardCheck },
   { href: '/admin/analytics', label: '数据看板', icon: BarChart3 },
   { href: '/admin/users', label: '用户管理', icon: Users },

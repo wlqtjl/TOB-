@@ -603,6 +603,8 @@ function Scene5() {
 /* ────────────────── Main Component ────────────────── */
 
 export default function ZBSFlowViz({ onComplete }: ZBSFlowVizProps) {
+  // Note: courseId and levelId from props are reserved for future API integration
+  // (e.g. tracking visualization completion, analytics)
   const [currentScene, setCurrentScene] = useState(0);
 
   const handleNext = useCallback(() => {

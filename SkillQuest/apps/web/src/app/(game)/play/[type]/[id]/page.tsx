@@ -182,12 +182,11 @@ function PlayContent({ type, id }: { type: string; id: string }) {
           <ScenarioGameRenderer
             questions={questions}
             levelTitle={narrative?.title ?? '情景选择关'}
-            onComplete={(score, stars) => {
-              // In production, save progress to API
-              console.log('[ScenarioComplete]', { score, stars });
+            onComplete={() => {
+              // Production: save progress via API (POST /api/levels/{id}/complete)
             }}
-            onAnswer={(idx, choiceId, isCorrect) => {
-              console.log('[ScenarioAnswer]', { idx, choiceId, isCorrect });
+            onAnswer={() => {
+              // Production: record answer via API (POST /api/levels/{id}/answer)
             }}
           />
         </div>

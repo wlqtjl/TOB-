@@ -184,7 +184,19 @@ function AISettingsPageContent() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+    // Load initial data on mount
+    let cancelled = false;
+    (async () => {
+      const [p, s] = await Promise.all([fetchProviders(), fetchSettings()]);
+      if (!cancelled) {
+        setProviders(p);
+        setSettings(s);
+        setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);

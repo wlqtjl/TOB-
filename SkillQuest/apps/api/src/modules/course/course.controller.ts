@@ -235,4 +235,19 @@ export class CourseController {
     if (!job) throw new BadRequestException('任务不存在');
     return job;
   }
+
+  // ─── 流水线状态 ─────────────────────────────────────────────────────
+
+  /** 获取课程流水线状态 (前端轮询) */
+  @Get(':courseId/pipeline')
+  getPipelineStatus(@Param('courseId') courseId: string) {
+    return this.courses.getPipelineStatus(courseId);
+  }
+
+  /** 发布课程（将状态置为 PUBLISHED） */
+  @Post(':courseId/publish')
+  @Roles('ADMIN', 'TRAINER')
+  publishCourse(@Param('courseId') courseId: string) {
+    return this.courses.updatePipelineStatus(courseId, 'PUBLISHED');
+  }
 }

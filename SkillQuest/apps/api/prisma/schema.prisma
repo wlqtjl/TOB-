@@ -76,6 +76,12 @@ model Course {
   vendor      String
   category    CourseCategory
   coverImage  String         @default("")
+
+  /// 课程生产流水线状态 (Linear 风格)
+  pipelineStatus PipelineStatus @default(UPLOADING)
+  /// 流水线进度详情 (JSON: { done: number, total: number, message?: string })
+  pipelineProgress Json?
+
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
@@ -83,6 +89,14 @@ model Course {
   documentChunks DocumentChunk[]
   versions      CourseVersion[]
   translations  CourseTranslation[]
+}
+
+enum PipelineStatus {
+  UPLOADING
+  ANALYZING
+  GENERATING
+  REVIEWING
+  PUBLISHED
 }
 
 enum CourseCategory {
@@ -534,4 +548,22 @@ model Permission {
   @@unique([userId, action, resourceId])
   @@index([userId])
   @@index([tenantId])
+}
+
+// ─── AI 模型设置 (每租户) ──────────────────────────────────────────
+
+model AISettings {
+  id                String   @id @default(uuid())
+  tenantId          String   @unique
+  /// 生成器 Provider Key (如 deepseek, qwen, openai, claude 等)
+  generatorProvider String   @default("openai")
+  generatorModel    String   @default("gpt-4o")
+  /// 校验器 Provider Key
+  validatorProvider String   @default("openai")
+  validatorModel    String   @default("gpt-4o-mini")
+  /// 动画生成 Provider Key
+  animationProvider String   @default("gemini")
+  animationModel    String   @default("gemini-2.0-flash")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }

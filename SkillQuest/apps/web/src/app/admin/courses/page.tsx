@@ -25,6 +25,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
+import PipelineStatus from '../../../components/ai/PipelineStatus';
 import { useAuth } from '../../../lib/auth-context';
 
 // ─── Types ───────────────────────────────────────────────────────────
@@ -37,6 +38,8 @@ interface CourseAdmin {
   status: string;
   levelCount: number;
   pendingCount: number;
+  pipelineStatus?: 'UPLOADING' | 'ANALYZING' | 'GENERATING' | 'REVIEWING' | 'PUBLISHED';
+  pipelineProgress?: { done?: number; total?: number; message?: string };
 }
 
 interface ImportInsights {
@@ -59,9 +62,9 @@ interface ImportStatus {
 // ─── Mock Data ───────────────────────────────────────────────────────
 
 const MOCK_COURSES_ADMIN: CourseAdmin[] = [
-  { id: 'c1', title: 'SmartX 超融合认证', vendor: 'SmartX', category: 'VIRTUALIZATION', status: 'published', levelCount: 12, pendingCount: 0 },
-  { id: 'c2', title: '深信服 SD-WAN 培训', vendor: 'Sangfor', category: 'NETWORK', status: 'pending_review', levelCount: 8, pendingCount: 3 },
-  { id: 'c3', title: '华为 HCI 认证', vendor: 'Huawei', category: 'CLOUD', status: 'draft', levelCount: 0, pendingCount: 0 },
+  { id: 'c1', title: 'SmartX 超融合认证', vendor: 'SmartX', category: 'VIRTUALIZATION', status: 'published', levelCount: 12, pendingCount: 0, pipelineStatus: 'PUBLISHED' },
+  { id: 'c2', title: '深信服 SD-WAN 培训', vendor: 'Sangfor', category: 'NETWORK', status: 'pending_review', levelCount: 8, pendingCount: 3, pipelineStatus: 'REVIEWING' },
+  { id: 'c3', title: '华为 HCI 认证', vendor: 'Huawei', category: 'CLOUD', status: 'draft', levelCount: 0, pendingCount: 0, pipelineStatus: 'UPLOADING' },
 ];
 
 // ─── API Helpers ─────────────────────────────────────────────────────
@@ -530,6 +533,12 @@ function CoursesAdminContent() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <Link
+            href="/admin/ai-settings"
+            className="flex items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-1.5 text-xs text-indigo-700 transition hover:border-indigo-400 hover:bg-indigo-100"
+          >
+            🤖 AI 模型设置
+          </Link>
           <button
             onClick={() => void loadCourses()}
             className="flex items-center gap-1.5 rounded-lg border border-base-200 px-3 py-1.5 text-xs text-base-600 transition hover:border-accent/40 hover:text-base-900"
@@ -598,6 +607,13 @@ function CoursesAdminContent() {
                     <BarChart3 size={12} strokeWidth={1.5} />
                     {course.levelCount} 关卡
                   </span>
+                  {course.pipelineStatus && (
+                    <PipelineStatus
+                      status={course.pipelineStatus}
+                      progress={course.pipelineProgress}
+                      compact
+                    />
+                  )}
                   {course.pendingCount > 0 && (
                     <Link
                       href={`/admin/review?courseId=${course.id}`}

@@ -103,7 +103,7 @@ export class AISettingsService {
    * Writes an API key to the server .env file and syncs to process.env.
    * The key is never stored in the database.
    */
-  writeEnvKey(providerKey: ProviderKey, apiKey: string): void {
+  async writeEnvKey(providerKey: ProviderKey, apiKey: string): Promise<void> {
     const config = AI_PROVIDERS[providerKey];
     const envVarName = config.envKey;
 
@@ -115,7 +115,7 @@ export class AISettingsService {
     try {
       let envContent = '';
       if (fs.existsSync(envPath)) {
-        envContent = fs.readFileSync(envPath, 'utf-8');
+        envContent = await fs.promises.readFile(envPath, 'utf-8');
       }
 
       const regex = new RegExp(`^${envVarName}=.*$`, 'm');
@@ -127,7 +127,7 @@ export class AISettingsService {
         envContent = envContent.trimEnd() + '\n' + newLine + '\n';
       }
 
-      fs.writeFileSync(envPath, envContent, 'utf-8');
+      await fs.promises.writeFile(envPath, envContent, 'utf-8');
       this.logger.log(`API Key for ${config.name} written to .env`);
     } catch (err) {
       this.logger.warn(`Failed to write .env file: ${(err as Error).message}. Key is set in process.env only.`);

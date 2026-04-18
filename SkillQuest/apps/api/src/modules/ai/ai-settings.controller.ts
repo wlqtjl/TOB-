@@ -60,7 +60,7 @@ export class AISettingsController {
 
   /** 写入 API Key */
   @Post('key/:provider')
-  writeKey(
+  async writeKey(
     @Param('provider') provider: string,
     @Body() body: { apiKey: string },
   ) {
@@ -68,7 +68,7 @@ export class AISettingsController {
     if (!body.apiKey || typeof body.apiKey !== 'string' || body.apiKey.trim().length === 0) {
       throw new BadRequestException('apiKey 不能为空');
     }
-    this.aiSettings.writeEnvKey(provider as ProviderKey, body.apiKey.trim());
+    await this.aiSettings.writeEnvKey(provider as ProviderKey, body.apiKey.trim());
     return { ok: true, message: `${provider} API Key 已配置` };
   }
 

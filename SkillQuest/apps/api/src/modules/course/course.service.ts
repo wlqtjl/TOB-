@@ -560,7 +560,7 @@ export class CourseService {
       where: { id: courseId },
       data: {
         pipelineStatus: status,
-        pipelineProgress: (progress ?? {}) as object,
+        pipelineProgress: progress ? (progress as object) : undefined,
       },
     });
   }

@@ -110,7 +110,7 @@ export default function PipelineStatus({
           />
         </span>
         {config.label}
-        {status === 'GENERATING' && progress?.done != null && progress?.total != null && (
+        {status === 'GENERATING' && progress?.done !== undefined && progress?.total !== undefined && (
           <span className="font-mono">
             {progress.done}/{progress.total}
           </span>
@@ -130,7 +130,7 @@ export default function PipelineStatus({
       <div className="flex-1">
         <p className={`text-sm font-semibold ${config.textColor}`}>
           {config.label}
-          {status === 'GENERATING' && progress?.done != null && progress?.total != null && (
+          {status === 'GENERATING' && progress?.done !== undefined && progress?.total !== undefined && (
             <span className="font-mono ml-2">
               ({progress.done}/{progress.total})
             </span>

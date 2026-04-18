@@ -80,7 +80,7 @@ model Course {
   /// 课程生产流水线状态 (Linear 风格)
   pipelineStatus PipelineStatus @default(UPLOADING)
   /// 流水线进度详情 (JSON: { done: number, total: number, message?: string })
-  pipelineProgress Json       @default("{}")
+  pipelineProgress Json?
 
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt

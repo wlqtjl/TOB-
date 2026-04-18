@@ -545,4 +545,40 @@ export class CourseService {
       prerequisites: i > 0 ? [levelIds[i - 1]] : [],
     }));
   }
+
+  // ─── 流水线状态管理 ────────────────────────────────────────────────
+
+  /**
+   * 更新课程流水线状态 (支持前端轮询)
+   */
+  async updatePipelineStatus(
+    courseId: string,
+    status: 'UPLOADING' | 'ANALYZING' | 'GENERATING' | 'REVIEWING' | 'PUBLISHED',
+    progress?: { done: number; total: number; message?: string },
+  ) {
+    return this.prisma.course.update({
+      where: { id: courseId },
+      data: {
+        pipelineStatus: status,
+        pipelineProgress: (progress ?? {}) as object,
+      },
+    });
+  }
+
+  /**
+   * 获取课程流水线状态 (前端轮询接口)
+   */
+  async getPipelineStatus(courseId: string) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        id: true,
+        title: true,
+        pipelineStatus: true,
+        pipelineProgress: true,
+      },
+    });
+    if (!course) throw new NotFoundException('课程不存在');
+    return course;
+  }
 }

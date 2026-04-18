@@ -11,6 +11,7 @@ import { LearningPathModule } from './modules/learning-path/learning-path.module
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { AIBudgetModule } from './modules/ai-budget/ai-budget.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { AIModule } from './modules/ai/ai.module';
 import { PrismaService } from './prisma.service';
 
 @Module({
@@ -27,6 +28,7 @@ import { PrismaService } from './prisma.service';
     FeedbackModule,
     AIBudgetModule,
     AuditModule,
+    AIModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

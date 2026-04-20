@@ -52,6 +52,17 @@ export const RANK_TIERS: RankTier[] = [
 
 const ICON_MAP = { Shield, Crown, Gem, Sparkles, Flame } as const;
 
+/** Pre-computed Tailwind class mappings (JIT-safe — no dynamic interpolation). */
+const RANK_CLASSES: Record<string, { border: string; text: string; fill: string }> = {
+  bronze:   { border: 'border-amber-600/30',  text: 'text-amber-600',  fill: 'fill-amber-600'  },
+  silver:   { border: 'border-gray-400/30',   text: 'text-gray-400',   fill: 'fill-gray-400'   },
+  gold:     { border: 'border-yellow-400/30',  text: 'text-yellow-400', fill: 'fill-yellow-400' },
+  platinum: { border: 'border-cyan-400/30',    text: 'text-cyan-400',   fill: 'fill-cyan-400'   },
+  diamond:  { border: 'border-blue-400/30',    text: 'text-blue-400',   fill: 'fill-blue-400'   },
+  star:     { border: 'border-purple-400/30',  text: 'text-purple-400', fill: 'fill-purple-400' },
+  legend:   { border: 'border-red-400/30',     text: 'text-red-400',    fill: 'fill-red-400'    },
+};
+
 /** Returns the RankTier matching a given XP total. */
 export function getRank(xp: number): RankTier {
   for (let i = RANK_TIERS.length - 1; i >= 0; i--) {
@@ -83,13 +94,14 @@ export default function RankBadge({ xp, showStars = true, size = 'md' }: RankBad
   const stars = useMemo(() => getStarsInTier(xp, rank), [xp, rank]);
   const cfg = SIZE_CONFIG[size];
   const Icon = ICON_MAP[rank.iconName];
+  const cls = RANK_CLASSES[rank.id];
 
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-      className={`inline-flex items-center ${cfg.gap} ${cfg.padding} rounded-full border border-${rank.color}/30 bg-gray-900/80 backdrop-blur-xl`}
+      className={`inline-flex items-center ${cfg.gap} ${cfg.padding} rounded-full border ${cls.border} bg-gray-900/80 backdrop-blur-xl`}
       style={{ boxShadow: `0 0 14px ${rank.glowColor}, 0 0 4px ${rank.glowColor}` }}
     >
       {/* Rank icon */}
@@ -97,11 +109,11 @@ export default function RankBadge({ xp, showStars = true, size = 'md' }: RankBad
         animate={{ rotate: [0, -8, 8, 0] }}
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        <Icon size={cfg.icon} className={`text-${rank.color}`} />
+        <Icon size={cfg.icon} className={cls.text} />
       </motion.div>
 
       {/* Rank name */}
-      <span className={`${cfg.text} font-bold text-${rank.color}`}>
+      <span className={`${cfg.text} font-bold ${cls.text}`}>
         {rank.name}
       </span>
 
@@ -119,7 +131,7 @@ export default function RankBadge({ xp, showStars = true, size = 'md' }: RankBad
                 size={cfg.star}
                 className={
                   i < stars
-                    ? `text-${rank.color} fill-${rank.color}`
+                    ? `${cls.text} ${cls.fill}`
                     : 'text-gray-600'
                 }
               />

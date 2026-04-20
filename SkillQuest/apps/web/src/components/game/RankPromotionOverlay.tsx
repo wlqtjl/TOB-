@@ -33,6 +33,17 @@ export interface RankPromotionOverlayProps {
 
 const ICON_MAP = { Shield, Crown, Gem, Sparkles, Flame } as const;
 
+/** Pre-computed Tailwind class mappings (JIT-safe — no dynamic interpolation). */
+const RANK_CLASSES: Record<string, { border: string; borderWide: string; text: string; fill: string }> = {
+  bronze:   { border: 'border-amber-600/30',  borderWide: 'border-amber-600/40',  text: 'text-amber-600',  fill: 'fill-amber-600'  },
+  silver:   { border: 'border-gray-400/30',   borderWide: 'border-gray-400/40',   text: 'text-gray-400',   fill: 'fill-gray-400'   },
+  gold:     { border: 'border-yellow-400/30',  borderWide: 'border-yellow-400/40', text: 'text-yellow-400', fill: 'fill-yellow-400' },
+  platinum: { border: 'border-cyan-400/30',    borderWide: 'border-cyan-400/40',   text: 'text-cyan-400',   fill: 'fill-cyan-400'   },
+  diamond:  { border: 'border-blue-400/30',    borderWide: 'border-blue-400/40',   text: 'text-blue-400',   fill: 'fill-blue-400'   },
+  star:     { border: 'border-purple-400/30',  borderWide: 'border-purple-400/40', text: 'text-purple-400', fill: 'fill-purple-400' },
+  legend:   { border: 'border-red-400/30',     borderWide: 'border-red-400/40',    text: 'text-red-400',    fill: 'fill-red-400'    },
+};
+
 const PARTICLE_COUNT = 24;
 const PARTICLE_COLORS = [
   '#FBBF24', '#F59E0B', '#EF4444', '#A78BFA',
@@ -109,6 +120,8 @@ export default function RankPromotionOverlay({
 
   const OldIcon = ICON_MAP[oldRank.iconName];
   const NewIcon = ICON_MAP[newRank.iconName];
+  const oldCls = RANK_CLASSES[oldRank.id];
+  const newCls = RANK_CLASSES[newRank.id];
 
   const clearTimers = useCallback(() => {
     timerRefs.current.forEach(clearTimeout);
@@ -187,12 +200,12 @@ export default function RankPromotionOverlay({
               className="flex flex-col items-center"
             >
               <div
-                className={`rounded-full border border-${oldRank.color}/30 bg-gray-900/80 p-6`}
+                className={`rounded-full border ${oldCls.border} bg-gray-900/80 p-6`}
                 style={{ boxShadow: `0 0 20px ${oldRank.glowColor}` }}
               >
-                <OldIcon size={48} className={`text-${oldRank.color}`} />
+                <OldIcon size={48} className={oldCls.text} />
               </div>
-              <span className={`mt-3 text-lg font-bold text-${oldRank.color}`}>
+              <span className={`mt-3 text-lg font-bold ${oldCls.text}`}>
                 {oldRank.name}
               </span>
             </motion.div>
@@ -228,7 +241,7 @@ export default function RankPromotionOverlay({
               className="flex flex-col items-center"
             >
               <motion.div
-                className={`rounded-full border-2 border-${newRank.color}/40 bg-gray-900/90 p-8`}
+                className={`rounded-full border-2 ${newCls.borderWide} bg-gray-900/90 p-8`}
                 style={{ boxShadow: `0 0 30px ${newRank.glowColor}, 0 0 60px ${newRank.glowColor}` }}
                 animate={{
                   boxShadow: [
@@ -243,7 +256,7 @@ export default function RankPromotionOverlay({
                   animate={{ rotate: [0, -10, 10, 0] }}
                   transition={{ duration: 0.6, delay: 0.3 }}
                 >
-                  <NewIcon size={56} className={`text-${newRank.color}`} />
+                  <NewIcon size={56} className={newCls.text} />
                 </motion.div>
               </motion.div>
 
@@ -257,7 +270,7 @@ export default function RankPromotionOverlay({
                     className="mt-4 flex flex-col items-center gap-2"
                   >
                     <span
-                      className={`text-2xl font-extrabold text-${newRank.color}`}
+                      className={`text-2xl font-extrabold ${newCls.text}`}
                       style={{ textShadow: `0 0 16px ${newRank.glowColor}` }}
                     >
                       {newRank.name.split('').map((char, i) => (
@@ -283,7 +296,7 @@ export default function RankPromotionOverlay({
                         >
                           <Star
                             size={18}
-                            className={`text-${newRank.color} fill-${newRank.color}`}
+                            className={`${newCls.text} ${newCls.fill}`}
                           />
                         </motion.div>
                       ))}

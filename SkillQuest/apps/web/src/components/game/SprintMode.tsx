@@ -150,18 +150,6 @@ export default function SprintMode({
     return () => clearTimeout(t);
   }, [phase, countdownNum]);
 
-  // Timer
-  useEffect(() => {
-    if (phase !== 'playing') return;
-    if (timeLeft <= 0) {
-      finishSprint();
-      return;
-    }
-    const t = setInterval(() => setTimeLeft((s) => s - 1), 1000);
-    return () => clearInterval(t);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, timeLeft]);
-
   const finishSprint = useCallback(() => {
     setPhase('result');
     onComplete({
@@ -172,6 +160,17 @@ export default function SprintMode({
       timeUsed: Math.floor((Date.now() - startTimeRef.current) / 1000),
     });
   }, [correct, answered, maxStreak, score, onComplete]);
+
+  // Timer
+  useEffect(() => {
+    if (phase !== 'playing') return;
+    if (timeLeft <= 0) {
+      finishSprint();
+      return;
+    }
+    const t = setInterval(() => setTimeLeft((s) => s - 1), 1000);
+    return () => clearInterval(t);
+  }, [phase, timeLeft, finishSprint]);
 
   const handleAnswer = useCallback((optionIndex: number) => {
     if (selected !== null) return;

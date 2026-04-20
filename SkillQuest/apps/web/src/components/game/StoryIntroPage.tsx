@@ -31,6 +31,9 @@ interface StoryIntroProps {
   crisisMessage?: string;
 }
 
+/** Cosmetic urgency countdown — creates tension but doesn't enforce failure */
+const URGENCY_COUNTDOWN_SECONDS = 30;
+
 // Simulated log messages for immersion
 const SYSTEM_LOGS = [
   { time: '10:32:01', msg: '[CRITICAL] ZBS 存储集群心跳丢失', level: 'error' },
@@ -57,7 +60,7 @@ export default function StoryIntroPage({
 }: StoryIntroProps) {
   const [phase, setPhase] = useState<'warning' | 'logs' | 'briefing'>('warning');
   const [visibleLogs, setVisibleLogs] = useState(0);
-  const [countdownSec, setCountdownSec] = useState(30);
+  const [countdownSec, setCountdownSec] = useState(URGENCY_COUNTDOWN_SECONDS);
 
   // Phase transitions
   useEffect(() => {

@@ -97,7 +97,7 @@ export default function AIHintPanel({
   useEffect(() => {
     if (answeredCorrectly === null || answeredCorrectly === undefined) return;
 
-    // Use setTimeout(0) to avoid direct setState in effect body
+    // Set typing indicator via timeout to avoid direct setState in effect body
     const typingTimer = setTimeout(() => setIsTyping(true), 0);
     const timeout = setTimeout(() => {
       const text = answeredCorrectly
@@ -111,7 +111,11 @@ export default function AIHintPanel({
       setIsTyping(false);
     }, 800);
 
-    return () => { clearTimeout(typingTimer); clearTimeout(timeout); };
+    return () => {
+      clearTimeout(typingTimer);
+      clearTimeout(timeout);
+      setIsTyping(false);
+    };
   }, [answeredCorrectly, attemptCount]);
 
   const requestHint = useCallback(() => {

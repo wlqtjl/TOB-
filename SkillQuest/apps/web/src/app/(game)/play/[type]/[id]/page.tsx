@@ -41,12 +41,15 @@ import GameHUD from '../../../../../components/game/GameHUD';
 import NarrativeModal from '../../../../../components/game/NarrativeModal';
 import ScenarioGameRenderer from '../../../../../components/game/ScenarioGameRenderer';
 import LevelIntroModal from '../../../../../components/game/LevelIntroModal';
+import ComboAnnouncement from '../../../../../components/game/ComboAnnouncement';
+import VictoryEffects from '../../../../../components/game/VictoryEffects';
 import { useGameState } from '../../../../../components/game/hooks/useGameState';
 import { ErrorBoundary } from '../../../../../components/ui/ErrorBoundary';
 import { useCourseId } from '../../../../../hooks/useCourseId';
 import { COURSES, getPlayContent, getPlayContentTypes, getCourse, getLevelBriefing } from '../../../../../lib/mock-courses';
 import { tenantConfig } from '../../../../../lib/tenant-config';
 import LevelBriefingModal from '../../../../../components/game/LevelBriefingModal';
+import { getComboTier } from '../../../../../components/game/FeedbackEffects';
 
 // ─── Adapter dispatch ──────────────────────────────────────────────
 
@@ -106,6 +109,10 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const [briefingDismissed, setBriefingDismissed] = useState(false);
   const [introDismissed, setIntroDismissed] = useState(false);
 
+  // ── Combo announcement tracking ────────────────────────────────
+  const [comboTriggerKey, setComboTriggerKey] = useState(0);
+  const [showVictory, setShowVictory] = useState(false);
+
   // Load content from shared data layer
   const content = getPlayContent(courseId, contentType);
   const totalQuestions = 1; // Will be dynamic from API
@@ -123,6 +130,9 @@ function PlayContent({ type, id }: { type: string; id: string }) {
 
   const { state: gameState, answerCorrect, answerWrong } = useGameState(totalQuestions);
 
+  // Derive combo tier for announcement
+  const currentComboTier = getComboTier(gameState.combo.current) as 'good' | 'great' | 'amazing' | 'legendary' | null ?? null;
+
   // Convert content → VisualScene via adapter (null for scenario_decision)
   const scene = useMemo(() => {
     if (!content) return null;
@@ -134,6 +144,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
     (result: InteractionResult) => {
       if (result.correct) {
         answerCorrect(id);
+        setComboTriggerKey((k) => k + 1);
       } else {
         answerWrong(id);
       }
@@ -182,6 +193,7 @@ function PlayContent({ type, id }: { type: string; id: string }) {
           <ScenarioGameRenderer
             questions={questions}
             levelTitle={narrative?.title ?? '情景选择关'}
+            bossMode={questions.length >= 3}
             onComplete={() => {
               // Production: save progress via API (POST /api/levels/{id}/complete)
             }}
@@ -283,6 +295,21 @@ function PlayContent({ type, id }: { type: string; id: string }) {
             debug={false}
           />
         </ErrorBoundary>
+
+        {/* Combo Announcement Overlay */}
+        <ComboAnnouncement
+          tier={currentComboTier}
+          comboCount={gameState.combo.current}
+          triggerKey={comboTriggerKey}
+        />
+
+        {/* Victory Effects Overlay */}
+        <VictoryEffects
+          visible={showVictory}
+          stars={gameState.stars}
+          score={gameState.totalScore}
+          onDismiss={() => setShowVictory(false)}
+        />
       </div>
 
       {/* Interaction messages */}

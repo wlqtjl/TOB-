@@ -142,7 +142,7 @@ export default function RankPromotionOverlay({
       timerRefs.current.push(t);
     };
 
-    setPhase('old');
+    schedule(() => setPhase('old'), 0);
     schedule(() => setPhase('burst'), 600);
     schedule(() => setPhase('new'), 1000);
     schedule(() => setPhase('text'), 1500);

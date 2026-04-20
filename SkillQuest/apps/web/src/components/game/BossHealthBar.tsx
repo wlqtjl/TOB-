@@ -77,19 +77,23 @@ export default function BossHealthBar({
   // ── Phase tracking ─────────────────────────────────────────────────────────
   const activePhase = useMemo(() => resolveCurrentPhase(hpPercent, phases), [hpPercent, phases]);
   const prevPhaseRef = useRef<BossPhase | null>(activePhase);
+  const phaseFlashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [phaseFlash, setPhaseFlash] = useState(false);
   const [phaseKey, setPhaseKey] = useState(0);
 
-  useEffect(() => {
-    if (activePhase && prevPhaseRef.current && activePhase.name !== prevPhaseRef.current.name) {
+  // Detect phase changes during render (no useEffect needed)
+  if (activePhase && prevPhaseRef.current && activePhase.name !== prevPhaseRef.current.name) {
+    prevPhaseRef.current = activePhase;
+    // Schedule flash via microtask to avoid synchronous setState during render
+    if (phaseFlashTimerRef.current) clearTimeout(phaseFlashTimerRef.current);
+    queueMicrotask(() => {
       setPhaseFlash(true);
       setPhaseKey((k) => k + 1);
-      const timer = setTimeout(() => setPhaseFlash(false), 600);
-      prevPhaseRef.current = activePhase;
-      return () => clearTimeout(timer);
-    }
+      phaseFlashTimerRef.current = setTimeout(() => setPhaseFlash(false), 600);
+    });
+  } else {
     prevPhaseRef.current = activePhase;
-  }, [activePhase]);
+  }
 
   // ── Floating damage numbers ────────────────────────────────────────────────
   const [damages, setDamages] = useState<FloatingDamage[]>([]);

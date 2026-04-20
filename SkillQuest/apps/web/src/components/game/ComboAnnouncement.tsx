@@ -14,7 +14,7 @@
 
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Flame, Star, Crown } from 'lucide-react';
 
@@ -119,19 +119,20 @@ export default function ComboAnnouncement({
   comboCount,
   triggerKey,
 }: ComboAnnouncementProps) {
-  const [visible, setVisible] = useState(false);
+  const [dismissedKey, setDismissedKey] = useState(-1);
   const particles = useMemo(() => generateParticles(), []);
+  const dismissTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Show on tier change, auto-dismiss after 1.5s
-  useEffect(() => {
-    if (!tier) {
-      setVisible(false);
-      return;
-    }
-    setVisible(true);
-    const t = setTimeout(() => setVisible(false), 1500);
-    return () => clearTimeout(t);
-  }, [tier, triggerKey]);
+  // Visible when we have a tier and haven't dismissed this specific triggerKey
+  const visible = tier !== null && dismissedKey !== triggerKey;
+
+  // Auto-dismiss after 1.5s — start timer when visibility changes
+  const prevVisibleRef = useRef(false);
+  if (visible && !prevVisibleRef.current) {
+    if (dismissTimerRef.current) clearTimeout(dismissTimerRef.current);
+    dismissTimerRef.current = setTimeout(() => setDismissedKey(triggerKey), 1500);
+  }
+  prevVisibleRef.current = visible;
 
   const config = tier ? TIER_CONFIG[tier] : null;
 

@@ -131,6 +131,7 @@ SkillQuest/
 | `/profile` | `app/profile/page.tsx` | 个人资料 |
 | `/analytics` | `app/analytics/page.tsx` | 学习分析 |
 | `/learning-path` | `app/learning-path/page.tsx` | 学习路径 |
+| `/daily` | `app/daily/page.tsx` | 每日任务 |
 
 ### 管理端 (ADMIN)
 | 路由 | 文件 | 说明 |
@@ -714,6 +715,55 @@ LevelBriefingModal.tsx (渲染互动预习卡片)
     ↓ BackToLevelButton
 /level/{levelId} (返回关卡)
 ```
+
+---
+
+### 2026-04-20 — Phase 1 用户参与系统 (Boss 战 / 段位 / 连击爆发 / 每日任务)
+
+**背景**：为提升用户粘性和学习动力，对标原神/王者荣耀的参与感设计，新增四大系统：Boss 血条多阶段战斗、7段位竞技系统、连击全屏爆发效果、每日任务卡片。所有功能使用已有的 framer-motion + Canvas 2D + lucide-react，零新依赖。
+
+**涉及文件**：
+
+| # | 文件路径 | 改动摘要 |
+|---|---|---|
+| 1 | `apps/web/src/components/game/BossHealthBar.tsx` | **新文件** — 多阶段 Boss 血条组件 (Framer Motion 弹簧动画，阶段转换闪屏，浮动伤害数字，低血量脉冲光晕，击败爆炸效果) |
+| 2 | `apps/web/src/components/game/RankBadge.tsx` | **新文件** — 7 段位徽章组件 (青铜→传说)，导出 `getRank()` + `RANK_TIERS` 常量 |
+| 3 | `apps/web/src/components/game/RankPromotionOverlay.tsx` | **新文件** — 全屏段位晋升动画 (5 阶段序列: 旧徽章 → 粒子爆发 → 新徽章 → 段位名 → 自动关闭)，Web Audio API 升级音效 |
+| 4 | `apps/web/src/components/game/ComboAnnouncement.tsx` | **新文件** — 全屏连击公告覆盖层 (good/great/amazing/legendary 四级视觉升级，传奇级含金色粒子爆发 + 屏幕震动) |
+| 5 | `apps/web/src/components/game/DailyQuests.tsx` | **新文件** — 每日任务卡片 (localStorage 持久化，4 种任务类型，跨组件 `completeDailyQuest()` API，领取奖励动画) |
+| 6 | `apps/web/src/components/game/ScenarioGameRenderer.tsx` | 新增 `bossMode` 属性: Boss 血条集成、伤害系统 (正确=满伤害，错误=30%伤害)、阶段自动分配 |
+| 7 | `apps/web/src/app/(game)/play/[type]/[id]/page.tsx` | 集成 `ComboAnnouncement` + `VictoryEffects` 覆盖层，连击追踪状态，`scenario_decision` 启用 Boss 模式 |
+| 8 | `apps/web/src/app/daily/page.tsx` | **新文件** — 每日任务演示页面 (`/daily`)，含测试控制台 |
+
+**关联组件依赖图**：
+
+```
+BossHealthBar.tsx (Boss 血条)
+  ↓ 被引用
+ScenarioGameRenderer.tsx (bossMode=true)
+  ↓ 被引用
+play/[type]/[id]/page.tsx (scenario_decision 路由)
+
+RankBadge.tsx (段位徽章)
+  ↓ 导出 RankTier 类型
+RankPromotionOverlay.tsx (晋升动画)
+  ↓ 被引用
+daily/page.tsx (演示页面)
+
+ComboAnnouncement.tsx (连击公告)
+  ↓ 被引用
+play/[type]/[id]/page.tsx (所有关卡类型)
+  ↑ getComboTier()
+FeedbackEffects.ts (连击等级计算)
+
+DailyQuests.tsx (每日任务)
+  ↓ completeDailyQuest() 全局 API
+任意游戏组件 (跨组件触发)
+  ↓ 被引用
+daily/page.tsx (演示页面 + 测试控制台)
+```
+
+**新增路由**：`/daily` — 每日任务演示页面
 
 ---
 

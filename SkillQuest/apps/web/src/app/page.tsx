@@ -1,8 +1,8 @@
 /**
- * Homepage — Light minimalist design (Linear/Stripe style)
+ * Homepage — Immersive Data Center Adventure Entry
  *
- * Design: #F9FAFB surface, single accent (Indigo #4F46E5),
- * 8px grid, 1px borders, Lucide icons only.
+ * Transformed from cold course list to immersive crisis narrative.
+ * Design: Dark theme data center feel with crisis urgency.
  */
 
 import Link from 'next/link';
@@ -23,6 +23,11 @@ import {
   LogIn,
   UsersRound,
   Gamepad2,
+  AlertTriangle,
+  Server,
+  Zap,
+  Timer,
+  Shield,
 } from 'lucide-react';
 import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
@@ -51,6 +56,74 @@ export default function Home() {
         </p>
       </div>
 
+      {/* ── Crisis Alert Banner ── */}
+      <Link
+        href="/crisis"
+        className="group w-full max-w-3xl rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50 p-6 transition-all hover:border-red-400 hover:shadow-lg hover:shadow-red-100"
+      >
+        <div className="flex items-center gap-4">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-red-100 text-red-600 group-hover:bg-red-200 transition">
+            <AlertTriangle size={28} strokeWidth={1.5} />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-red-900">数据中心危机模拟器</h2>
+              <span className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                LIVE
+              </span>
+            </div>
+            <p className="mt-1 text-sm text-red-700/70">
+              核心服务离线，50,000 用户受影响 — 以救援工程师身份接入紧急任务
+            </p>
+          </div>
+          <div className="text-red-400 group-hover:text-red-600 transition">
+            <Server size={24} />
+          </div>
+        </div>
+      </Link>
+
+      {/* ── Quick Actions: Sprint + Leaderboard ── */}
+      <div className="grid w-full max-w-3xl grid-cols-2 gap-4">
+        <Link
+          href="/sprint"
+          className="group rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 transition-all hover:border-amber-400 hover:shadow-lg hover:shadow-amber-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+              <Timer size={20} strokeWidth={1.5} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-amber-900">5 分钟冲刺</h3>
+              <p className="text-xs text-amber-700/60">碎片时间 · 快速提分</p>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-xs text-amber-600">
+            <Zap size={12} />
+            <span>Duolingo 风格极速闯关</span>
+          </div>
+        </Link>
+
+        <Link
+          href="/leaderboard"
+          className="group rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 transition-all hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+              <Trophy size={20} strokeWidth={1.5} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-blue-900">实时排行榜</h3>
+              <p className="text-xs text-blue-700/60">部门榜 · 周榜 · 连胜榜</p>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-xs text-blue-600">
+            <Shield size={12} />
+            <span>实时推送排名变动通知</span>
+          </div>
+        </Link>
+      </div>
+
       {/* ── Stats — clean grid ── */}
       <div className="grid w-full max-w-2xl grid-cols-4 gap-4 text-center">
         {[
@@ -69,9 +142,9 @@ export default function Home() {
         ))}
       </div>
 
-      {/* ── Course List ── */}
+      {/* ── Course List — Mission Cards ── */}
       <div className="w-full max-w-3xl">
-        <h2 className="mb-4 text-sm font-medium text-base-400">我的培训课程</h2>
+        <h2 className="mb-4 text-sm font-medium text-base-400">🎯 救援任务</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {activeCourses.map((course) => (
             <Link
@@ -123,10 +196,12 @@ export default function Home() {
           { href: '/data-gravity', label: '数据引力场', desc: '物理可视化 · 数据流动', Icon: Orbit },
           { href: '/data-gravity/story', label: 'ZBS 数据流', desc: '五场景叙事 · 交互学习', Icon: Presentation },
           { href: '/play/scenario_decision/demo?course=smartx-halo', label: '情景选择关', desc: '角色扮演 · 决策训练', Icon: Gamepad2 },
-          { href: '/achievements', label: 'Achievements', desc: 'Badges / Level / Milestones', Icon: Award },
+          { href: '/achievements', label: '成就徽章墙', desc: '隐藏成就 · 稀有徽章', Icon: Award },
           { href: '/profile', label: 'Profile', desc: 'Stats / Skills / Progress', Icon: User },
           { href: '/analytics', label: 'Analytics', desc: 'Reports / Insights / ROI', Icon: LineChart },
           { href: '/learning-path', label: 'Learning Path', desc: 'Skill Tree / Recommendations', Icon: GitBranch },
+          { href: '/sprint', label: '冲刺模式', desc: '5分钟快速提分', Icon: Timer },
+          { href: '/crisis', label: '危机模拟', desc: '沉浸式救援任务', Icon: AlertTriangle },
         ].map((item) => (
           <Link
             key={item.href}

@@ -52,6 +52,8 @@
 |------|------|------|
 | 前端框架 | Next.js 15 (App Router) | SSR + 路由 |
 | 游戏引擎 | Canvas 2D + 自研粒子引擎 | 8 种关卡渲染 + Combo 连击 |
+| 动画系统 | Framer Motion + Canvas 2D + SVG + Web Audio | 35+ 动画组件 · 19 种状态动画映射 |
+| 物理引擎 | 万有引力(F=GMm/r²) + 碰撞检测 + 粒子物理 | 数据引力场 · 布朗运动 · 波动方程 |
 | UI 设计 | Tailwind CSS + Lucide React | 极简毛玻璃设计系统 |
 | 后端框架 | NestJS 10 | REST API + WebSocket |
 | 数据库 | PostgreSQL 16 + Prisma ORM | 业务数据 + 向量存储 |
@@ -69,6 +71,211 @@
 | 三维展示 | Unity 6 LTS | GPU Instancing 渲染 |
 | Web 控制台 | TypeScript + Vite | 实时 Telemetry 面板 |
 | 部署 | Docker Compose + Nginx | WebSocket + 静态文件 |
+
+---
+
+## 🎨 动画与视觉效果核心架构
+
+> SkillQuest 拥有 **35+ 个动画/视觉组件**，横跨 5 大渲染技术栈，构成完整的沉浸式游戏化培训体验。
+
+### 动画引擎分层架构图
+
+```mermaid
+graph TB
+    subgraph "🎮 用户交互层"
+        A1["🖱️ 鼠标/触控事件"]
+        A2["⌨️ 键盘输入"]
+        A3["📱 手势识别"]
+    end
+
+    subgraph "🏗️ 游戏引擎层 — packages/game-engine"
+        B1["📋 animation-catalog.ts<br/>19 种状态→动画映射<br/>节点离线/恢复/过载/数据迁移..."]
+        B2["⚙️ physics-engine.ts<br/>粒子物理 · 热力图 · 呼吸动画<br/>震动衰减 · X光模式"]
+        B3["🌌 core-physics-engine.ts<br/>牛顿万有引力 F=GMm/r²<br/>多普勒色偏 · 碰撞检测 · 反亲和力"]
+        B4["🔫 gravity-gun-controller.ts<br/>引力锚 · 力场护盾<br/>透镜 · 奇点脉冲"]
+        B5["🔧 tool-system.ts<br/>6 种语义工具<br/>Probe/Cutter/Booster/Linker/Migrator/Freezer"]
+        B6["🌉 tool-visual-bridge.ts<br/>工具→动画桥接<br/>19 种动画效果映射"]
+        B7["🗺️ visual-scene.ts<br/>VisualScene 协议<br/>通用渲染抽象层"]
+        B8["🔄 world-state.ts<br/>WorldState 沙箱<br/>纯函数状态转换"]
+    end
+
+    subgraph "🎨 Canvas 2D 渲染层 — components/game"
+        C1["🎬 UniversalGameRenderer<br/>通用 Canvas 渲染器<br/>网格 · 实体 · 连线 · 粒子"]
+        C2["✨ ParticleSystem<br/>对象池粒子引擎<br/>500流动+200爆发 · Bézier路径<br/>轨迹拖尾 · 形状(圆/方/菱)"]
+        C3["📐 EntityRenderer<br/>圆形/圆角矩形 · 辉光<br/>图标渲染 · 星级显示"]
+        C4["🔗 ConnectionRenderer<br/>Bézier 曲线 · 箭头<br/>虚线动画 · 高亮"]
+        C5["💥 FeedbackEffects<br/>答对: 绿色闪屏+粒子爆发<br/>答错: 15Hz震动+红色闪屏<br/>通关: 五点烟花+金色涟漪"]
+        C6["🔁 useParticleLoop<br/>RAF 动画循环<br/>DPI缩放 · dt上限50ms"]
+    end
+
+    subgraph "🌟 Framer Motion 动画层 — components/game"
+        D1["🏆 VictoryEffects<br/>Canvas烟花 + Web Audio和弦<br/>C5-E5-G5琶音 · 星星弹入<br/>12色粒子 · 重力模拟"]
+        D2["⚠️ StoryIntroPage<br/>危机警报三阶段动画<br/>打字机日志 · 红色脉冲边框<br/>倒计时紧张感"]
+        D3["⚡ SprintMode<br/>5分钟冲刺倒计时<br/>题目滑入/滑出 · 连击徽章<br/>星级旋转弹入"]
+        D4["📊 LeaderboardToast<br/>弹簧弹入通知<br/>damping:20 stiffness:300<br/>自动消失 · 排名变动"]
+        D5["🤖 AIHintPanel<br/>苏格拉底导师面板<br/>打字指示器 · 提示渐入<br/>鼓励/引导切换"]
+        D6["🗺️ ZBSFlowViz<br/>五场景叙事动画<br/>数据分块 · 节点故障震动<br/>副本策略 · 读路径选择"]
+        D7["🎮 ScenarioGameRenderer<br/>选择卡片动画<br/>进度条填充 · 后果揭示"]
+        D8["📊 StandardFlowGenerator<br/>通用数据流模板<br/>参数化场景动画"]
+    end
+
+    subgraph "📈 SVG 可视化层"
+        E1["📉 SLACurve<br/>二次Bézier平滑曲线<br/>渐变填充 · 网格参考线<br/>红/黄/绿阈值着色"]
+        E2["⏱️ ExpertComparisonTimeline<br/>双轨垂直时间线<br/>偏离分支 · 辉光节点"]
+        E3["🔘 TimelineNode<br/>状态辉光圆<br/>correct/warning/error<br/>震动动画(error)"]
+    end
+
+    subgraph "🔬 物理仿真沙箱层 — components/sandbox"
+        F1["🌊 WaveEngine<br/>正弦波渲染<br/>双波源干涉 · 阈值警报"]
+        F2["⚛️ ParticleSystem (sandbox)<br/>布朗运动 · 弹性碰撞<br/>温度缩放 · 压力边界"]
+        F3["🧲 VectorField<br/>三种力场(引力/电场/流场)<br/>箭头网格 · 相位动画"]
+        F4["🔌 LogicGate<br/>6种逻辑门(AND/OR/NOT...)<br/>SVG路径动画 · 信号着色"]
+    end
+
+    subgraph "🌍 数据引力可视化 — app/data-gravity"
+        G1["🌌 DataGravity 交互页<br/>Canvas 2D 物理沙箱<br/>3个存储节点 · 多普勒色偏<br/>引力常数G可调 · 能量监控"]
+        G2["📖 DataGravity 故事模式<br/>五场景叙事引导<br/>ZBSFlowViz 交互学习"]
+    end
+
+    A1 --> C1
+    A2 --> D3
+    A3 --> G1
+
+    B1 --> B6
+    B5 --> B6
+    B6 --> C5
+    B7 --> C1
+    B8 --> B1
+    B3 --> G1
+    B4 --> G1
+    B2 --> C1
+
+    C1 --> C2
+    C1 --> C3
+    C1 --> C4
+    C1 --> C5
+    C6 --> C1
+    C6 --> G1
+
+    D1 --> C2
+    D6 --> D8
+
+    style B1 fill:#1e293b,stroke:#60a5fa,color:#fff
+    style B3 fill:#1e293b,stroke:#a78bfa,color:#fff
+    style C2 fill:#064e3b,stroke:#34d399,color:#fff
+    style D1 fill:#7c2d12,stroke:#fb923c,color:#fff
+    style D2 fill:#7f1d1d,stroke:#f87171,color:#fff
+    style G1 fill:#312e81,stroke:#818cf8,color:#fff
+```
+
+### 动画技术栈分布
+
+| 渲染技术 | 组件数 | 核心能力 | 代表组件 |
+|---------|--------|---------|---------|
+| **Canvas 2D** | 18 | 高性能粒子系统、物理仿真、实体渲染、连线动画 | UniversalGameRenderer, ParticleSystem, DataGravity |
+| **Framer Motion** | 10 | UI 过渡动画、弹簧物理、手势响应、布局动画 | VictoryEffects, StoryIntroPage, SprintMode, ZBSFlowViz |
+| **SVG** | 4 | 矢量曲线、时间线节点、逻辑门电路 | SLACurve, ExpertComparisonTimeline, LogicGate |
+| **Web Audio API** | 1 | 合成音频反馈（胜利和弦 C5-E5-G5） | VictoryEffects |
+| **CSS/Tailwind** | 全局 | 毛玻璃效果、渐变、脉冲、发光阴影 | GameHUD, LeaderboardToast |
+
+### 完整动画组件清单（35+ 文件）
+
+<details>
+<summary>📂 展开查看全部动画组件</summary>
+
+#### 🏗️ 游戏引擎核心（packages/game-engine/src/）
+
+| 文件 | 动画类型 | 关键技术 |
+|------|---------|---------|
+| `animation-catalog.ts` | 19 种状态→动画映射 | 触发器模式匹配、优先级排序、通配符支持 |
+| `physics-engine.ts` | 粒子物理、热力图、呼吸动画 | 颜色插值 `loadToColor()`、0.5Hz/2Hz 脉冲、震动衰减 |
+| `data-gravity/core-physics-engine.ts` | 万有引力 F=GMm/r² | 多普勒色偏、碰撞检测(CoR=0.8)、反亲和力、摩擦阻尼 |
+| `data-gravity/gravity-gun-controller.ts` | 4 种交互工具 | 引力锚(mass=5000)、力场护盾、透镜(120px)、奇点脉冲(50000) |
+| `data-gravity/node-manager.ts` | 节点状态管理 | 存储节点/数据粒子/锚点/护盾生命周期 |
+| `data-gravity/energy-monitor.ts` | 能量追踪 | 动能/势能/熵增实时计算 |
+| `tool-system.ts` | 6 种语义工具 | Probe/Cutter/Booster/Linker/Migrator/Freezer |
+| `tool-visual-bridge.ts` | 工具→动画桥接 | 19 种效果映射到 Canvas 渲染 |
+| `visual-scene.ts` | VisualScene 协议 | 实体/连线/粒子/交互规则抽象 |
+| `world-state.ts` | 状态沙箱 | 纯函数状态转换 + PRNG(Mulberry32) |
+
+#### 🎨 Canvas 2D 渲染器（apps/web/src/components/game/）
+
+| 文件 | 动画类型 | 关键技术 |
+|------|---------|---------|
+| `UniversalGameRenderer.tsx` | 通用 Canvas 渲染器 | 50px 网格、DPI 缩放、RAF 循环、dt 上限 50ms |
+| `ParticleSystem.ts` | 对象池粒子引擎 | 500 流动 + 200 爆发粒子、Bézier 路径跟随、轨迹拖尾 |
+| `EntityRenderer.ts` | 实体渲染 | 圆形/圆角矩形、辉光 shadowBlur(2.5×)、图标+标签 |
+| `ConnectionRenderer.ts` | 连线渲染 | Bézier 曲线、箭头旋转、虚线 `[6,4]`、高亮 #22c55e |
+| `FeedbackEffects.ts` | 答题反馈 | 正确:绿闪(0.15α)+爆发、错误:15Hz震动+红闪、通关:5点烟花+金涟漪 |
+| `InteractionManager.ts` | 交互管理 | 点击/连线/拖拽/序列/输入 5 种模式 |
+| `InsightPanel.tsx` | 打字机动画 | 逐字显示（30ms/字） |
+| `GameHUD.tsx` | 毛玻璃 HUD | Combo 阶梯(Good/Great/Amazing/Legendary) + 火焰动画 |
+
+#### 🌟 Framer Motion 组件（apps/web/src/components/game/）
+
+| 文件 | 动画类型 | 关键技术 |
+|------|---------|---------|
+| `VictoryEffects.tsx` | 三重感官反馈 | Canvas 烟花(12色/60粒子/重力0.05)、Web Audio 和弦(C5-E5-G5)、Framer 弹入 |
+| `StoryIntroPage.tsx` | 危机叙事入场 | 三阶段(警告→日志→简报)、打字机(400ms/行)、红色脉冲边框(2s循环) |
+| `SprintMode.tsx` | 冲刺倒计时 | 数字缩放(2→1)、题目滑动(±50px)、进度条变色(绿→黄→红) |
+| `LeaderboardToast.tsx` | 排名通知弹窗 | 弹簧(damping:20, stiffness:300)、popLayout 重排、自动消失 |
+| `AIHintPanel.tsx` | AI 导师面板 | 面板弹入(scale:0.95→1)、打字指示器(bounce)、提示渐入 |
+| `ZBSFlowViz.tsx` | 五场景叙事 | 数据分块动画、节点故障震动(0.4s×2)、副本策略滑块、读路径交互 |
+| `ScenarioGameRenderer.tsx` | 情景选择 | 选择卡片变色(emerald/red)、后果揭示缩放 |
+| `StandardFlowGenerator.tsx` | 通用数据流 | DataFlowTemplate 参数化、场景切换动画 |
+| `LevelIntroModal.tsx` | 关卡入场 | 模态弹入 + 叙事文本动画 |
+| `NarrativeModal.tsx` | 叙事对话 | 消息逐条显示、频道切换 |
+
+#### 📈 SVG 可视化（apps/web/src/components/game/）
+
+| 文件 | 动画类型 | 关键技术 |
+|------|---------|---------|
+| `SLACurve.tsx` | SLA 曲线 | 二次 Bézier `Q cpx py x y`、渐变填充(0.15→0.02)、红/黄/绿阈值 |
+| `ExpertComparisonTimeline.tsx` | 双轨时间线 | SVG 垂直布局、GitBranch 偏离标注、等级徽章(A/S/B/C/D) |
+| `TimelineNode.tsx` | 时间线节点 | 辉光圆(shadow 12-16px)、状态着色(emerald/amber/red)、error 震动 |
+
+#### 🔬 物理仿真沙箱（apps/web/src/components/sandbox/）
+
+| 文件 | 动画类型 | 关键技术 |
+|------|---------|---------|
+| `WaveEngine.tsx` | 正弦波渲染 | `y = A·sin(x·f·0.02 + t·s)`、双波源干涉、阈值警报(红背景) |
+| `ParticleSystem.tsx` | 布朗运动 | 随机速度(±1.5×speedFactor)、弹性碰撞、温度缩放 √(T/300) |
+| `VectorField.tsx` | 矢量力场 | 3 种场(引力/电场/流场)、箭头网格、相位动画 |
+| `LogicGate.tsx` | 逻辑门电路 | 6 种门(AND/OR/NOT/XOR/NAND/BUFFER)、pathLength 0→1 动画 |
+| `SimulationCanvas.tsx` | 引擎路由 | wave/particle/vector_field/logic_gate 四引擎分发 |
+| `ParameterPanel.tsx` | 参数控制 | 实时滑块调节物理参数 |
+| `FormulaDisplay.tsx` | 公式渲染 | KaTeX 数学公式实时更新 |
+
+#### 🌍 数据引力页面（apps/web/src/app/data-gravity/）
+
+| 文件 | 动画类型 | 关键技术 |
+|------|---------|---------|
+| `page.tsx` (data-gravity) | 2D 物理沙箱 | 3 存储节点、多普勒色偏、引力常数 G 可调(默认400)、摩擦 0.98 |
+| `story/page.tsx` | 故事模式 | ZBSFlowViz 五场景叙事引导 |
+
+</details>
+
+### 19 种动画效果目录（animation-catalog.ts）
+
+```
+状态触发器                    → 动画效果组合
+──────────────────────────────────────────────
+节点离线 (offline)            → fade_out + spark
+节点重启 (rebooting)          → pulse + progress_bar
+节点恢复 (recovered)          → fade_in + burst + ripple
+节点降级 (degraded)           → blink
+节点过载 (overloaded)         → heat_map + pulse
+节点维护 (maintenance)        → blink
+链路分区 (link-partitioned)   → connection_break + spark
+链路降级 (link-degraded)      → blink
+链路恢复 (link-recovered)     → merge + ripple
+数据再平衡 (data-rebalance)   → flow_redirect + trail
+数据丢失 (data-loss)          → data_scatter + shake
+数据迁移 (data-migration)     → trail + progress_bar
+选举共识 (consensus-election) → ripple + highlight
+灾难爆炸 (disaster-explosion) → explosion + shake + countdown
+级联故障 (disaster-cascading)  → spark + fade_out
+```
 
 ---
 
@@ -162,7 +369,7 @@ cargo test --workspace       # 运行全部测试
 
 ## 功能模块完整清单
 
-### SkillQuest — 7 大功能模块
+### SkillQuest — 7 大功能模块 + 沉浸式冒险系统
 
 | 模块 | 核心文件 | PR | 测试数 |
 |------|----------|-----|--------|
@@ -173,6 +380,7 @@ cargo test --workspace       # 运行全部测试
 | Canvas 动画通用化 | animation-catalog.ts (19 种动画), world-state.ts, world-state-visual-bridge.ts | [#6](https://github.com/wlqtjl/TOB-/pull/6) [#15](https://github.com/wlqtjl/TOB-/pull/15) | 79 |
 | 关卡前知识普及 | LevelBriefingModal.tsx, briefing-data.ts | [#20](https://github.com/wlqtjl/TOB-/pull/20) | — |
 | 专家对比复盘 | ExpertComparisonTimeline.tsx, SLACurve.tsx, TimelineNode.tsx, replay/page.tsx | [#17](https://github.com/wlqtjl/TOB-/pull/17) | — |
+| 🆕 沉浸式冒险系统 | StoryIntroPage.tsx, VictoryEffects.tsx, SprintMode.tsx, LeaderboardToast.tsx, AIHintPanel.tsx | 当前 PR | — |
 
 ### SkillQuest — 8 种关卡类型
 

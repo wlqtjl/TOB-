@@ -22,16 +22,22 @@ import {
 } from 'lucide-react';
 
 const MOCK_BADGES = [
-  { id: '1', key: 'first_clear', name: 'First Clear', description: 'Complete your first level', icon: 'Shield', category: 'progress', rarity: 'common', earned: true, unlockedAt: '2026-04-10' },
-  { id: '2', key: 'five_clears', name: 'Five Clears', description: 'Complete 5 levels', icon: 'Target', category: 'progress', rarity: 'uncommon', earned: true, unlockedAt: '2026-04-11' },
-  { id: '3', key: 'ten_clears', name: 'Dedicated Learner', description: 'Complete 10 levels', icon: 'BookOpen', category: 'progress', rarity: 'rare', earned: false },
-  { id: '4', key: 'perfect_score', name: 'Perfect Score', description: 'Score 100% on a level', icon: 'Sparkles', category: 'mastery', rarity: 'uncommon', earned: true, unlockedAt: '2026-04-11' },
-  { id: '5', key: 'triple_perfect', name: 'Triple Perfect', description: 'Score 100% on 3 levels', icon: 'Crown', category: 'mastery', rarity: 'rare', earned: false },
-  { id: '6', key: 'streak_3', name: '3-Day Streak', description: 'Study 3 days in a row', icon: 'Flame', category: 'streak', rarity: 'common', earned: true, unlockedAt: '2026-04-12' },
-  { id: '7', key: 'streak_7', name: 'Weekly Warrior', description: 'Study 7 days in a row', icon: 'Zap', category: 'streak', rarity: 'uncommon', earned: false },
-  { id: '8', key: 'streak_30', name: 'Monthly Master', description: 'Study 30 days in a row', icon: 'Award', category: 'streak', rarity: 'epic', earned: false },
-  { id: '9', key: 'xp_1000', name: 'XP Hunter', description: 'Earn 1000 total XP', icon: 'TrendingUp', category: 'mastery', rarity: 'rare', earned: false },
-  { id: '10', key: 'star_50', name: 'Star Collector', description: 'Collect 50 stars', icon: 'Star', category: 'mastery', rarity: 'epic', earned: false },
+  { id: '1', key: 'first_clear', name: 'First Clear', description: 'Complete your first level', icon: 'Shield', category: 'progress', rarity: 'common', earned: true, unlockedAt: '2026-04-10', hidden: false },
+  { id: '2', key: 'five_clears', name: 'Five Clears', description: 'Complete 5 levels', icon: 'Target', category: 'progress', rarity: 'uncommon', earned: true, unlockedAt: '2026-04-11', hidden: false },
+  { id: '3', key: 'ten_clears', name: 'Dedicated Learner', description: 'Complete 10 levels', icon: 'BookOpen', category: 'progress', rarity: 'rare', earned: false, hidden: false },
+  { id: '4', key: 'perfect_score', name: 'Perfect Score', description: 'Score 100% on a level', icon: 'Sparkles', category: 'mastery', rarity: 'uncommon', earned: true, unlockedAt: '2026-04-11', hidden: false },
+  { id: '5', key: 'triple_perfect', name: 'Triple Perfect', description: 'Score 100% on 3 levels', icon: 'Crown', category: 'mastery', rarity: 'rare', earned: false, hidden: false },
+  { id: '6', key: 'streak_3', name: '3-Day Streak', description: 'Study 3 days in a row', icon: 'Flame', category: 'streak', rarity: 'common', earned: true, unlockedAt: '2026-04-12', hidden: false },
+  { id: '7', key: 'streak_7', name: 'Weekly Warrior', description: 'Study 7 days in a row', icon: 'Zap', category: 'streak', rarity: 'uncommon', earned: false, hidden: false },
+  { id: '8', key: 'streak_30', name: 'Monthly Master', description: 'Study 30 days in a row', icon: 'Award', category: 'streak', rarity: 'epic', earned: false, hidden: false },
+  { id: '9', key: 'xp_1000', name: 'XP Hunter', description: 'Earn 1000 total XP', icon: 'TrendingUp', category: 'mastery', rarity: 'rare', earned: false, hidden: false },
+  { id: '10', key: 'star_50', name: 'Star Collector', description: 'Collect 50 stars', icon: 'Star', category: 'mastery', rarity: 'epic', earned: false, hidden: false },
+  // Hidden achievements — only revealed when earned
+  { id: '11', key: 'night_owl', name: '夜鹰工程师', description: '在凌晨 2-5 点完成一个关卡', icon: 'Zap', category: 'special', rarity: 'epic', earned: true, unlockedAt: '2026-04-15', hidden: true },
+  { id: '12', key: 'speed_demon', name: '闪电侠', description: '在 30 秒内完成一个关卡', icon: 'Zap', category: 'special', rarity: 'legendary', earned: false, hidden: true },
+  { id: '13', key: 'comeback_king', name: '逆袭王者', description: '从排行榜最后一名升至前三', icon: 'Crown', category: 'special', rarity: 'legendary', earned: false, hidden: true },
+  { id: '14', key: 'crisis_hero', name: '危机英雄', description: '完成所有数据中心救援任务', icon: 'Shield', category: 'special', rarity: 'legendary', earned: false, hidden: true },
+  { id: '15', key: 'sprint_master', name: '冲刺大师', description: '在冲刺模式中获得满分', icon: 'Target', category: 'special', rarity: 'epic', earned: false, hidden: true },
 ];
 
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; strokeWidth?: number; className?: string }>> = {
@@ -51,17 +57,36 @@ const RARITY_BG: Record<string, string> = {
   uncommon: 'bg-emerald-500/10',
   rare: 'bg-blue-400/10',
   epic: 'bg-purple-400/10',
-  legendary: 'bg-yellow-400/10',
+  legendary: 'bg-gradient-to-br from-yellow-400/10 to-amber-500/10',
 };
 
-const CATEGORIES = ['all', 'progress', 'mastery', 'streak', 'social', 'special'];
+const RARITY_GLOW: Record<string, string> = {
+  common: '',
+  uncommon: '',
+  rare: 'shadow-blue-500/20 shadow-lg',
+  epic: 'shadow-purple-500/20 shadow-lg',
+  legendary: 'shadow-yellow-500/30 shadow-xl animate-pulse',
+};
+
+const RARITY_LABELS: Record<string, string> = {
+  common: '普通',
+  uncommon: '优秀',
+  rare: '稀有',
+  epic: '史诗',
+  legendary: '传说',
+};
+
+const CATEGORIES = ['all', 'progress', 'mastery', 'streak', 'special'];
 
 const MOCK_PLAYER = { level: 5, title: 'Intermediate', xp: 750, nextLevelXp: 1000, totalBadges: 4, streak: 3 };
 
 function AchievementsContent() {
   const [filter, setFilter] = useState('all');
-  const filtered = filter === 'all' ? MOCK_BADGES : MOCK_BADGES.filter((b) => b.category === filter);
+  const filtered = (filter === 'all' ? MOCK_BADGES : MOCK_BADGES.filter((b) => b.category === filter))
+    .filter((b) => !b.hidden || b.earned); // Only show hidden badges if earned
   const earnedCount = MOCK_BADGES.filter((b) => b.earned).length;
+  const hiddenTotal = MOCK_BADGES.filter((b) => b.hidden).length;
+  const hiddenEarned = MOCK_BADGES.filter((b) => b.hidden && b.earned).length;
   const xpProgress = Math.round((MOCK_PLAYER.xp / MOCK_PLAYER.nextLevelXp) * 100);
 
   return (
@@ -134,10 +159,11 @@ function AchievementsContent() {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((badge) => {
             const IconComp = ICON_MAP[badge.icon] ?? Shield;
+            const glow = badge.earned ? (RARITY_GLOW[badge.rarity] ?? '') : '';
             return (
               <div
                 key={badge.id}
-                className={`rounded-2xl border-2 p-5 transition-all ${
+                className={`rounded-2xl border-2 p-5 transition-all ${glow} ${
                   badge.earned
                     ? `${RARITY_COLORS[badge.rarity]} ${RARITY_BG[badge.rarity]}`
                     : 'border-base-200/40 bg-white opacity-50'
@@ -152,10 +178,17 @@ function AchievementsContent() {
                     )}
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-semibold text-base-900">{badge.name}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-base-900">{badge.name}</p>
+                      {badge.hidden && badge.earned && (
+                        <span className="rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-600">隐藏</span>
+                      )}
+                    </div>
                     <p className="text-xs text-base-400 mt-0.5">{badge.description}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className={`text-xs capitalize ${badge.earned ? 'text-base-600' : 'text-base-400'}`}>{badge.rarity}</span>
+                      <span className={`text-xs font-medium ${badge.earned ? 'text-base-600' : 'text-base-400'}`}>
+                        {RARITY_LABELS[badge.rarity] ?? badge.rarity}
+                      </span>
                       {badge.earned && badge.unlockedAt && (
                         <span className="text-xs text-base-400">{badge.unlockedAt}</span>
                       )}
@@ -165,6 +198,13 @@ function AchievementsContent() {
               </div>
             );
           })}
+        </div>
+
+        {/* Hidden achievements hint */}
+        <div className="mt-6 text-center">
+          <p className="text-xs text-base-400">
+            🔮 隐藏成就 {hiddenEarned}/{hiddenTotal} · 继续探索以解锁更多神秘成就
+          </p>
         </div>
       </div>
     </div>

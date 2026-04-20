@@ -9,20 +9,52 @@
  * 适用知识点：操作流程、故障处理、最佳实践
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, CheckCircle2, XCircle, Lightbulb,
   ChevronRight, RotateCcw, Trophy,
 } from 'lucide-react';
 import type { ScenarioDecisionQuestion } from '@skillquest/types';
+import BossHealthBar from './BossHealthBar';
+import type { BossPhase } from './BossHealthBar';
 
 interface ScenarioGameRendererProps {
   questions: ScenarioDecisionQuestion[];
   levelTitle?: string;
   onComplete: (score: number, stars: number) => void;
   onAnswer?: (questionIndex: number, choiceId: string, isCorrect: boolean) => void;
+  /** Enable boss battle mode with HP bar */
+  bossMode?: boolean;
+  /** Boss name (defaults to levelTitle or '未知 Boss') */
+  bossName?: string;
 }
+
+/* ────────────────── Boss helpers ────────────────── */
+
+/** Build boss phases from question count, distributing thresholds evenly */
+function buildBossPhases(totalQuestions: number): BossPhase[] {
+  if (totalQuestions <= 2) {
+    return [{ name: '最终阶段', hpThreshold: 0.5, color: 'from-red-600 to-orange-400', icon: '💀' }];
+  }
+  const phases: BossPhase[] = [];
+  const phaseCount = Math.min(totalQuestions, 3);
+  const PHASE_DEFS: Array<{ name: string; color: string; icon: string }> = [
+    { name: '第一阶段: 防御姿态', color: 'from-red-500 to-orange-400', icon: '🛡️' },
+    { name: '第二阶段: 狂暴模式', color: 'from-orange-500 to-yellow-400', icon: '⚡' },
+    { name: '第三阶段: 最终形态', color: 'from-purple-500 to-red-500', icon: '💀' },
+  ];
+  for (let i = 0; i < phaseCount; i++) {
+    phases.push({
+      ...PHASE_DEFS[i % PHASE_DEFS.length],
+      hpThreshold: ((phaseCount - i) / phaseCount),
+    });
+  }
+  return phases;
+}
+
+/** Damage per question (boss has 1000 HP, distributed across questions) */
+const BOSS_TOTAL_HP = 1000;
 
 /* ────────────────── Helpers ────────────────── */
 
@@ -268,21 +300,36 @@ export default function ScenarioGameRenderer({
   levelTitle,
   onComplete,
   onAnswer,
+  bossMode = false,
+  bossName,
 }: ScenarioGameRendererProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [correctCount, setCorrectCount] = useState(0);
   const [finished, setFinished] = useState(false);
 
+  // ── Boss state ────────────────────────────────────────────────────
+  const bossPhases = useMemo(() => buildBossPhases(questions.length), [questions.length]);
+  const damagePerQuestion = questions.length > 0 ? Math.ceil(BOSS_TOTAL_HP / questions.length) : 0;
+  const [bossHp, setBossHp] = useState(BOSS_TOTAL_HP);
+  const [lastDamage, setLastDamage] = useState<{ amount: number; timestamp: number } | undefined>();
+
   const handleAnswered = useCallback((choiceId: string, isCorrect: boolean) => {
     if (isCorrect) setCorrectCount((c) => c + 1);
     onAnswer?.(currentIndex, choiceId, isCorrect);
+
+    // Boss damage: correct answers deal full damage, wrong answers deal 30% damage
+    if (bossMode) {
+      const dmg = isCorrect ? damagePerQuestion : Math.ceil(damagePerQuestion * 0.3);
+      setBossHp((hp) => Math.max(0, hp - dmg));
+      setLastDamage({ amount: dmg, timestamp: Date.now() });
+    }
 
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       setFinished(true);
     }
-  }, [currentIndex, questions.length, onAnswer]);
+  }, [currentIndex, questions.length, onAnswer, bossMode, damagePerQuestion]);
 
   const handleComplete = useCallback(() => {
     const stars = calculateStars(correctCount, questions.length);
@@ -290,18 +337,41 @@ export default function ScenarioGameRenderer({
     onComplete(score, stars);
   }, [correctCount, questions.length, onComplete]);
 
+  const bossDefeated = bossMode && bossHp <= 0;
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      {/* Boss HP Bar (only in boss mode) */}
+      {bossMode && (
+        <div className="border-b border-gray-100 bg-gray-950 px-4 py-3">
+          <BossHealthBar
+            bossName={bossName ?? levelTitle ?? '未知 Boss'}
+            totalHp={BOSS_TOTAL_HP}
+            currentHp={bossHp}
+            phases={bossPhases}
+            lastDamage={lastDamage}
+            defeated={bossDefeated}
+          />
+        </div>
+      )}
+
       {/* Header */}
       <div className="border-b border-gray-100 bg-gradient-to-r from-amber-50 to-orange-50 px-6 py-4">
         <div className="flex items-center gap-2">
-          <span className="text-lg">🎭</span>
+          <span className="text-lg">{bossMode ? '⚔️' : '🎭'}</span>
           <h2 className="text-lg font-bold text-gray-800">
             {levelTitle ?? '情景选择关'}
           </h2>
+          {bossMode && (
+            <span className="ml-2 rounded-full bg-red-100 border border-red-200 px-2 py-0.5 text-xs font-semibold text-red-600">
+              Boss 战
+            </span>
+          )}
         </div>
         <p className="text-sm text-gray-500 mt-0.5">
-          根据情景做出最佳选择，每个选择都有后果
+          {bossMode
+            ? '击败 Boss！每次正确选择都是致命一击'
+            : '根据情景做出最佳选择，每个选择都有后果'}
         </p>
       </div>
 

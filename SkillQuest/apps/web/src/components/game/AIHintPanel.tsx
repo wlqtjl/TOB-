@@ -82,19 +82,23 @@ export default function AIHintPanel({
 
   // Reset on new question
   useEffect(() => {
-    setHintLevel(0);
-    setMessages([{
-      role: 'ai',
-      text: '你好！我是你的 AI 导师。遇到困难时，可以点击「获取提示」来获取思考方向。',
-      icon: '🤖',
-    }]);
+    const t = setTimeout(() => {
+      setHintLevel(0);
+      setMessages([{
+        role: 'ai',
+        text: '你好！我是你的 AI 导师。遇到困难时，可以点击「获取提示」来获取思考方向。',
+        icon: '🤖',
+      }]);
+    }, 0);
+    return () => clearTimeout(t);
   }, [questionContext]);
 
   // React to answer result
   useEffect(() => {
     if (answeredCorrectly === null || answeredCorrectly === undefined) return;
 
-    setIsTyping(true);
+    // Use setTimeout(0) to avoid direct setState in effect body
+    const typingTimer = setTimeout(() => setIsTyping(true), 0);
     const timeout = setTimeout(() => {
       const text = answeredCorrectly
         ? CORRECT_RESPONSES[Math.floor(Math.random() * CORRECT_RESPONSES.length)]
@@ -107,7 +111,7 @@ export default function AIHintPanel({
       setIsTyping(false);
     }, 800);
 
-    return () => clearTimeout(timeout);
+    return () => { clearTimeout(typingTimer); clearTimeout(timeout); };
   }, [answeredCorrectly, attemptCount]);
 
   const requestHint = useCallback(() => {

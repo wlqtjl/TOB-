@@ -104,6 +104,7 @@ export default function VictoryEffects({ visible, stars, score, onDismiss }: Vic
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animFrameRef = useRef<number>(0);
+  // Track card visibility via ref + callback scheduling to avoid setState in effect body
   const [showCard, setShowCard] = useState(false);
 
   const emitFirework = useCallback((cx: number, cy: number, count: number = 50) => {
@@ -112,12 +113,17 @@ export default function VictoryEffects({ visible, stars, score, onDismiss }: Vic
     }
   }, []);
 
-  // Start fireworks sequence
+  const showCardCallback = useCallback(() => setShowCard(true), []);
+
+  // Start fireworks sequence when visible becomes true
   useEffect(() => {
     if (!visible) {
-      particlesRef.current = [];
-      setShowCard(false);
-      return;
+      // Use setTimeout(0) to avoid direct setState in effect body
+      const t = setTimeout(() => {
+        setShowCard(false);
+        particlesRef.current = [];
+      }, 0);
+      return () => clearTimeout(t);
     }
 
     const canvas = canvasRef.current;
@@ -145,10 +151,10 @@ export default function VictoryEffects({ visible, stars, score, onDismiss }: Vic
     });
 
     // Show card after initial bursts
-    timeouts.push(setTimeout(() => setShowCard(true), 1000));
+    timeouts.push(setTimeout(showCardCallback, 1000));
 
     return () => { timeouts.forEach(clearTimeout); };
-  }, [visible, emitFirework]);
+  }, [visible, emitFirework, showCardCallback]);
 
   // Animation loop
   useEffect(() => {

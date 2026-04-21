@@ -1,0 +1,13 @@
+graph TB
+    A[Animation Engine] -->|uses| B{Components}
+    B --> C[Graphics Engine]
+    B --> D[Sound Engine]
+    B --> E[Input Handler]
+    C --> F[Render]
+    C --> G[Shader]
+    D --> H[Background Music]
+    D --> I[Sound Effects]
+    style A fill:#f9f,stroke:#333,stroke-width:4px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#fbb,stroke:#333,stroke-width:2px
+    style D fill:#bfb,stroke:#333,stroke-width:2px

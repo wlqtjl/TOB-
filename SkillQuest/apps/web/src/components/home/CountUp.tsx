@@ -104,7 +104,12 @@ export default function CountUp({
   const formatted = display.toLocaleString();
   const denom = denominator != null ? `/${denominator.toLocaleString()}` : '';
   return (
-    <span ref={ref} className={className}>
+    <span
+      ref={ref}
+      className={className}
+      aria-live="off"
+      aria-atomic="false"
+    >
       {prefix}
       {formatted}
       {denom}

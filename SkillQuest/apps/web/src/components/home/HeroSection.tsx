@@ -9,6 +9,9 @@
 import Link from 'next/link';
 import { ArrowRight, Zap, Play } from 'lucide-react';
 import HeroParticleFlow from './HeroParticleFlow';
+import Typewriter from './Typewriter';
+import CountUp from './CountUp';
+import LiveMetricBadge from './LiveMetricBadge';
 
 interface HeroSectionProps {
   platformName: string;
@@ -48,10 +51,7 @@ export default function HeroSection({
 
       {/* Content */}
       <div className="relative flex min-h-[520px] flex-col items-start justify-center gap-6 px-8 py-20 md:px-16">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/80 backdrop-blur hero-fade-in">
-          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          LIVE · 数据包实时流动中
-        </span>
+        <LiveMetricBadge />
 
         <h1 className="max-w-3xl text-4xl font-semibold tracking-tight md:text-6xl hero-fade-in-up">
           <span className="bg-gradient-to-r from-white via-blue-100 to-sky-300 bg-clip-text text-transparent">
@@ -60,7 +60,7 @@ export default function HeroSection({
         </h1>
 
         <p className="max-w-2xl text-base font-light text-white/80 md:text-lg hero-fade-in-up hero-delay-100">
-          {tagline}
+          <Typewriter text={tagline} stepMs={32} startDelayMs={350} />
         </p>
         <p className="max-w-2xl text-sm text-white/60 hero-fade-in-up hero-delay-200">
           {welcomeMessage}
@@ -69,7 +69,7 @@ export default function HeroSection({
         <div className="mt-4 flex flex-wrap items-center gap-3 hero-fade-in-up hero-delay-300">
           <Link
             href="/map"
-            className="group inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-medium text-[#0D1117] transition-all hover:bg-accent-300 hover:shadow-lg hover:shadow-accent/30"
+            className="cta-shimmer group inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-3 text-sm font-medium text-[#0D1117] transition-all hover:bg-accent-300 hover:shadow-lg hover:shadow-accent/30"
           >
             <Play size={16} strokeWidth={2} />
             进入闯关地图
@@ -89,17 +89,17 @@ export default function HeroSection({
         {/* Stats strip */}
         <div className="mt-8 grid w-full max-w-3xl grid-cols-2 gap-3 md:grid-cols-4 hero-fade-in-up hero-delay-400">
           {[
-            { label: '培训课程', value: stats.courses },
-            { label: '实训关卡', value: stats.levels },
-            { label: '已通关', value: `${stats.passed}/${stats.levels}` },
-            { label: '星数', value: `${stats.stars}/${stats.maxStars}` },
+            { label: '培训课程', value: stats.courses, denom: undefined },
+            { label: '实训关卡', value: stats.levels, denom: undefined },
+            { label: '已通关', value: stats.passed, denom: stats.levels },
+            { label: '星数', value: stats.stars, denom: stats.maxStars },
           ].map((s) => (
             <div
               key={s.label}
               className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur"
             >
               <p className="text-lg font-semibold text-white md:text-xl">
-                {s.value}
+                <CountUp value={s.value} denominator={s.denom} durationMs={1400} />
               </p>
               <p className="mt-0.5 text-[11px] text-white/50">{s.label}</p>
             </div>

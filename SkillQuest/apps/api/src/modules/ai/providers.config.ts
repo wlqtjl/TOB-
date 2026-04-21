@@ -10,6 +10,12 @@ export interface AIProviderConfig {
   readonly baseURL: string;
   readonly envKey: string;
   readonly defaultModel: string;
+  /**
+   * If true, provider can be used without configuring an API key
+   * (e.g. locally-hosted Ollama). A placeholder key is sent to satisfy
+   * the OpenAI SDK contract.
+   */
+  readonly optionalApiKey?: boolean;
 }
 
 export const AI_PROVIDERS = {
@@ -49,7 +55,26 @@ export const AI_PROVIDERS = {
     envKey: 'ANTHROPIC_API_KEY',
     defaultModel: 'claude-3-5-sonnet-20240620',
   },
-} as const;
+  minimax: {
+    name: 'MiniMax',
+    baseURL: 'https://api.minimaxi.com/v1',
+    envKey: 'MINIMAX_API_KEY',
+    defaultModel: 'MiniMax-M2.7-highspeed',
+  },
+  doubao: {
+    name: '豆包 (Doubao)',
+    baseURL: 'https://ark.cn-beijing.volces.com/api/v3',
+    envKey: 'DOUBAO_API_KEY',
+    defaultModel: 'doubao-pro-32k',
+  },
+  ollama: {
+    name: 'Ollama (本地)',
+    baseURL: process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434/v1',
+    envKey: 'OLLAMA_API_KEY',
+    defaultModel: 'llama3.1',
+    optionalApiKey: true,
+  },
+} as const satisfies Record<string, AIProviderConfig>;
 
 export type ProviderKey = keyof typeof AI_PROVIDERS;
 

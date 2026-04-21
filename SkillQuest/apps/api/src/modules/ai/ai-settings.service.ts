@@ -138,7 +138,10 @@ export class AISettingsService {
    * Check if a provider has an API key configured.
    */
   isKeyConfigured(providerKey: ProviderKey): boolean {
-    return !!process.env[AI_PROVIDERS[providerKey].envKey];
+    const config: (typeof AI_PROVIDERS)[ProviderKey] & { optionalApiKey?: boolean } =
+      AI_PROVIDERS[providerKey];
+    if (config.optionalApiKey) return true;
+    return !!process.env[config.envKey];
   }
 
   // ─── Connection Test ───────────────────────────────────────────────

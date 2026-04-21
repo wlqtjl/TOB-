@@ -11,7 +11,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Upload,
@@ -25,15 +25,49 @@ import {
   FileText,
   Cpu,
 } from 'lucide-react';
-import { COURSES } from '../../lib/mock-courses';
+import { COURSES, getCourseInteractionTypes } from '../../lib/mock-courses';
 import { tenantConfig } from '../../lib/tenant-config';
 import CourseImportDialog from '../../components/ui/CourseImportDialog';
+import InteractionTabs, {
+  courseMatchesCategory,
+  INTERACTION_TABS,
+  type InteractionCategory,
+} from '../../components/interaction/InteractionTabs';
 
 const tenant = tenantConfig();
 
 export default function CoursesPage() {
   const router = useRouter();
   const [showImport, setShowImport] = useState(false);
+  const [category, setCategory] = useState<InteractionCategory>('all');
+
+  // Pre-compute each course's interaction types once
+  const courseTypes = useMemo(() => {
+    const map: Record<string, string[]> = {};
+    for (const c of COURSES) {
+      map[c.id] = getCourseInteractionTypes(c.id);
+    }
+    return map;
+  }, []);
+
+  // Counts per tab (including "all")
+  const counts = useMemo(() => {
+    const out: Partial<Record<InteractionCategory, number>> = {};
+    for (const tab of INTERACTION_TABS) {
+      out[tab.key] = COURSES.filter((c) =>
+        courseMatchesCategory(courseTypes[c.id] ?? [], tab.key),
+      ).length;
+    }
+    return out;
+  }, [courseTypes]);
+
+  const filteredCourses = useMemo(
+    () =>
+      COURSES.filter((c) =>
+        courseMatchesCategory(courseTypes[c.id] ?? [], category),
+      ),
+    [category, courseTypes],
+  );
 
   const handleImportSuccess = (courseId: string) => {
     setShowImport(false);
@@ -79,9 +113,33 @@ export default function CoursesPage() {
           </button>
         </div>
 
+        {/* ── Interaction Type Filter Tabs ── */}
+        <div className="mb-6">
+          <p className="mb-2 text-xs text-base-400">按交互形态筛选</p>
+          <InteractionTabs
+            value={category}
+            onChange={setCategory}
+            counts={counts}
+          />
+        </div>
+
         {/* ── Course Cards ── */}
         <div className="space-y-4">
-          {COURSES.map((course) => (
+          {filteredCourses.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-base-200 bg-white p-10 text-center">
+              <p className="text-sm text-base-600">
+                当前分类下暂无课程
+              </p>
+              <button
+                type="button"
+                onClick={() => setCategory('all')}
+                className="mt-3 text-xs text-accent hover:underline"
+              >
+                查看全部课程 →
+              </button>
+            </div>
+          ) : (
+            filteredCourses.map((course) => (
             <div
               key={course.id}
               className="group rounded-2xl border border-base-200 bg-white p-7 transition-all hover:border-base-200 hover:bg-base-100"
@@ -146,7 +204,8 @@ export default function CoursesPage() {
                 />
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
 
         {/* ── Platform Stats ── */}

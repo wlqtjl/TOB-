@@ -105,3 +105,15 @@ const MAP_DATA: Record<string, LevelMapData> = {
 export function getMapData(courseId: string): LevelMapData | null {
   return MAP_DATA[courseId] ?? null;
 }
+
+/**
+ * Aggregate the distinct level.type values used in a course.
+ * Returns empty array if course not found.
+ */
+export function getCourseInteractionTypes(courseId: string): string[] {
+  const data = MAP_DATA[courseId];
+  if (!data) return [];
+  const set = new Set<string>();
+  for (const node of data.nodes) set.add(node.type);
+  return Array.from(set);
+}

@@ -36,6 +36,7 @@ const PROVIDER_TAGS: Record<string, { text: string; color: string }> = {
   gemini: { text: '动画推荐', color: 'bg-purple-100 text-purple-700' },
   openai: { text: '旗舰', color: 'bg-blue-100 text-blue-700' },
   claude: { text: '长文本', color: 'bg-orange-100 text-orange-700' },
+  ollama: { text: '本地部署', color: 'bg-gray-100 text-gray-700' },
 };
 
 const PROVIDER_ICONS: Record<string, string> = {
@@ -45,6 +46,9 @@ const PROVIDER_ICONS: Record<string, string> = {
   openai: '🤖',
   gemini: '💎',
   claude: '🎭',
+  minimax: '⚡',
+  doubao: '🫘',
+  ollama: '🦙',
 };
 
 // ─── Component ────────────────────────────────────────────────────────

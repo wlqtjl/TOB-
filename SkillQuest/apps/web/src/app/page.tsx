@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
+import HeroSection from '../components/home/HeroSection';
+import InteractionModesGrid from '../components/home/InteractionModesGrid';
 
 const tenant = tenantConfig();
 
@@ -42,19 +44,25 @@ export default function Home() {
   const maxStars = activeCourses.reduce((s, c) => s + c.totalStars, 0);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-12 px-8 py-16">
-      {/* ── Brand ── */}
-      <div className="text-center">
-        <h1 className="text-4xl font-semibold tracking-tight text-base-900">
-          {tenant.platformName}
-        </h1>
-        <p className="mt-3 text-base font-light text-base-600">
-          {tenant.tagline}
-        </p>
-        <p className="mt-1 text-sm text-base-400">
-          {tenant.welcomeMessage}
-        </p>
+    <main className="flex min-h-screen flex-col items-center gap-12 px-6 py-8 md:px-8 md:py-12">
+      {/* ── Dynamic Hero with particle flow ── */}
+      <div className="w-full max-w-6xl">
+        <HeroSection
+          platformName={tenant.platformName}
+          tagline={tenant.tagline}
+          welcomeMessage={tenant.welcomeMessage}
+          stats={{
+            courses: activeCourses.length,
+            levels: totalLevels,
+            passed: totalPassed,
+            stars: totalStars,
+            maxStars,
+          }}
+        />
       </div>
+
+      {/* ── 5 Interaction modes showcase grid ── */}
+      <InteractionModesGrid />
 
       {/* ── Crisis Alert Banner ── */}
       <Link
@@ -124,23 +132,7 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* ── Stats — clean grid ── */}
-      <div className="grid w-full max-w-2xl grid-cols-4 gap-4 text-center">
-        {[
-          { label: '培训课程', value: activeCourses.length },
-          { label: '实训关卡', value: totalLevels },
-          { label: '已通关', value: `${totalPassed}/${totalLevels}` },
-          { label: '星数', value: `${totalStars}/${maxStars}` },
-        ].map((s) => (
-          <div
-            key={s.label}
-            className="rounded-xl border border-base-200 bg-white px-4 py-5"
-          >
-            <p className="text-xl font-semibold text-base-900">{s.value}</p>
-            <p className="mt-0.5 text-xs text-base-400">{s.label}</p>
-          </div>
-        ))}
-      </div>
+      {/* ── Stats already shown in Hero; keeping Quick Actions below ── */}
 
       {/* ── Course List — Mission Cards ── */}
       <div className="w-full max-w-3xl">

@@ -47,8 +47,8 @@ export class UnifiedAIService {
     messages: AIMessage[],
     modelOverride?: string,
   ): Promise<AIResponse> {
-    const config = AI_PROVIDERS[providerKey];
-    const apiKey = process.env[config.envKey];
+    const config: AIProviderConfig = AI_PROVIDERS[providerKey];
+    const apiKey = process.env[config.envKey] ?? (config.optionalApiKey ? 'not-required' : undefined);
     if (!apiKey) {
       throw new Error(`${config.name} API Key 未配置 (env: ${config.envKey})`);
     }

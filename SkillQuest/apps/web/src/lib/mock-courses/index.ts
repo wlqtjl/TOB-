@@ -9,7 +9,7 @@
  */
 
 export { COURSES, getCourse, getCourseIds, getDefaultCourseId } from './courses';
-export { getMapData } from './map-data';
+export { getMapData, getCourseInteractionTypes } from './map-data';
 export { getLevelQuestions } from './level-questions';
 export { getLeaderboard } from './leaderboard-data';
 export { getPlayContent, getPlayContentTypes } from './play-content';

@@ -33,6 +33,9 @@ import { COURSES } from '../lib/mock-courses';
 import { tenantConfig } from '../lib/tenant-config';
 import HeroSection from '../components/home/HeroSection';
 import InteractionModesGrid from '../components/home/InteractionModesGrid';
+import Reveal from '../components/home/Reveal';
+import CountUp from '../components/home/CountUp';
+import AmbientBackdrop from '../components/home/AmbientBackdrop';
 
 const tenant = tenantConfig();
 
@@ -44,7 +47,9 @@ export default function Home() {
   const maxStars = activeCourses.reduce((s, c) => s + c.totalStars, 0);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-12 px-6 py-8 md:px-8 md:py-12">
+    <main className="relative flex min-h-screen flex-col items-center gap-12 px-6 py-8 md:px-8 md:py-12">
+      <AmbientBackdrop />
+
       {/* ── Dynamic Hero with particle flow ── */}
       <div className="w-full max-w-6xl">
         <HeroSection
@@ -62,75 +67,81 @@ export default function Home() {
       </div>
 
       {/* ── 5 Interaction modes showcase grid ── */}
-      <InteractionModesGrid />
+      <Reveal className="w-full flex justify-center">
+        <InteractionModesGrid />
+      </Reveal>
 
       {/* ── Crisis Alert Banner ── */}
-      <Link
-        href="/crisis"
-        className="group w-full max-w-3xl rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50 p-6 transition-all hover:border-red-400 hover:shadow-lg hover:shadow-red-100"
-      >
-        <div className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-red-100 text-red-600 group-hover:bg-red-200 transition">
-            <AlertTriangle size={28} strokeWidth={1.5} />
-          </div>
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h2 className="text-lg font-semibold text-red-900">数据中心危机模拟器</h2>
-              <span className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-600">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                LIVE
-              </span>
+      <Reveal className="w-full flex justify-center">
+        <Link
+          href="/crisis"
+          className="crisis-scan group relative w-full max-w-3xl overflow-hidden rounded-2xl border-2 border-red-200 bg-gradient-to-r from-red-50 to-orange-50 p-6 transition-all hover:border-red-400 hover:shadow-lg hover:shadow-red-100"
+        >
+          <div className="relative flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-red-100 text-red-600 group-hover:bg-red-200 transition">
+              <AlertTriangle size={28} strokeWidth={1.5} />
             </div>
-            <p className="mt-1 text-sm text-red-700/70">
-              核心服务离线，50,000 用户受影响 — 以救援工程师身份接入紧急任务
-            </p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-semibold text-red-900">数据中心危机模拟器</h2>
+                <span className="flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-600">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                  LIVE
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-red-700/70">
+                核心服务离线，<CountUp value={50000} durationMs={1600} live liveJitter={30} liveIntervalMs={2000} /> 用户受影响 — 以救援工程师身份接入紧急任务
+              </p>
+            </div>
+            <div className="text-red-400 group-hover:text-red-600 transition">
+              <Server size={24} />
+            </div>
           </div>
-          <div className="text-red-400 group-hover:text-red-600 transition">
-            <Server size={24} />
-          </div>
-        </div>
-      </Link>
+        </Link>
+      </Reveal>
 
       {/* ── Quick Actions: Sprint + Leaderboard ── */}
-      <div className="grid w-full max-w-3xl grid-cols-2 gap-4">
-        <Link
-          href="/sprint"
-          className="group rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 transition-all hover:border-amber-400 hover:shadow-lg hover:shadow-amber-100"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
-              <Timer size={20} strokeWidth={1.5} />
+      <Reveal className="w-full flex justify-center">
+        <div className="grid w-full max-w-3xl grid-cols-2 gap-4">
+          <Link
+            href="/sprint"
+            className="group rounded-xl border-2 border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 transition-all hover:-translate-y-0.5 hover:border-amber-400 hover:shadow-lg hover:shadow-amber-100"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                <Timer size={20} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-amber-900">5 分钟冲刺</h3>
+                <p className="text-xs text-amber-700/60">碎片时间 · 快速提分</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-semibold text-amber-900">5 分钟冲刺</h3>
-              <p className="text-xs text-amber-700/60">碎片时间 · 快速提分</p>
+            <div className="mt-3 flex items-center gap-2 text-xs text-amber-600">
+              <Zap size={12} />
+              <span>Duolingo 风格极速闯关</span>
             </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2 text-xs text-amber-600">
-            <Zap size={12} />
-            <span>Duolingo 风格极速闯关</span>
-          </div>
-        </Link>
+          </Link>
 
-        <Link
-          href="/leaderboard"
-          className="group rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 transition-all hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
-              <Trophy size={20} strokeWidth={1.5} />
+          <Link
+            href="/leaderboard"
+            className="group rounded-xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 p-5 transition-all hover:-translate-y-0.5 hover:border-blue-400 hover:shadow-lg hover:shadow-blue-100"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 text-blue-600">
+                <Trophy size={20} strokeWidth={1.5} />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-blue-900">实时排行榜</h3>
+                <p className="text-xs text-blue-700/60">部门榜 · 周榜 · 连胜榜</p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-semibold text-blue-900">实时排行榜</h3>
-              <p className="text-xs text-blue-700/60">部门榜 · 周榜 · 连胜榜</p>
+            <div className="mt-3 flex items-center gap-2 text-xs text-blue-600">
+              <Shield size={12} />
+              <span>实时推送排名变动通知</span>
             </div>
-          </div>
-          <div className="mt-3 flex items-center gap-2 text-xs text-blue-600">
-            <Shield size={12} />
-            <span>实时推送排名变动通知</span>
-          </div>
-        </Link>
-      </div>
+          </Link>
+        </div>
+      </Reveal>
 
       {/* ── Stats already shown in Hero; keeping Quick Actions below ── */}
 
@@ -138,38 +149,42 @@ export default function Home() {
       <div className="w-full max-w-3xl">
         <h2 className="mb-4 text-sm font-medium text-base-400">🎯 救援任务</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          {activeCourses.map((course) => (
-            <Link
-              key={course.id}
-              href={`/map?course=${course.id}`}
-              className="group rounded-xl border border-base-200 bg-white p-6 transition-all hover:border-accent/40"
-            >
-              <h3 className="text-base font-semibold text-base-900 group-hover:text-accent transition-colors">
-                {course.title}
-              </h3>
-              <span className="mt-0.5 text-xs text-base-400">{course.category}</span>
-              <p className="mt-2 text-sm font-light leading-relaxed text-base-600">
-                {course.description}
-              </p>
-              <div className="mt-4 flex items-center gap-3 text-xs text-base-400">
-                <span className="flex items-center gap-1">
-                  <Star size={12} strokeWidth={1.5} />
-                  {course.earnedStars}/{course.totalStars}
-                </span>
-                <span className="flex items-center gap-1">
-                  <BarChart3 size={12} strokeWidth={1.5} />
-                  {course.passedCount}/{course.levelCount} 关
-                </span>
-              </div>
-              {/* Progress bar */}
-              <div className="mt-3 h-[3px] w-full overflow-hidden rounded-full bg-base-100">
-                <div
-                  className="h-full rounded-full bg-accent/60 transition-all"
-                  style={{ width: `${Math.round((course.passedCount / course.levelCount) * 100)}%` }}
-                />
-              </div>
-            </Link>
-          ))}
+          {activeCourses.map((course, idx) => {
+            const progress = course.levelCount > 0 ? course.passedCount / course.levelCount : 0;
+            return (
+              <Reveal key={course.id} delayMs={idx * 60}>
+                <Link
+                  href={`/map?course=${course.id}`}
+                  className="group block rounded-xl border border-base-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_8px_24px_rgba(99,102,241,0.12)]"
+                >
+                  <h3 className="text-base font-semibold text-base-900 group-hover:text-accent transition-colors">
+                    {course.title}
+                  </h3>
+                  <span className="mt-0.5 text-xs text-base-400">{course.category}</span>
+                  <p className="mt-2 text-sm font-light leading-relaxed text-base-600">
+                    {course.description}
+                  </p>
+                  <div className="mt-4 flex items-center gap-3 text-xs text-base-400">
+                    <span className="flex items-center gap-1">
+                      <Star size={12} strokeWidth={1.5} />
+                      {course.earnedStars}/{course.totalStars}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <BarChart3 size={12} strokeWidth={1.5} />
+                      {course.passedCount}/{course.levelCount} 关
+                    </span>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="mt-3 h-[3px] w-full overflow-hidden rounded-full bg-base-100">
+                    <div
+                      className="progress-bar-fill h-full w-full rounded-full bg-accent/60"
+                      style={{ '--progress': progress } as React.CSSProperties}
+                    />
+                  </div>
+                </Link>
+              </Reveal>
+            );
+          })}
         </div>
       </div>
 
@@ -194,18 +209,19 @@ export default function Home() {
           { href: '/learning-path', label: 'Learning Path', desc: 'Skill Tree / Recommendations', Icon: GitBranch },
           { href: '/sprint', label: '冲刺模式', desc: '5分钟快速提分', Icon: Timer },
           { href: '/crisis', label: '危机模拟', desc: '沉浸式救援任务', Icon: AlertTriangle },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="group rounded-xl border border-base-200 bg-white p-5 transition-all hover:border-accent/40"
-          >
-            <item.Icon size={20} strokeWidth={1.5} className="text-base-400 group-hover:text-accent transition-colors" />
-            <h2 className="mt-3 text-sm font-semibold text-base-900 group-hover:text-accent transition-colors">
-              {item.label}
-            </h2>
-            <p className="mt-1 text-xs text-base-400">{item.desc}</p>
-          </Link>
+        ].map((item, idx) => (
+          <Reveal key={item.href} delayMs={idx * 30}>
+            <Link
+              href={item.href}
+              className="group block rounded-xl border border-base-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-[0_8px_24px_rgba(99,102,241,0.12)]"
+            >
+              <item.Icon size={20} strokeWidth={1.5} className="text-base-400 group-hover:text-accent transition-colors" />
+              <h2 className="mt-3 text-sm font-semibold text-base-900 group-hover:text-accent transition-colors">
+                {item.label}
+              </h2>
+              <p className="mt-1 text-xs text-base-400">{item.desc}</p>
+            </Link>
+          </Reveal>
         ))}
       </div>
 

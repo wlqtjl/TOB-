@@ -80,6 +80,13 @@
 
 ### 动画引擎分层架构图
 
+> 下图为预渲染 SVG，始终可见（GitHub 客户端 Mermaid 在节点数较多时会卡在 "Loading"，故改用静态图）。若修改了本节下方的 Mermaid 源码，需同步重新生成 [`docs/animation-architecture.svg`](docs/animation-architecture.svg)。
+
+[![动画引擎分层架构图](docs/animation-architecture.svg)](docs/animation-architecture.svg)
+
+<details>
+<summary>📜 查看 Mermaid 源码（便于后续编辑 / 本地渲染）</summary>
+
 ```mermaid
 graph TB
     subgraph "🎮 用户交互层"
@@ -167,6 +174,15 @@ graph TB
     style D2 fill:#7f1d1d,stroke:#f87171,color:#fff
     style G1 fill:#312e81,stroke:#818cf8,color:#fff
 ```
+
+重新生成命令：
+
+```bash
+# 从 README 第 ### 动画引擎分层架构图 下方提取 mermaid 源 → diagram.mmd
+npx -y @mermaid-js/mermaid-cli -i diagram.mmd -o docs/animation-architecture.svg
+```
+
+</details>
 
 ### 动画技术栈分布
 

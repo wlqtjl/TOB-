@@ -17,7 +17,8 @@
 8. [ZBS 数据流可视化 (`/data-gravity/story`)](#8-zbs-数据流可视化)
 9. [情景选择关 (Scenario Decision)](#9-情景选择关)
 10. [关卡叙事系统 (Level Narrative)](#10-关卡叙事系统)
-11. [变更日志](#11-变更日志)
+11. [UI 界面截图 (UI Screenshots)](#11-ui-界面截图)
+12. [变更日志](#12-变更日志)
 
 ---
 
@@ -603,9 +604,114 @@ narrative.successMessage / narrative.failureMessage (结算展示)
 
 ---
 
-## 11. 变更日志
+## 11. UI 界面截图
+
+> **🛡️ 维护规则 (重要 — 不要忽略!)**
+>
+> 1. 本节是 **整个软件的 UI 截图档案**，每张图片对应一个真实路由。任何新增 / 删除 / 重命名路由的改动，**必须同步更新** `SkillQuest/docs/screenshots/` 目录下的对应截图，并在下表中更新条目。
+> 2. 当页面视觉发生重大变化（布局、配色、关键组件重构）时，**必须**重新生成受影响的截图。
+> 3. 截图标准：Chromium headless，1280×900 视口，`fullPage: true`，PNG 格式，文件名需与下表 `截图` 列完全一致。
+> 4. 所有截图必须在安装中文字体 (`fonts-noto-cjk`) 的环境下生成，防止出现"豆腐框"乱码。
+> 5. **严禁删除本节**。PR Review 时若发现此节缺失或被简化，应直接打回。
+>
+> 最近一次全量回归：**2026-04-21**，基于 `pnpm start` 生产构建产物 (Next.js 15.5.15 App Router) + 后端离线模式 (mock + localStorage)。
+
+### 11.1 截图索引
+
+| # | 路由 | 角色 | 说明 | 截图 |
+|---|------|------|------|------|
+| 01 | `/` | 公共 | 首页 — SmartX 培训学院门户，危机模拟器 CTA、5分钟冲刺、实时排行榜、4 门课程、快速入口 | [`01-home.png`](screenshots/01-home.png) |
+| 02 | `/login` | 公共 | 登录页 + 演示模式三选一（管理员 / 培训师 / 学员） | [`02-login.png`](screenshots/02-login.png) |
+| 03 | `/register` | 公共 | 学员注册页 | [`03-register.png`](screenshots/03-register.png) |
+| 04 | `/showcase` | 公共 | 产品动态展示页 — 七大能力、8 种关卡类型、四层架构、工作流程 | [`04-showcase.png`](screenshots/04-showcase.png) |
+| 05 | `/setup-vendor` | 初始化 | 平台首次部署配置（引导令牌 + 超级管理员账号） | [`05-setup-vendor.png`](screenshots/05-setup-vendor.png) |
+| 10 | `/map` | 学员 | 闯关地图（Canvas 粒子流 DAG 图 + 课程切换） | [`10-map.png`](screenshots/10-map.png) |
+| 11 | `/leaderboard` | 学员 | 实时排行榜（本周 / 本月 / 赛季 / 全部） | [`11-leaderboard.png`](screenshots/11-leaderboard.png) |
+| 12 | `/courses` | 培训师 / 管理员 | 课程管理后台（卡片视图 + 闯关/排行/演示入口） | [`12-courses.png`](screenshots/12-courses.png) |
+| 13 | `/courses/agency` | 代理商 | 代理商后台（学员进度表 + 课程分配） | [`13-courses-agency.png`](screenshots/13-courses-agency.png) |
+| 14 | `/profile` | 学员 | 个人资料（XP 进度、徽章、学习路径、技能概览） | [`14-profile.png`](screenshots/14-profile.png) |
+| 15 | `/dashboard` | 学员 | 学员仪表盘（继续学习 + 签到日历 + 我的课程） | [`15-dashboard.png`](screenshots/15-dashboard.png) |
+| 16 | `/achievements` | 学员 | 成就徽章墙（普通 / 优秀 / 稀有 / 史诗 + 隐藏成就） | [`16-achievements.png`](screenshots/16-achievements.png) |
+| 17 | `/learning-path` | 学员 | 学习路径（推荐课程 + 技能树） | [`17-learning-path.png`](screenshots/17-learning-path.png) |
+| 18 | `/analytics` | 管理员 | 学习分析（课程表现 + 部门完成热力图 + Top 学员） | [`18-analytics.png`](screenshots/18-analytics.png) |
+| 19 | `/daily` | 学员 | 每日任务 / 今日题库 / 段位排行榜（新增 gamification 页） | [`19-daily.png`](screenshots/19-daily.png) |
+| 20 | `/sprint` | 学员 | 5 分钟冲刺（Duolingo 风格连续答题 + 倒计时） | [`20-sprint.png`](screenshots/20-sprint.png) |
+| 21 | `/crisis` | 学员 | 沉浸式数据中心危机模拟器（实时日志 + 紧急告警） | [`21-crisis.png`](screenshots/21-crisis.png) |
+| 22 | `/replay` | 学员 | 专家对比复盘报告（玩家路径 vs 专家路径 + SLA 曲线） | [`22-replay.png`](screenshots/22-replay.png) |
+| 23 | `/data-gravity` | 学员 | ZBS 数据分布物理仿真（副本亲和力、节点故障注入、实时能量指标） | [`23-data-gravity.png`](screenshots/23-data-gravity.png) |
+| 24 | `/data-gravity/story` | 学员 | ZBS 数据流五场景故事模式（framer-motion 交互叙事） | [`24-data-gravity-story.png`](screenshots/24-data-gravity-story.png) |
+| 25 | `/play/scenario_decision/demo?course=smartx-halo` | 学员 | 情景选择关（角色扮演 + Boss 战 HP 条 + 4 选 1 后果叙事） | [`25-play-scenario-decision.png`](screenshots/25-play-scenario-decision.png) |
+| 25b | `/play/topology/demo?course=smartx-halo` | 学员 | 拓扑连线关卡（Canvas 渲染 + 知识普及弹窗） — 代表 7 种 UniversalGameRenderer 类型 | [`25b-play-topology.png`](screenshots/25b-play-topology.png) |
+| 26 | `/play/sandbox` | 学员 | 交互实验室（物理公式 + 调参面板 + 可视化 + AI 引导 + 学习检验） | [`26-play-sandbox.png`](screenshots/26-play-sandbox.png) |
+| 27 | `/level/:id` | 学员 | 关卡答题页（课程切换 + 倒计时 + 标签） | [`27-level.png`](screenshots/27-level.png) |
+| 28 | `/results` | 学员 | 结算页（星级 + 基础分 / 时间奖励 / 连击奖励 + XP） | [`28-results.png`](screenshots/28-results.png) |
+| 30 | `/admin/dashboard` | 管理员 | 总览看板（课程/关卡/答题/均分 + 活动摘要 + 完成率） | [`30-admin-dashboard.png`](screenshots/30-admin-dashboard.png) |
+| 31 | `/admin/courses` | 管理员 | 文档上传 + AI 题目生成（带 AI 模型设置入口） | [`31-admin-courses.png`](screenshots/31-admin-courses.png) |
+| 32 | `/admin/review` | 管理员 | AI 题目审核中心（双 Agent 对比 + 置信度） | [`32-admin-review.png`](screenshots/32-admin-review.png) |
+| 33 | `/admin/users` | 管理员 | 用户管理（注册审核 + 激活/禁用） | [`33-admin-users.png`](screenshots/33-admin-users.png) |
+| 34 | `/admin/partners` | 管理员 | 代理商员工管理（员工概览表 + 课程分配卡片） | [`34-admin-partners.png`](screenshots/34-admin-partners.png) |
+| 35 | `/admin/analytics` | 管理员 | 数据看板（KPI + 每日活跃趋势 + 各课程完成情况） | [`35-admin-analytics.png`](screenshots/35-admin-analytics.png) |
+| 36 | `/admin/ai-settings` | 管理员 | AI 模型设置（6 provider × 3 用途网格 + API Key 配置 + Provider 状态） | [`36-admin-ai-settings.png`](screenshots/36-admin-ai-settings.png) |
+| 37 | `/admin/content-generator` | 管理员 | 内容生成器（内置 ZBS/Ceph/iSCSI 模板 + 自定义 DataFlowTemplate CRUD） | [`37-admin-content-generator.png`](screenshots/37-admin-content-generator.png) |
+
+### 11.2 截图生成流程
+
+```bash
+# 1. 安装中文字体（首次运行时）
+sudo apt-get install -y fonts-noto-cjk fonts-noto-cjk-extra && fc-cache -fv
+
+# 2. 构建前端（优先使用生产构建以复用编译产物）
+cd SkillQuest/apps/web && pnpm build && pnpm start &
+
+# 3. 使用 Playwright MCP 或 chromium headless 依次访问并截图
+#    视口: 1280×900; fullPage: true; PNG
+#    需要登录的页面：/login 页面上点击"管理员数据看板 / 课程管理"按钮注入演示身份
+#
+# 4. 拷贝到 SkillQuest/docs/screenshots/ 并以 <序号>-<路由短名>.png 命名
+```
+
+### 11.3 未覆盖项
+
+以下场景属于 **动态/交互弹层**，本节暂不单独出图，由 [`ZBS 数据流可视化`](#8-zbs-数据流可视化) 与 [`关卡叙事系统`](#10-关卡叙事系统) 章节的文字描述为主：
+
+- `LevelBriefingModal` 关卡知识普及弹窗（见第 6 节）
+- `LevelIntroModal` 叙事入口弹窗（见第 10 节）
+- `ComboAnnouncement` / `RankPromotionOverlay` / `BossVictory` 游戏化反馈层（覆盖式出现，无独立路由）
+
+若这些组件未来被提升为独立页面，必须补充对应截图。
+
+---
+
+## 12. 变更日志
 
 > **规则**：每次涉及多文件联动的改动，必须在此追加一条记录。
+
+### 2026-04-21 — 新增「UI 界面截图」章节 (第 11 节)
+
+**背景**：文档之前只记录结构与类型，缺乏对"整个软件长什么样"的可视化索引。新同学、代理商评估者、PM 看需求评审时都无法快速对齐页面外观。本次补齐 33 张端到端 UI 截图并写入 ARCHITECTURE.md，并设置强约束规则防止后续被忽略。
+
+**涉及文件**：
+
+| # | 文件路径 | 改动摘要 |
+|---|---|---|
+| 1 | `docs/screenshots/01-home.png` … `37-admin-content-generator.png` | **新文件 (33 张)** — 1280×900 `fullPage` PNG，覆盖公共 / 学员 / 代理商 / 管理员四类角色的全部主路由 + 1 个代表性 play 类型 + sandbox + level + results |
+| 2 | `docs/ARCHITECTURE.md` | 新增第 11 节「UI 界面截图」(含维护规则、截图索引表、生成流程、未覆盖项清单)；原第 11 节「变更日志」重编号为第 12 节；目录对应更新 |
+
+**生成环境**：
+
+- Node.js / Next.js 15.5.15 生产构建 (`pnpm build && pnpm start`)
+- Chromium 147 headless (通过 Playwright 驱动)，视口 1280×900
+- 字体：`fonts-noto-cjk` + `fonts-noto-cjk-extra`
+- 后端离线，页面在 mock / localStorage 兜底数据下渲染
+
+**维护约束（写入第 11 节开头）**：
+
+1. 路由增删改 → 同步更新截图 + 索引表
+2. 视觉重构 → 重新生成受影响截图
+3. 禁止删除本节或合并入其他章节
+4. PR Review 若发现本节缺失/被简化应直接打回
+
+---
 
 ### 2026-04-17 — ZBS 数据流可视化 + 情景选择关 + 关卡叙事系统
 

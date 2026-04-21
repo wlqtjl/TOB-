@@ -35,13 +35,13 @@ const ICON_MAP = { Shield, Crown, Gem, Sparkles, Flame } as const;
 
 /** Pre-computed Tailwind class mappings (JIT-safe — no dynamic interpolation). */
 const RANK_CLASSES: Record<string, { border: string; borderWide: string; text: string; fill: string }> = {
+  iron:     { border: 'border-zinc-500/30',   borderWide: 'border-zinc-500/40',   text: 'text-zinc-300',   fill: 'fill-zinc-300'   },
   bronze:   { border: 'border-amber-600/30',  borderWide: 'border-amber-600/40',  text: 'text-amber-600',  fill: 'fill-amber-600'  },
   silver:   { border: 'border-gray-400/30',   borderWide: 'border-gray-400/40',   text: 'text-gray-400',   fill: 'fill-gray-400'   },
-  gold:     { border: 'border-yellow-400/30',  borderWide: 'border-yellow-400/40', text: 'text-yellow-400', fill: 'fill-yellow-400' },
-  platinum: { border: 'border-cyan-400/30',    borderWide: 'border-cyan-400/40',   text: 'text-cyan-400',   fill: 'fill-cyan-400'   },
-  diamond:  { border: 'border-blue-400/30',    borderWide: 'border-blue-400/40',   text: 'text-blue-400',   fill: 'fill-blue-400'   },
-  star:     { border: 'border-purple-400/30',  borderWide: 'border-purple-400/40', text: 'text-purple-400', fill: 'fill-purple-400' },
-  legend:   { border: 'border-red-400/30',     borderWide: 'border-red-400/40',    text: 'text-red-400',    fill: 'fill-red-400'    },
+  gold:     { border: 'border-yellow-400/30', borderWide: 'border-yellow-400/40', text: 'text-yellow-400', fill: 'fill-yellow-400' },
+  platinum: { border: 'border-cyan-400/30',   borderWide: 'border-cyan-400/40',   text: 'text-cyan-400',   fill: 'fill-cyan-400'   },
+  diamond:  { border: 'border-blue-400/30',   borderWide: 'border-blue-400/40',   text: 'text-blue-400',   fill: 'fill-blue-400'   },
+  legend:   { border: 'border-red-400/30',    borderWide: 'border-red-400/40',    text: 'text-red-400',    fill: 'fill-red-400'    },
 };
 
 const PARTICLE_COUNT = 24;

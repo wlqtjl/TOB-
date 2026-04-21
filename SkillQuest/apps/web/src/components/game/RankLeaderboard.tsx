@@ -14,7 +14,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Trophy } from 'lucide-react';
-import RankBadge, { type PlayerRankKey } from './RankBadge';
+import RankBadge, { type PlayerRankKey as BadgeRankKey } from './RankBadge';
 import {
   fetchRankLeaderboard,
   type RankSummary,
@@ -74,7 +74,9 @@ export default function RankLeaderboard({
         <ol className="flex flex-col gap-2">
           {entries.map((entry, idx) => {
             const isSelf = entry.userId === currentUserId;
-            const rankKey = entry.rank.toLowerCase() as PlayerRankKey;
+            // `entry.rank` is uppercase (backend enum, e.g. "GOLD"). RankBadge accepts
+            // both cases via its own `normalizeKey`, so pass through unchanged.
+            const rankKey = entry.rank as unknown as BadgeRankKey | Uppercase<BadgeRankKey>;
             return (
               <motion.li
                 key={entry.userId}

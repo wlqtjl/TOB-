@@ -18,7 +18,7 @@ import { ArrowLeft, Zap } from 'lucide-react';
 
 import DailyQuests, { completeDailyQuest } from '../../components/game/DailyQuests';
 import ApiDailyQuest from '../../components/game/ApiDailyQuest';
-import RankBadge, { type PlayerRankKey } from '../../components/game/RankBadge';
+import RankBadge from '../../components/game/RankBadge';
 import RankLeaderboard from '../../components/game/RankLeaderboard';
 import TutorBubble from '../../components/game/TutorBubble';
 
@@ -57,11 +57,7 @@ export default function DailyPage() {
             <ArrowLeft size={14} /> 返回
           </Link>
           {rank ? (
-            <RankBadge
-              rank={rank.rank.toLowerCase() as PlayerRankKey}
-              rankScore={rank.rankScore}
-              size="sm"
-            />
+            <RankBadge rank={rank.rank} rankScore={rank.rankScore} size="sm" />
           ) : (
             <RankBadge rank="iron" rankScore={0} size="sm" />
           )}

@@ -50,8 +50,14 @@ export default function BossVictory({
     () => (result ? GRADE_STYLE[result.grade] : null),
     [result],
   );
+  // RankBadge.getTier accepts both upper and lower case — pass the backend
+  // enum value (uppercase) through directly.
   const newTier = useMemo(
-    () => (result ? getTier(result.newRank.toLowerCase() as Lowercase<BossCompleteResponse['newRank']>) : null),
+    () => (result ? getTier(result.newRank) : null),
+    [result],
+  );
+  const previousTier = useMemo(
+    () => (result ? getTier(result.previousRank) : null),
     [result],
   );
 
@@ -119,9 +125,9 @@ export default function BossVictory({
                 )}
               </div>
               <div className="flex items-center justify-center gap-3">
-                {result.promoted && (
+                {result.promoted && previousTier && (
                   <>
-                    <span className="text-sm text-gray-500">{getTier(result.previousRank.toLowerCase() as Lowercase<BossCompleteResponse['previousRank']>).name}</span>
+                    <span className="text-sm text-gray-500">{previousTier.name}</span>
                     <ArrowRight size={14} className="text-gray-600" />
                   </>
                 )}

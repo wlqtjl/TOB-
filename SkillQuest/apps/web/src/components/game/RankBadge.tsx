@@ -1,80 +1,109 @@
 /**
  * RankBadge — Player rank tier badge with glow effects
  *
- * Displays the player's current competitive rank tier based on XP.
- * Seven tiers from Bronze (青铜) to Legend (传说), each with
- * distinct color, icon, and glow treatment.
+ * Displays the player's current competitive rank tier. Seven tiers keyed on
+ * the backend `PlayerRank` enum: IRON → BRONZE → SILVER → GOLD → PLATINUM →
+ * DIAMOND → LEGEND. Thresholds match `RankService.RANK_THRESHOLDS` in
+ * apps/api (rankScore-based, not XP).
  *
  * Exports:
- * - getRank(xp)    — returns the RankTier object for a given XP value
- * - RANK_TIERS     — ordered array of all tier definitions
- * - RankTier type  — tier shape
- * - RankBadge      — default component
+ * - RANK_TIERS            — ordered array, indexed by PlayerRankKey
+ * - getRankFromScore(n)   — returns the RankTier for a given rankScore
+ * - getTier(rank)         — returns the RankTier for a PlayerRankKey
+ * - RankTier / PlayerRankKey types
+ * - RankBadge             — default component
  */
 
 'use client';
 
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Crown, Gem, Sparkles, Flame, Star } from 'lucide-react';
+import { Shield, Crown, Gem, Flame, Star } from 'lucide-react';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
+export type PlayerRankKey =
+  | 'iron'
+  | 'bronze'
+  | 'silver'
+  | 'gold'
+  | 'platinum'
+  | 'diamond'
+  | 'legend';
+
 export interface RankTier {
-  id: string;
+  id: PlayerRankKey;
   name: string;
-  minXp: number;
-  maxXp: number;
-  color: string;
+  /** Inclusive lower bound for rankScore */
+  minScore: number;
+  /** Inclusive upper bound for rankScore (Infinity for legend) */
+  maxScore: number;
   glowColor: string;
-  iconName: 'Shield' | 'Crown' | 'Gem' | 'Sparkles' | 'Flame';
+  iconName: 'Shield' | 'Crown' | 'Gem' | 'Flame';
 }
 
 export interface RankBadgeProps {
-  xp: number;
+  /** Explicit tier — preferred when available (backend enum value, case-insensitive). */
+  rank?: PlayerRankKey | Uppercase<PlayerRankKey>;
+  /**
+   * Rank score from backend (0-∞). Used to derive the tier when `rank` is
+   * omitted, and to compute the 5-star progress indicator within the tier.
+   */
+  rankScore?: number;
   showStars?: boolean;
   size?: 'sm' | 'md' | 'lg';
 }
 
-// ─── Tier definitions ────────────────────────────────────────────────────────
+// ─── Tier definitions — must match apps/api/.../rank.service.ts thresholds ──
 
 export const RANK_TIERS: RankTier[] = [
-  { id: 'bronze',   name: '青铜', minXp: 0,     maxXp: 999,      color: 'amber-600',   glowColor: 'rgba(217,119,6,0.6)',   iconName: 'Shield'   },
-  { id: 'silver',   name: '白银', minXp: 1000,   maxXp: 2999,    color: 'gray-400',    glowColor: 'rgba(156,163,175,0.6)', iconName: 'Shield'   },
-  { id: 'gold',     name: '黄金', minXp: 3000,   maxXp: 5999,    color: 'yellow-400',  glowColor: 'rgba(250,204,21,0.6)',  iconName: 'Crown'    },
-  { id: 'platinum', name: '铂金', minXp: 6000,   maxXp: 9999,    color: 'cyan-400',    glowColor: 'rgba(34,211,238,0.6)',  iconName: 'Crown'    },
-  { id: 'diamond',  name: '钻石', minXp: 10000,  maxXp: 14999,   color: 'blue-400',    glowColor: 'rgba(96,165,250,0.6)',  iconName: 'Gem'      },
-  { id: 'star',     name: '星耀', minXp: 15000,  maxXp: 19999,   color: 'purple-400',  glowColor: 'rgba(192,132,252,0.6)', iconName: 'Sparkles' },
-  { id: 'legend',   name: '传说', minXp: 20000,  maxXp: Infinity, color: 'red-400',    glowColor: 'rgba(248,113,113,0.6)', iconName: 'Flame'    },
+  { id: 'iron',     name: '玄铁', minScore: 0,    maxScore: 199,      glowColor: 'rgba(113,113,122,0.6)', iconName: 'Shield' },
+  { id: 'bronze',   name: '青铜', minScore: 200,  maxScore: 499,      glowColor: 'rgba(217,119,6,0.6)',   iconName: 'Shield' },
+  { id: 'silver',   name: '白银', minScore: 500,  maxScore: 999,      glowColor: 'rgba(156,163,175,0.6)', iconName: 'Shield' },
+  { id: 'gold',     name: '黄金', minScore: 1000, maxScore: 1799,     glowColor: 'rgba(250,204,21,0.6)',  iconName: 'Crown'  },
+  { id: 'platinum', name: '铂金', minScore: 1800, maxScore: 2999,     glowColor: 'rgba(34,211,238,0.6)',  iconName: 'Crown'  },
+  { id: 'diamond',  name: '钻石', minScore: 3000, maxScore: 4999,     glowColor: 'rgba(96,165,250,0.6)',  iconName: 'Gem'    },
+  { id: 'legend',   name: '传说', minScore: 5000, maxScore: Infinity, glowColor: 'rgba(248,113,113,0.6)', iconName: 'Flame'  },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const ICON_MAP = { Shield, Crown, Gem, Sparkles, Flame } as const;
+const ICON_MAP = { Shield, Crown, Gem, Flame } as const;
 
 /** Pre-computed Tailwind class mappings (JIT-safe — no dynamic interpolation). */
-const RANK_CLASSES: Record<string, { border: string; text: string; fill: string }> = {
+const RANK_CLASSES: Record<PlayerRankKey, { border: string; text: string; fill: string }> = {
+  iron:     { border: 'border-zinc-500/30',   text: 'text-zinc-300',   fill: 'fill-zinc-300'   },
   bronze:   { border: 'border-amber-600/30',  text: 'text-amber-600',  fill: 'fill-amber-600'  },
   silver:   { border: 'border-gray-400/30',   text: 'text-gray-400',   fill: 'fill-gray-400'   },
-  gold:     { border: 'border-yellow-400/30',  text: 'text-yellow-400', fill: 'fill-yellow-400' },
-  platinum: { border: 'border-cyan-400/30',    text: 'text-cyan-400',   fill: 'fill-cyan-400'   },
-  diamond:  { border: 'border-blue-400/30',    text: 'text-blue-400',   fill: 'fill-blue-400'   },
-  star:     { border: 'border-purple-400/30',  text: 'text-purple-400', fill: 'fill-purple-400' },
-  legend:   { border: 'border-red-400/30',     text: 'text-red-400',    fill: 'fill-red-400'    },
+  gold:     { border: 'border-yellow-400/30', text: 'text-yellow-400', fill: 'fill-yellow-400' },
+  platinum: { border: 'border-cyan-400/30',   text: 'text-cyan-400',   fill: 'fill-cyan-400'   },
+  diamond:  { border: 'border-blue-400/30',   text: 'text-blue-400',   fill: 'fill-blue-400'   },
+  legend:   { border: 'border-red-400/30',    text: 'text-red-400',    fill: 'fill-red-400'    },
 };
 
-/** Returns the RankTier matching a given XP total. */
-export function getRank(xp: number): RankTier {
+function normalizeKey(key: string): PlayerRankKey {
+  const lower = key.toLowerCase();
+  return (RANK_TIERS.find((t) => t.id === lower)?.id) ?? 'iron';
+}
+
+/** Returns the RankTier matching a rankScore. */
+export function getRankFromScore(rankScore: number): RankTier {
   for (let i = RANK_TIERS.length - 1; i >= 0; i--) {
-    if (xp >= RANK_TIERS[i].minXp) return RANK_TIERS[i];
+    if (rankScore >= RANK_TIERS[i].minScore) return RANK_TIERS[i];
   }
   return RANK_TIERS[0];
 }
 
+/** Returns the RankTier for a PlayerRank enum key (accepts upper/lower case). */
+export function getTier(rank: PlayerRankKey | Uppercase<PlayerRankKey>): RankTier {
+  return RANK_TIERS.find((t) => t.id === normalizeKey(rank)) ?? RANK_TIERS[0];
+}
+
 /** How many stars (1-5) the player has earned within the current tier. */
-function getStarsInTier(xp: number, tier: RankTier): number {
-  const range = tier.maxXp === Infinity ? 10000 : tier.maxXp - tier.minXp + 1;
-  const progress = xp - tier.minXp;
+function getStarsInTier(rankScore: number, tier: RankTier): number {
+  const range =
+    tier.maxScore === Infinity ? 2000 : tier.maxScore - tier.minScore + 1;
+  const progress = rankScore - tier.minScore;
   const raw = Math.floor((progress / range) * 5) + 1;
   return Math.max(1, Math.min(5, raw));
 }
@@ -89,12 +118,23 @@ const SIZE_CONFIG = {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function RankBadge({ xp, showStars = true, size = 'md' }: RankBadgeProps) {
-  const rank = useMemo(() => getRank(xp), [xp]);
-  const stars = useMemo(() => getStarsInTier(xp, rank), [xp, rank]);
+export default function RankBadge({
+  rank,
+  rankScore = 0,
+  showStars = true,
+  size = 'md',
+}: RankBadgeProps) {
+  const tier = useMemo(
+    () => (rank ? getTier(rank) : getRankFromScore(rankScore)),
+    [rank, rankScore],
+  );
+  const stars = useMemo(
+    () => getStarsInTier(rankScore, tier),
+    [rankScore, tier],
+  );
   const cfg = SIZE_CONFIG[size];
-  const Icon = ICON_MAP[rank.iconName];
-  const cls = RANK_CLASSES[rank.id];
+  const Icon = ICON_MAP[tier.iconName];
+  const cls = RANK_CLASSES[tier.id];
 
   return (
     <motion.div
@@ -102,7 +142,7 @@ export default function RankBadge({ xp, showStars = true, size = 'md' }: RankBad
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: 'spring', damping: 20, stiffness: 300 }}
       className={`inline-flex items-center ${cfg.gap} ${cfg.padding} rounded-full border ${cls.border} bg-gray-900/80 backdrop-blur-xl`}
-      style={{ boxShadow: `0 0 14px ${rank.glowColor}, 0 0 4px ${rank.glowColor}` }}
+      style={{ boxShadow: `0 0 14px ${tier.glowColor}, 0 0 4px ${tier.glowColor}` }}
     >
       {/* Rank icon */}
       <motion.div
@@ -114,7 +154,7 @@ export default function RankBadge({ xp, showStars = true, size = 'md' }: RankBad
 
       {/* Rank name */}
       <span className={`${cfg.text} font-bold ${cls.text}`}>
-        {rank.name}
+        {tier.name}
       </span>
 
       {/* Stars within tier */}

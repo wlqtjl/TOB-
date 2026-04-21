@@ -196,3 +196,116 @@ export interface NarrativeContent {
 export async function fetchNarrativeContent(levelId: string): Promise<NarrativeContent | null> {
   return apiFetch<NarrativeContent>(`/courses/levels/${levelId}/narrative`);
 }
+
+// ─── Gamification (Rank / Daily Quest / AI Tutor / Boss) ──────────────
+
+export type PlayerRankKey =
+  | 'IRON'
+  | 'BRONZE'
+  | 'SILVER'
+  | 'GOLD'
+  | 'PLATINUM'
+  | 'DIAMOND'
+  | 'LEGEND';
+
+export interface RankSummary {
+  userId: string;
+  displayName: string;
+  avatarUrl: string;
+  rank: PlayerRankKey;
+  rankScore: number;
+  nextRank: PlayerRankKey | null;
+  toNext: number | null;
+}
+
+export async function fetchRank(): Promise<RankSummary | null> {
+  return apiFetch<RankSummary>(`/gamification/rank`);
+}
+
+export async function fetchRankLeaderboard(limit = 50): Promise<RankSummary[] | null> {
+  return apiFetch<RankSummary[]>(`/gamification/rank/leaderboard?limit=${limit}`);
+}
+
+export interface DailyQuestQuestion {
+  levelId: string;
+  title: string;
+  courseId: string;
+  courseTitle: string;
+}
+
+export interface DailyQuestRecord {
+  id: string;
+  userId: string;
+  tenantId: string;
+  date: string;
+  questions: DailyQuestQuestion[];
+  completed: boolean;
+  completedAt: string | null;
+  stars: number;
+  createdAt: string;
+}
+
+export async function fetchDailyQuest(): Promise<DailyQuestRecord | null> {
+  return apiFetch<DailyQuestRecord>(`/gamification/daily-quest`);
+}
+
+export async function completeDailyQuestApi(
+  questId: string,
+  stars: number,
+): Promise<DailyQuestRecord | null> {
+  return apiFetch<DailyQuestRecord>(`/gamification/daily-quest/${questId}/complete`, {
+    method: 'POST',
+    body: JSON.stringify({ stars }),
+  });
+}
+
+export interface TutorFeedbackRequest {
+  correct: number;
+  total: number;
+  durationSec?: number;
+  mistakes?: string[];
+}
+
+export interface TutorFeedbackResponse {
+  tutorName: string;
+  avatar: string;
+  message: string;
+  fallback: boolean;
+}
+
+export async function fetchTutorFeedback(
+  levelId: string,
+  payload: TutorFeedbackRequest,
+): Promise<TutorFeedbackResponse | null> {
+  return apiFetch<TutorFeedbackResponse>(
+    `/gamification/levels/${levelId}/tutor-feedback`,
+    { method: 'POST', body: JSON.stringify(payload) },
+  );
+}
+
+export interface BossCompletePayload {
+  accuracy: number;
+  timeRemainingRatio?: number;
+}
+
+export interface BossCompleteResponse {
+  levelId: string;
+  stars: number;
+  rankDelta: number;
+  xpDelta: number;
+  grade: 'S' | 'A' | 'B' | 'C';
+  promoted: boolean;
+  newRank: PlayerRankKey;
+  previousRank: PlayerRankKey;
+  achievementUnlocked: boolean;
+}
+
+export async function submitBossComplete(
+  levelId: string,
+  payload: BossCompletePayload,
+): Promise<BossCompleteResponse | null> {
+  return apiFetch<BossCompleteResponse>(
+    `/gamification/levels/${levelId}/boss-complete`,
+    { method: 'POST', body: JSON.stringify(payload) },
+  );
+}

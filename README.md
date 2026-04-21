@@ -1,4 +1,4 @@
-# TOB- — To-B 企业级产品培训与仿真平台
+npx -y @mermaid-js/mermaid-cli -i diagram.mmd -o docs/animation-architecture.svg# TOB- — To-B 企业级产品培训与仿真平台
 
 > 包含两大子系统：**SkillQuest**（游戏化培训）+ **Omni-Sim**（数字孪生仿真）
 

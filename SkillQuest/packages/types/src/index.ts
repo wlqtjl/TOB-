@@ -1619,3 +1619,64 @@ export interface DataFlowTemplate {
   /** 更新时间 */
   updatedAt: string;
 }
+
+// ─── Spark 2.0 (3DGS) 沉浸式演练 ─────────────────────────────────────
+
+export type SparkJobStatus = 'queued' | 'analyzing' | 'reconstructing' | 'streaming' | 'ready' | 'failed';
+
+export interface SparkReconstructJob {
+  id: string;
+  tenantId: string;
+  sceneName: string;
+  photoCount: number;
+  status: SparkJobStatus;
+  progress: number;
+  radUrl?: string;
+  error?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type SparkHotspotKind = 'quiz' | 'dragdrop' | 'info' | 'comparison' | 'pain-point';
+
+export interface SparkHotspot {
+  id: string;
+  sceneId: string;
+  position: { x: number; y: number; z: number };
+  kind: SparkHotspotKind;
+  label: string;
+  description?: string;
+  payload?: Record<string, unknown>;
+}
+
+export type SparkPhaseType = 'legacy' | 'migration' | 'smartx';
+
+export interface SparkScene {
+  id: string;
+  name: string;
+  description: string;
+  radUrl: string | null;
+  procedural: boolean;
+  phase: SparkPhaseType;
+  createdAt: string;
+}
+
+export interface SparkMigrationPhase {
+  id: string;
+  phase: SparkPhaseType;
+  title: string;
+  subtitle: string;
+  sceneId: string;
+  hotspots: SparkHotspot[];
+  painPoints?: string[];
+}
+
+export interface Spark3DGSLevel {
+  id: string;
+  levelId: string;
+  type: 'spark_3dgs';
+  title: string;
+  phases: SparkMigrationPhase[];
+  successMessage: string;
+  failureMessage: string;
+}

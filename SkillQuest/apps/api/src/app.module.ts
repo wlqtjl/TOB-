@@ -13,6 +13,7 @@ import { AIBudgetModule } from './modules/ai-budget/ai-budget.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AIModule } from './modules/ai/ai.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
+import { SparkModule } from './modules/spark/spark.module';
 import { PrismaService } from './prisma.service';
 
 @Module({
@@ -31,6 +32,7 @@ import { PrismaService } from './prisma.service';
     AuditModule,
     AIModule,
     GamificationModule,
+    SparkModule,
   ],
   providers: [PrismaService],
   exports: [PrismaService],

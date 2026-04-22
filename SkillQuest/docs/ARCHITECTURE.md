@@ -144,6 +144,7 @@ SkillQuest/
 | `/admin/partners` | `app/admin/partners/page.tsx` | 团队管理 |
 | `/admin/courses` | `app/admin/courses/page.tsx` | 课程管理 (Admin) |
 | `/admin/review` | `app/admin/review/page.tsx` | 审核中心 |
+| `/admin/spark` | `app/admin/spark/page.tsx` | Spark 3DGS 管理后台 |
 
 ### TRAINER 端
 | 路由 | 文件 | 说明 |
@@ -155,6 +156,7 @@ SkillQuest/
 |---|---|---|
 | `/data-gravity` | `app/data-gravity/page.tsx` | **ZBS 数据分布仿真**（Canvas 物理引擎，关卡 l2 前置互动预习，含故事/仿真模式切换）|
 | `/data-gravity/story` | `app/data-gravity/story/page.tsx` | **ZBS 数据流可视化**（五场景交互叙事模式，framer-motion 动画）|
+| `/play/spark_3dgs/*` | `app/(game)/play/[type]/[id]/page.tsx` | **Spark 2.0 3DGS 演练** — SmartX 替换 VMware 沉浸式关卡（3 阶段点云场景 + 热点答题）|
 
 ---
 

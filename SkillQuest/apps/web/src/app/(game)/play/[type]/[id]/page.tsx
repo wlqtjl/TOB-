@@ -13,6 +13,7 @@
 'use client';
 
 import React, { useMemo, useCallback, useState, Suspense } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import type {
   TopologyQuizLevel,
@@ -25,6 +26,7 @@ import type {
   NarrativeConfig,
   ScenarioDecisionQuestion,
   LevelNarrative,
+  Spark3DGSLevel,
 } from '@skillquest/types';
 import type { VisualScene, InteractionResult } from '@skillquest/game-engine';
 import {
@@ -51,14 +53,25 @@ import { tenantConfig } from '../../../../../lib/tenant-config';
 import LevelBriefingModal from '../../../../../components/game/LevelBriefingModal';
 import { getComboTier } from '../../../../../components/game/FeedbackEffects';
 
+// Spark 3DGS level renderer — lazy, client-only (Three.js + WebGL2)
+const SparkMigrationLevel = dynamic(
+  () => import('../../../../../components/spark/SparkMigrationLevel'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-screen text-white">加载 3DGS 场景...</div>
+    ),
+  },
+);
+
 // ─── Adapter dispatch ──────────────────────────────────────────────
 
-type ContentType = 'topology' | 'matching' | 'ordering' | 'quiz' | 'terminal' | 'scenario' | 'vm_placement' | 'scenario_decision';
+type ContentType = 'topology' | 'matching' | 'ordering' | 'quiz' | 'terminal' | 'scenario' | 'vm_placement' | 'scenario_decision' | 'spark_3dgs';
 
 function adaptContent(type: ContentType, data: Record<string, unknown>): VisualScene | null {
   if (!data || typeof data !== 'object') return null;
-  // scenario_decision uses its own renderer, no adapter needed
-  if (type === 'scenario_decision') return null;
+  // scenario_decision and spark_3dgs use their own renderers, no adapter needed
+  if (type === 'scenario_decision' || type === 'spark_3dgs') return null;
   try {
     switch (type) {
       case 'topology': return topologyAdapter(data as unknown as TopologyQuizLevel);
@@ -108,6 +121,8 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   const [narrativeComplete, setNarrativeComplete] = useState(false);
   const [briefingDismissed, setBriefingDismissed] = useState(false);
   const [introDismissed, setIntroDismissed] = useState(false);
+  const [victoryScore, setVictoryScore] = useState<number>(0);
+  const [victoryStars, setVictoryStars] = useState<number>(0);
 
   // ── Combo announcement tracking ────────────────────────────────
   const [comboTriggerKey, setComboTriggerKey] = useState(0);
@@ -133,10 +148,10 @@ function PlayContent({ type, id }: { type: string; id: string }) {
   // Derive combo tier for announcement
   const currentComboTier = getComboTier(gameState.combo.current) as 'good' | 'great' | 'amazing' | 'legendary' | null ?? null;
 
-  // Convert content → VisualScene via adapter (null for scenario_decision)
+  // Convert content → VisualScene via adapter (null for scenario_decision and spark_3dgs)
   const scene = useMemo(() => {
     if (!content) return null;
-    if (contentType === 'scenario_decision') return null; // Uses own renderer
+    if (contentType === 'scenario_decision' || contentType === 'spark_3dgs') return null; // Uses own renderer
     return adaptContent(contentType, content);
   }, [contentType, content]);
 
@@ -224,6 +239,56 @@ function PlayContent({ type, id }: { type: string; id: string }) {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // ─── Spark 3DGS — dedicated renderer ───
+  if (contentType === 'spark_3dgs' && content) {
+    const level = content as unknown as Spark3DGSLevel;
+
+    return (
+      <div className="min-h-screen bg-slate-900">
+        <SparkMigrationLevel
+          level={level}
+          onComplete={(score, stars) => {
+            setShowVictory(true);
+            setVictoryScore(score);
+            setVictoryStars(stars);
+            // Production: save progress via API
+          }}
+          onAnswer={(hotspotId, correct) => {
+            if (correct) answerCorrect(hotspotId);
+            else answerWrong(hotspotId);
+          }}
+        />
+
+        {/* Course/type tabs */}
+        <div className="mx-auto max-w-[700px] px-4 py-6 space-y-4">
+          <div>
+            <p className="text-xs text-gray-400 mb-2">切换关卡类型:</p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(TYPE_LABELS).map(([key, label]) => (
+                <Link
+                  key={key}
+                  href={`/play/${key}/demo?course=${courseId}`}
+                  className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                    key === contentType
+                      ? 'border-blue-500 bg-blue-500/10 text-blue-400'
+                      : 'border-gray-600 text-gray-400 hover:border-gray-400'
+                  }`}
+                >
+                  {label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <a href={`/map?course=${courseId}`} className="inline-block text-xs text-gray-400 hover:text-gray-200 transition">
+            ← 返回地图
+          </a>
+        </div>
+
+        {showVictory && <VictoryEffects visible={true} stars={victoryStars} score={victoryScore} onDismiss={() => setShowVictory(false)} />}
       </div>
     );
   }
